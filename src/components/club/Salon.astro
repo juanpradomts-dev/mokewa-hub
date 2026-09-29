@@ -45,10 +45,10 @@ const records = [
   <h3 class="h-sub">Récords del club</h3>
   <div class="rejilla rejilla-3 records">
     {records.map(([que, rec]) => (
-      <div class="tarjeta record">
+      <div class="tarjeta record tarjeta-enlace">
         <span class="record-que">{que}</span>
         <strong class="record-num">{rec.n}</strong>
-        {rec.sensible ? <a href="#campeones">Ver en la lista completa</a> : <a href={ficha(rec.u)}>{rec.u}</a>}
+        {rec.sensible ? <a class="enlace-tarjeta" href="#campeones">Ver en la lista completa</a> : <a class="enlace-tarjeta" href={ficha(rec.u)}>{rec.u}</a>}
       </div>
     ))}
     <div class="tarjeta record">
@@ -57,10 +57,10 @@ const records = [
       <span>jugadores en un torneo suizo del club</span>
     </div>
     {r.mayor_torneo && (
-      <div class="tarjeta record">
+      <div class="tarjeta record tarjeta-enlace">
         <span class="record-que">Evento más grande</span>
         <strong class="record-num">{r.mayor_torneo.jugadores}</strong>
-        <a href={r.mayor_torneo.url} rel="noopener" target="_blank">{r.mayor_torneo.nombre}</a>
+        <a class="enlace-tarjeta" href={r.mayor_torneo.url} rel="noopener" target="_blank">{r.mayor_torneo.nombre}</a>
         <span class="record-pie">{fechaCorta(r.mayor_torneo.dia)} · batalla con otros clubes</span>
       </div>
     )}
@@ -242,7 +242,7 @@ const records = [
     font-family: var(--serif);
     font-size: 2.6rem;
     line-height: 1.1;
-    color: var(--vino);
+    color: var(--tinta);
   }
   .record a {
     font-weight: 600;

@@ -157,12 +157,23 @@ p {
   padding-top: 8px;
 }
 .antetitulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 0.8rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 650;
-  color: var(--oro-texto);
-  margin-bottom: 0.4em;
+  color: var(--suave);
+  margin-bottom: 0.5em;
+}
+.antetitulo::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: none;
+  background: var(--oro);
+  transform: rotate(45deg);
 }
 .bajada {
   color: var(--suave);
@@ -211,6 +222,9 @@ main:focus {
 }
 .aviso-demo a {
   color: #f5a04a;
+  display: inline-block;
+  padding: 14px 4px;
+  margin: -14px 0;
 }
 
 /* ---------- Cabecera ---------- */
@@ -231,6 +245,7 @@ main:focus {
 .marca {
   display: flex;
   align-items: center;
+  min-height: 44px;
   gap: 10px;
   text-decoration: none;
   color: var(--tinta);
@@ -259,11 +274,14 @@ main:focus {
   display: none;
 }
 .nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--tinta);
   text-decoration: none;
-  font-weight: 520;
-  font-size: 0.95rem;
-  padding: 8px 10px;
+  font-weight: 540;
+  font-size: 0.97rem;
+  padding: 0 12px;
   border-radius: 8px;
 }
 .nav a:hover {
@@ -363,17 +381,26 @@ main:focus {
   color: var(--vino);
 }
 .boton-whatsapp {
-  background: #1f8a4c;
+  background: #17773f;
   color: #fff;
 }
 .boton-whatsapp:hover {
-  background: #197340;
+  background: #126335;
   color: #fff;
 }
 .boton-chico {
-  min-height: 38px;
-  padding: 0 14px;
-  font-size: 0.9rem;
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 0.92rem;
+}
+/* El botón de la cabecera es oscuro: el naranja queda para la acción principal de cada pantalla. */
+.cabecera .cta-cabecera {
+  background: var(--tinta);
+  color: var(--fondo);
+}
+.cabecera .cta-cabecera:hover {
+  background: color-mix(in srgb, var(--tinta) 85%, var(--oro));
+  color: var(--fondo);
 }
 .boton[disabled],
 .boton[aria-disabled="true"] {
@@ -391,12 +418,12 @@ main:focus {
   background: var(--papel);
   border: 1px solid var(--linea);
   border-radius: var(--radio);
-  padding: 20px;
+  padding: 24px;
   box-shadow: var(--sombra);
 }
 .rejilla {
   display: grid;
-  gap: 16px;
+  gap: 20px;
 }
 @media (min-width: 640px) {
   .rejilla-2 {
@@ -416,6 +443,27 @@ main:focus {
   .rejilla-4 {
     grid-template-columns: repeat(4, 1fr);
   }
+}
+
+/* Enlace que cubre toda su tarjeta: objetivo táctil grande sin romper la lectura. */
+.tarjeta-enlace {
+  position: relative;
+}
+.tarjeta-enlace .enlace-tarjeta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.tarjeta-enlace:hover {
+  border-color: var(--vino);
+}
+.tarjeta-enlace:focus-within {
+  outline: 3px solid var(--oro);
+  outline-offset: 2px;
+}
+.tarjeta-enlace .enlace-tarjeta:focus-visible {
+  outline: none;
 }
 
 /* ---------- Cifras ---------- */
@@ -441,7 +489,7 @@ main:focus {
   font-size: clamp(1.9rem, 6vw, 2.6rem);
   font-weight: 650;
   line-height: 1;
-  color: var(--vino);
+  color: var(--tinta);
   font-variant-numeric: tabular-nums;
 }
 .cifra span {
@@ -666,6 +714,10 @@ textarea[aria-invalid="true"] {
 
 /* ---------- Pie ---------- */
 .pie {
+  --tinta: #f3eee8;
+  --suave: #c9c0b5;
+  --papel: rgb(255 255 255 / 0.05);
+  --linea: rgb(255 255 255 / 0.14);
   margin-top: 40px;
   background: var(--vino-osc);
   color: #e8e1d8;
@@ -695,9 +747,6 @@ textarea[aria-invalid="true"] {
 @media (min-width: 640px) {
   .pie ul {
     grid-template-columns: 1fr;
-  }
-  .pie ul a {
-    min-height: 32px;
   }
 }
 .pie .rejilla {
@@ -777,7 +826,7 @@ textarea[aria-invalid="true"] {
   background-size: 64px 64px;
 }
 .seccion-oscura .antetitulo {
-  color: #f5a04a;
+  color: #c9c0b5;
 }
 .seccion-oscura a:not(.boton) {
   color: #f5a04a;

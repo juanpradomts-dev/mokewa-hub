@@ -130,10 +130,10 @@ const mapa = valor("mapa");
       </div>
       <ol class="podio">
         {club.destacados.map((c, i) => (
-          <li class="tarjeta campeon">
+          <li class="tarjeta campeon tarjeta-enlace">
             <span class="puesto" aria-label={`Puesto ${i + 1}`}>{i + 1}</span>
             <div>
-              <a href={`${b}/jugador/?u=${encodeURIComponent(c.u)}`}><strong>{c.u}</strong></a>
+              <a class="enlace-tarjeta" href={`${b}/jugador/?u=${encodeURIComponent(c.u)}`}><strong>{c.u}</strong></a>
               <span>{c.titulos} títulos · {c.podios} podios · {c.torneos} torneos</span>
             </div>
           </li>
