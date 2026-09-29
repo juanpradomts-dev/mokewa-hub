@@ -1,4 +1,5 @@
 ---
+import Dato from "../components/Dato.astro";
 import Base from "../layouts/Base.astro";
 import GraficoAnual from "../components/GraficoAnual.astro";
 import Caballo from "../components/Caballo.astro";
@@ -45,7 +46,7 @@ const hitos = [
           <a class="boton boton-oro" href={`${b}/torneos/verano-2027/#inscripcion`}>Inscribirme al Torneo de Verano 2027</a>
           <BotonContacto variante="claro" accion="Clases para mi hijo/a" mensaje="Hola, quisiera información sobre las clases de ajedrez para mi hijo/a." />
         </div>
-        <p class="heroe-nota">El torneo de verano es un <strong>ejemplo</strong> para probar la inscripción; fecha y costo <span class="pc">por confirmar</span></p>
+        <p class="heroe-nota">El torneo de verano es un <strong>ejemplo</strong> para probar la inscripción.</p>
         <dl class="heroe-cifras">
           <div><dt class="num">{t.torneos}</dt><dd>torneos organizados</dd></div>
           <div><dt class="num">{t.campeones}</dt><dd>campeones en su historia</dd></div>
@@ -66,7 +67,7 @@ const hitos = [
             <a class="evento" href={`${b}/torneos/verano-2027/`}>
               <span class="etiqueta etiqueta-ejemplo">Ejemplo</span>
               <strong>Torneo de Verano 2027</strong>
-              <span>Presencial · categorías Sub-8 a Libre · fecha <span class="pc" data-campo="verano_fecha">por confirmar</span></span>
+              <span>Presencial · categorías Sub-8 a Libre · <Dato etiqueta="fecha" campo="verano_fecha" /></span>
             </a>
           )
         }
@@ -116,19 +117,19 @@ const hitos = [
           <span class="nivel-icono glifo" aria-hidden="true">♙︎</span>
           <h3>Básico</h3>
           <p>Para quienes empiezan: reglas, movimientos y primeras ideas de táctica.</p>
-          <span class="nivel-dato">Horario: <span class="pc" data-campo="horario_basico">por confirmar</span></span>
+          <Dato clase="nivel-dato" etiqueta="Horario" campo="horario_basico" />
         </a>
         <a class="tarjeta nivel" href={`${b}/academia/#intermedio`}>
           <span class="nivel-icono glifo" aria-hidden="true">♘︎</span>
           <h3>Intermedio</h3>
           <p>Para quienes ya juegan: aperturas, táctica y finales para competir.</p>
-          <span class="nivel-dato">Horario: <span class="pc" data-campo="horario_intermedio">por confirmar</span></span>
+          <Dato clase="nivel-dato" etiqueta="Horario" campo="horario_intermedio" />
         </a>
         <a class="tarjeta nivel" href={`${b}/academia/#avanzado`}>
           <span class="nivel-icono glifo" aria-hidden="true">♕︎</span>
           <h3>Avanzado</h3>
           <p>Para competidores: preparación de torneos, estrategia y análisis de partidas.</p>
-          <span class="nivel-dato">Horario: <span class="pc" data-campo="horario_avanzado">por confirmar</span></span>
+          <Dato clase="nivel-dato" etiqueta="Horario" campo="horario_avanzado" />
         </a>
       </div>
     </div>

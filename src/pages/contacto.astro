@@ -1,4 +1,5 @@
 ---
+import Dato from "../components/Dato.astro";
 import Base from "../layouts/Base.astro";
 import BotonContacto from "../components/BotonContacto.astro";
 import club from "../data/club.json";
@@ -14,7 +15,7 @@ import club from "../data/club.json";
       <div class="rejilla rejilla-2 contacto">
         <div class="tarjeta">
           <h2 class="h-bloque">WhatsApp</h2>
-          <p>Número oficial: <span class="pc" data-campo="whatsapp">por confirmar</span></p>
+          <Dato como="p" etiqueta="Número oficial" campo="whatsapp" />
           <div class="grupo-botones">
             <BotonContacto variante="primario" accion="Preguntar por clases" mensaje="Hola, quisiera información sobre las clases de ajedrez." />
             <BotonContacto variante="secundario" accion="Preguntar por torneos" mensaje="Hola, tengo una consulta sobre un torneo del club." />
@@ -23,9 +24,9 @@ import club from "../data/club.json";
         </div>
         <div class="tarjeta">
           <h2 class="h-bloque">Sede</h2>
-          <p><span class="pc" data-campo="sede">por confirmar</span></p>
+          <Dato como="p" etiqueta="Dirección" campo="sede" />
           <p>Moquegua, Perú</p>
-          <p>Horario de atención: <span class="pc" data-campo="atencion">por confirmar</span></p>
+          <Dato como="p" etiqueta="Horario de atención" campo="atencion" />
           <a class="boton boton-secundario" id="mapa" href="https://www.google.com/maps/search/?api=1&query=Moquegua%2C%20Per%C3%BA" rel="noopener" target="_blank">Ver en Google Maps</a>
         </div>
         <div class="tarjeta">
@@ -33,7 +34,7 @@ import club from "../data/club.json";
           <ul class="redes">
             <li><a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook · ACMokewa</a></li>
             <li><a href={club.equipo.url} rel="noopener" target="_blank">Lichess · equipo {club.equipo.nombre}</a></li>
-            <li>Correo: <span class="pc" data-campo="correo">por confirmar</span></li>
+            <Dato como="li" etiqueta="Correo" campo="correo" />
           </ul>
         </div>
         <div class="tarjeta">

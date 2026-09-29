@@ -1,21 +1,138 @@
 {
   "_nota": "Datos que NO se pudieron verificar en fuentes públicas. valor=null → la web muestra «por confirmar». El club los completa desde el panel (sección Datos del club).",
   "campos": {
-    "whatsapp": { "etiqueta": "WhatsApp oficial (con código 51)", "valor": null, "tipo": "tel", "grupo": "Contacto", "ayuda": "Solo números, p. ej. 51987654321. Activa los botones de WhatsApp de toda la web." },
-    "correo": { "etiqueta": "Correo del club", "valor": null, "tipo": "email", "grupo": "Contacto" },
-    "sede": { "etiqueta": "Sede (dirección)", "valor": null, "tipo": "text", "grupo": "Contacto", "ayuda": "Dirección donde se dictan las clases presenciales." },
-    "mapa": { "etiqueta": "Enlace de Google Maps de la sede", "valor": null, "tipo": "url", "grupo": "Contacto" },
-    "atencion": { "etiqueta": "Horario de atención", "valor": null, "tipo": "text", "grupo": "Contacto" },
-    "horario_basico": { "etiqueta": "Horario · nivel básico", "valor": null, "tipo": "text", "grupo": "Academia" },
-    "horario_intermedio": { "etiqueta": "Horario · nivel intermedio", "valor": null, "tipo": "text", "grupo": "Academia" },
-    "horario_avanzado": { "etiqueta": "Horario · nivel avanzado", "valor": null, "tipo": "text", "grupo": "Academia" },
-    "precio_mensual": { "etiqueta": "Mensualidad de la academia", "valor": null, "tipo": "text", "grupo": "Academia", "ayuda": "Tal como se debe mostrar, p. ej. «S/ 80 al mes»." },
-    "edad_minima": { "etiqueta": "Edad mínima para la academia", "valor": null, "tipo": "text", "grupo": "Academia" },
-    "entrenadores": { "etiqueta": "Entrenadores (nombres y títulos)", "valor": null, "tipo": "text", "grupo": "Academia" },
-    "verano_fecha": { "etiqueta": "Torneo de Verano 2027 · fecha", "valor": null, "tipo": "text", "grupo": "Torneo de Verano 2027" },
-    "verano_costo": { "etiqueta": "Torneo de Verano 2027 · inscripción", "valor": null, "tipo": "text", "grupo": "Torneo de Verano 2027" },
-    "verano_ritmo": { "etiqueta": "Torneo de Verano 2027 · ritmo de juego", "valor": null, "tipo": "text", "grupo": "Torneo de Verano 2027" },
-    "verano_cupo": { "etiqueta": "Torneo de Verano 2027 · cupo", "valor": null, "tipo": "text", "grupo": "Torneo de Verano 2027" },
-    "yape": { "etiqueta": "Yape / Plin: número y titular", "valor": null, "tipo": "text", "grupo": "Pagos" }
+    "whatsapp": {
+      "etiqueta": "WhatsApp oficial (con código 51)",
+      "valor": null,
+      "tipo": "tel",
+      "grupo": "Contacto",
+      "ayuda": "Solo números, p. ej. 51987654321. Activa los botones de WhatsApp de toda la web."
+    },
+    "correo": {
+      "etiqueta": "Correo del club",
+      "valor": null,
+      "tipo": "email",
+      "grupo": "Contacto"
+    },
+    "sede": {
+      "etiqueta": "Sede (dirección)",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Contacto",
+      "ayuda": "Dirección donde se dictan las clases presenciales."
+    },
+    "mapa": {
+      "etiqueta": "Enlace de Google Maps de la sede",
+      "valor": null,
+      "tipo": "url",
+      "grupo": "Contacto"
+    },
+    "atencion": {
+      "etiqueta": "Horario de atención",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Contacto"
+    },
+    "horario_basico": {
+      "etiqueta": "Horario · nivel básico",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Academia"
+    },
+    "horario_intermedio": {
+      "etiqueta": "Horario · nivel intermedio",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Academia"
+    },
+    "horario_avanzado": {
+      "etiqueta": "Horario · nivel avanzado",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Academia"
+    },
+    "edad_basico": {
+      "etiqueta": "Edad sugerida · nivel básico",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Academia",
+      "ayuda": "Ej.: «desde 6 años». Si queda vacío, no se muestra."
+    },
+    "edad_intermedio": {
+      "etiqueta": "Edad sugerida · nivel intermedio",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Academia"
+    },
+    "edad_avanzado": {
+      "etiqueta": "Edad sugerida · nivel avanzado",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Academia"
+    },
+    "precio_mensual": {
+      "etiqueta": "Mensualidad de la academia",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Academia",
+      "ayuda": "Tal como se debe mostrar, p. ej. «S/ 80 al mes»."
+    },
+    "clase_prueba": {
+      "etiqueta": "Clase de prueba (si la ofrecen)",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Academia",
+      "ayuda": "Ej.: «Primera clase gratis». Si se completa, el botón principal de la web dice «Clase de prueba»; si queda vacío, dice «Pedir informes»."
+    },
+    "edad_minima": {
+      "etiqueta": "Edad mínima para la academia",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Academia"
+    },
+    "entrenadores": {
+      "etiqueta": "Entrenadores (nombres y títulos)",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Academia",
+      "ayuda": "Uno por línea o separados por «;», con el formato «Nombre — título». Ej.: «Ana Pérez — Monitora FIDE». Si queda vacío, la sección de entrenadores no se muestra."
+    },
+    "verano_fecha": {
+      "etiqueta": "Torneo de Verano 2027 · fecha",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Torneo de Verano 2027"
+    },
+    "verano_costo": {
+      "etiqueta": "Torneo de Verano 2027 · inscripción",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Torneo de Verano 2027"
+    },
+    "verano_ritmo": {
+      "etiqueta": "Torneo de Verano 2027 · ritmo de juego",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Torneo de Verano 2027"
+    },
+    "verano_cupo": {
+      "etiqueta": "Torneo de Verano 2027 · cupo",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Torneo de Verano 2027"
+    },
+    "yape": {
+      "etiqueta": "Yape / Plin: número y titular",
+      "valor": null,
+      "tipo": "text",
+      "grupo": "Pagos"
+    },
+    "fotos": {
+      "etiqueta": "Fotos del club (enlaces)",
+      "valor": null,
+      "tipo": "textarea",
+      "grupo": "Fotos",
+      "ayuda": "Enlaces a fotos, uno por línea. Solo fotos con autorización escrita de los padres. Si queda vacío, la galería no se muestra."
+    }
   }
 }

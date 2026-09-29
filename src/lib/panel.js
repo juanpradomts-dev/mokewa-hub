@@ -356,7 +356,9 @@ function pintarDatos() {
         .map(([k, c]) => {
           const v = contenido(k) ?? "";
           return `<div class="campo"><label for="d-${k}">${esc(c.etiqueta)} ${v ? '<span class="etiqueta etiqueta-ok">publicado</span>' : '<span class="pc">por confirmar</span>'}</label>
-            <input id="d-${k}" name="${k}" type="${c.tipo === "email" ? "email" : c.tipo === "url" ? "url" : "text"}" value="${esc(v)}" ${c.tipo === "tel" ? 'inputmode="numeric"' : ""} />
+            ${c.tipo === "textarea" || k === "entrenadores"
+              ? `<textarea id="d-${k}" name="${k}">${esc(v)}</textarea>`
+              : `<input id="d-${k}" name="${k}" type="${c.tipo === "email" ? "email" : c.tipo === "url" ? "url" : "text"}" value="${esc(v)}" ${c.tipo === "tel" ? 'inputmode="numeric"' : ""} />`}
             ${c.ayuda ? `<span class="ayuda">${esc(c.ayuda)}</span>` : ""}</div>`;
         })
         .join("")}</div></fieldset>`,

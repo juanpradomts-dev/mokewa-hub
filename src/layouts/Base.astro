@@ -6,6 +6,7 @@ import Logo from "../components/Logo.astro";
 import BotonContacto from "../components/BotonContacto.astro";
 import club from "../data/club.json";
 import { fechaCorta } from "../lib/formato.js";
+import { MODO, esProduccion } from "../lib/contenido.js";
 
 interface Props {
   titulo: string;
@@ -54,7 +55,7 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
     <meta name="color-scheme" content="light dark" />
     <slot name="head" />
   </head>
-  <body data-base={b}>
+  <body data-base={b} data-modo={MODO}>
     <a class="saltar" href="#contenido">Saltar al contenido</a>
     <div class="aviso-demo">
       Demostración privada preparada para el Ajedrez Club Mokewa · aún no es la web oficial ·{" "}
@@ -111,7 +112,7 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
           <div>
             <h3>De dónde salen los datos</h3>
             <p>Los torneos online, campeones y récords se calculan automáticamente con la API pública de Lichess. Última actualización: {actualizado}.</p>
-            <p>Lo que aún no está verificado aparece marcado <span class="pc">por confirmar</span>.</p>
+            {!esProduccion && <p>Lo que aún no está verificado aparece marcado <span class="pc">por confirmar</span>.</p>}
           </div>
         </div>
         <p class="legal">

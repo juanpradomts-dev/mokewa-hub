@@ -1,4 +1,5 @@
 ---
+import Dato from "../components/Dato.astro";
 import Base from "../layouts/Base.astro";
 ---
 
@@ -36,7 +37,8 @@ import Base from "../layouts/Base.astro";
       </ul>
 
       <h2>Tus derechos</h2>
-      <p>Puedes pedir ver, corregir o borrar los datos tuyos o de tu hijo o hija (derecho de supresión). Escríbenos por WhatsApp o al correo del club: <span class="pc" data-campo="correo">por confirmar</span>. El organizador lo borra desde el panel.</p>
+      <p>Puedes pedir ver, corregir o borrar los datos tuyos o de tu hijo o hija (derecho de supresión). Escríbenos por los canales de la <a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/contacto/`}>página de contacto</a>. El organizador lo borra desde el panel.</p>
+      <Dato como="p" etiqueta="Correo del club" campo="correo" />
 
       <p class="nota">En esta demostración, todo lo que escribas en los formularios se guarda solo en tu navegador y no se envía a ningún servidor.</p>
     </div>

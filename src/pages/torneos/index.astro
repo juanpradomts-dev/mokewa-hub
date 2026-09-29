@@ -1,4 +1,5 @@
 ---
+import Dato from "../../components/Dato.astro";
 import Base from "../../layouts/Base.astro";
 import club from "../../data/club.json";
 import { fechaCorta, fechaLarga, TIPO_TORNEO, miles } from "../../lib/formato.js";
@@ -22,12 +23,12 @@ const historial = club.torneos.filter((x) => x.terminado || new Date(x.fecha) < 
         <article class="tarjeta torneo-tarjeta">
           <div class="torneo-etiquetas"><span class="etiqueta etiqueta-ejemplo">Ejemplo para la demo</span><span class="etiqueta">Presencial</span></div>
           <h3><a href={`${b}/torneos/verano-2027/`}>Torneo de Verano 2027</a></h3>
-          <dl class="datos">
-            <div><dt>Fecha</dt><dd><span class="pc" data-campo="verano_fecha">por confirmar</span></dd></div>
-            <div><dt>Ritmo</dt><dd><span class="pc" data-campo="verano_ritmo">por confirmar</span></dd></div>
-            <div><dt>Inscripción</dt><dd><span class="pc" data-campo="verano_costo">por confirmar</span></dd></div>
-            <div><dt>Sede</dt><dd><span class="pc" data-campo="sede">por confirmar</span></dd></div>
-          </dl>
+          <div class="datos">
+            <Dato como="div" etiqueta="Fecha" campo="verano_fecha" />
+            <Dato como="div" etiqueta="Ritmo" campo="verano_ritmo" />
+            <Dato como="div" etiqueta="Inscripción" campo="verano_costo" />
+            <Dato como="div" etiqueta="Sede" campo="sede" />
+          </div>
           <p class="cat">Categorías Sub-8 a Sub-18 y Libre · niveles básico, intermedio y avanzado</p>
           <div class="grupo-botones">
             <a class="boton boton-primario" href={`${b}/torneos/verano-2027/#inscripcion`}>Inscribirme</a>

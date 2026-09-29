@@ -1,4 +1,5 @@
 ---
+import Dato from "../../components/Dato.astro";
 import Base from "../../layouts/Base.astro";
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
@@ -13,12 +14,13 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
         Este torneo es un <strong>ejemplo</strong> para mostrar cómo funciona la inscripción en línea. Las bases, fecha y costo reales los define el club.
       </p>
       <div class="rejilla rejilla-4 ficha-datos" id="t-datos">
-        <div class="tarjeta"><span class="dt">Fecha</span><span class="pc" data-campo="verano_fecha">por confirmar</span></div>
-        <div class="tarjeta"><span class="dt">Ritmo de juego</span><span class="pc" data-campo="verano_ritmo">por confirmar</span></div>
-        <div class="tarjeta"><span class="dt">Inscripción</span><span class="pc" data-campo="verano_costo">por confirmar</span></div>
-        <div class="tarjeta"><span class="dt">Cupo</span><span class="pc" data-campo="verano_cupo">por confirmar</span></div>
+        <Dato como="div" clase="tarjeta" etiqueta="Fecha" campo="verano_fecha" />
+        <Dato como="div" clase="tarjeta" etiqueta="Ritmo de juego" campo="verano_ritmo" />
+        <Dato como="div" clase="tarjeta" etiqueta="Inscripción" campo="verano_costo" />
+        <Dato como="div" clase="tarjeta" etiqueta="Cupo" campo="verano_cupo" />
       </div>
-      <p class="cat">Categorías: <span id="t-cats-lista">Sub-8, Sub-10, Sub-12, Sub-14, Sub-16, Sub-18 y Libre</span>. La categoría se calcula sola con la fecha de nacimiento (edad al 1 de enero del año del torneo). Sede: <span class="pc" data-campo="sede">por confirmar</span></p>
+      <p class="cat">Categorías: <span id="t-cats-lista">Sub-8, Sub-10, Sub-12, Sub-14, Sub-16, Sub-18 y Libre</span>. La categoría se calcula sola con la fecha de nacimiento (edad al 1 de enero del año del torneo).</p>
+      <Dato como="p" etiqueta="Sede" campo="sede" />
     </div>
   </section>
 
@@ -89,7 +91,8 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
           <fieldset>
             <legend>3. Pago</legend>
             <div class="pago">
-              <p>Paga con <strong>Yape o Plin</strong> al número <span class="pc" data-campo="yape">por confirmar</span>. Monto: <span class="pc" data-campo="verano_costo">por confirmar</span>.</p>
+              <p>Paga con <strong>Yape o Plin</strong> y sube el comprobante aquí abajo.</p>
+              <div class="pago-datos"><Dato etiqueta="Número" campo="yape" /><Dato etiqueta="Monto" campo="verano_costo" /></div>
               <p class="ayuda">Luego sube una foto o captura del comprobante. El organizador lo valida y verás el estado: pendiente, validado o rechazado.</p>
             </div>
             <div class="campo">

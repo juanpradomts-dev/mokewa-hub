@@ -1,7 +1,9 @@
 ---
+import Dato from "../components/Dato.astro";
 import Base from "../layouts/Base.astro";
 import BotonContacto from "../components/BotonContacto.astro";
 import club from "../data/club.json";
+import { valor, esProduccion } from "../lib/contenido.js";
 
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 const hibridos = club.torneos.filter((t) => t.formato === "Torneos híbridos por nivel");
@@ -22,14 +24,15 @@ const niveles = [
     aprende: ["Preparación de aperturas contra rivales concretos", "Estrategia y planes de medio juego", "Temáticos (Siciliana, India de Rey, Española…)", "Gestión del tiempo y preparación psicológica"],
   },
 ];
+// Preguntas frecuentes. Las que dependen de un dato del club se ocultan en producción si falta.
 const preguntas = [
-  ["¿Desde qué edad pueden empezar?", `<span class="pc" data-campo="edad_minima">por confirmar</span>`],
-  ["¿Cuánto cuesta?", `Mensualidad: <span class="pc" data-campo="precio_mensual">por confirmar</span>. Se paga por Yape o Plin.`],
-  ["¿Dónde son las clases?", `En la sede del club: <span class="pc" data-campo="sede">por confirmar</span>.`],
-  ["¿Cómo sé en qué nivel inscribir a mi hijo o hija?", "Si nunca ha jugado, en básico. Si ya juega o compite, escríbenos por WhatsApp y el club te recomienda el nivel."],
-  ["¿Pueden practicar en casa?", `Sí: el club tiene un equipo gratuito en Lichess con ${club.equipo.miembros} miembros, torneos online y el puzzle del día.`],
-  ["¿Hay torneos para alumnos?", `Sí. El club ya organizó ${hibridos.length} torneos híbridos por nivel y ${club.totales.torneos} torneos online desde ${club.totales.desde}.`],
-];
+  { p: "¿Desde qué edad pueden empezar?", campo: "edad_minima" },
+  { p: "¿Cuánto cuesta?", antes: "Mensualidad: ", campo: "precio_mensual", despues: ". Se paga por Yape o Plin." },
+  { p: "¿Dónde son las clases?", antes: "En la sede del club: ", campo: "sede", despues: "." },
+  { p: "¿Cómo sé en qué nivel inscribir a mi hijo o hija?", r: "Si nunca ha jugado, en básico. Si ya juega o compite, escríbenos y el club te recomienda el nivel." },
+  { p: "¿Pueden practicar en casa?", r: `Sí: el club tiene un equipo gratuito en Lichess con ${club.equipo.miembros} miembros, torneos online y el puzzle del día.` },
+  { p: "¿Hay torneos para alumnos?", r: `Sí. El club ya organizó ${hibridos.length} torneos híbridos por nivel y ${club.totales.torneos} torneos online desde ${club.totales.desde}.` },
+].filter((q) => !q.campo || valor(q.campo) || !esProduccion);
 ---
 
 <Base titulo="Academia" seccion="academia" descripcion="Clases de ajedrez en Moquegua por niveles: básico, intermedio y avanzado. Horarios, precios e inscripción.">
@@ -45,9 +48,9 @@ const preguntas = [
         <a class="boton boton-secundario" href="#preguntas">Preguntas frecuentes</a>
       </div>
       <div class="rejilla rejilla-3 resumen">
-        <div class="tarjeta"><span class="dt">Mensualidad</span><span class="pc" data-campo="precio_mensual">por confirmar</span></div>
-        <div class="tarjeta"><span class="dt">Sede</span><span class="pc" data-campo="sede">por confirmar</span></div>
-        <div class="tarjeta"><span class="dt">Entrenadores</span><span class="pc" data-campo="entrenadores">por confirmar</span></div>
+        <Dato como="div" clase="tarjeta" etiqueta="Mensualidad" campo="precio_mensual" />
+        <Dato como="div" clase="tarjeta" etiqueta="Sede" campo="sede" />
+        <Dato como="div" clase="tarjeta" etiqueta="Entrenadores" campo="entrenadores" />
       </div>
     </div>
   </section>
@@ -61,7 +64,7 @@ const preguntas = [
           <p class="para">{n.para}</p>
           <h3>Qué aprende</h3>
           <ul>{n.aprende.map((a) => <li>{a}</li>)}</ul>
-          <p class="horario"><span class="dt">Horario</span><span class="pc" data-campo={n.campo}>por confirmar</span></p>
+          <Dato como="p" clase="horario" etiqueta="Horario" campo={n.campo} />
           <BotonContacto variante="secundario" accion="Quiero este nivel" mensaje={`Hola, quisiera información del nivel ${n.nombre.toLowerCase()} de la academia.`} />
         </article>
       ))}
@@ -90,10 +93,10 @@ const preguntas = [
     <div class="contenedor">
       <h2>Preguntas frecuentes</h2>
       <div class="faq">
-        {preguntas.map(([p, r]) => (
+        {preguntas.map((q) => (
           <details class="tarjeta">
-            <summary>{p}</summary>
-            <p set:html={r} />
+            <summary>{q.p}</summary>
+            <p>{q.r ?? <>{q.antes}<Dato campo={q.campo} />{q.despues}</>}</p>
           </details>
         ))}
       </div>

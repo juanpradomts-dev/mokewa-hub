@@ -1,0 +1,25 @@
+---
+// Un dato del club que puede no estar confirmado todavía (src/data/contenido.json).
+// - Con valor: lo muestra.
+// - Sin valor, modo demo: chip discreto «por confirmar» (el panel lo completa en vivo).
+// - Sin valor, modo producción (PUBLIC_MODO=produccion): no se dibuja nada, ni la etiqueta.
+import { valor, esProduccion } from "../lib/contenido.js";
+
+interface Props {
+  campo: string;
+  etiqueta?: string;
+  como?: "span" | "div" | "p" | "li" | "dd";
+  clase?: string;
+  vacio?: string;
+}
+const { campo, etiqueta, como = "span", clase = "", vacio = "por confirmar" } = Astro.props;
+const v = valor(campo);
+const Tag = como;
+---
+
+{(v || !esProduccion) && (
+  <Tag class={`dato ${clase}`} data-dato={campo}>
+    {etiqueta && <span class="dt">{etiqueta}</span>}
+    <span class={v ? "dato-valor confirmado" : "pc"} data-campo={campo} data-vacio={vacio}>{v ?? vacio}</span>
+  </Tag>
+)}

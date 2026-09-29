@@ -113,7 +113,7 @@ const cuenta = club.cuenta_club;
         <div class="cifra"><strong>${j.a.length}</strong><span>${j.a.length === 1 ? "temporada" : "temporadas"} (${j.a[0]}${j.a.length > 1 ? "–" + j.a.at(-1) : ""})</span></div>
       </div>
       ${tarjetaCuenta(j.u)}
-      <div class="tarjeta bloque">
+      ${document.body.dataset.modo === "produccion" ? "" : `<div class="tarjeta bloque">
         <h3>Datos oficiales</h3>
         <dl class="oficiales">
           <div><dt>FIDE ID</dt><dd><span class="pc">lo registra el club</span></dd></div>
@@ -121,7 +121,7 @@ const cuenta = club.cuenta_club;
           <div><dt>Categoría</dt><dd><span class="pc">por confirmar</span></dd></div>
           <div><dt>Nivel en la academia</dt><dd><span class="pc">por confirmar</span></dd></div>
         </dl>
-      </div>
+      </div>`}
       ${
         titulos.length
           ? `<div class="tarjeta bloque"><h3>Títulos</h3><ul class="titulos">${titulos
