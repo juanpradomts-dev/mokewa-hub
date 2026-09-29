@@ -3,7 +3,6 @@
 //
 // Salidas:
 //   src/data/club.json         → cifras, temporadas, récords y torneos (se usa al construir)
-//   public/datos/jugadores.json → historial por jugador (buscador y ficha, se carga a pedido)
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -265,15 +264,13 @@ async function main() {
   };
   const alias = await leerJson(path.join(RAIZ, "src", "data", "alias.json"), { alias: [] });
   const privacidad = await leerJson(path.join(RAIZ, "src", "data", "privacidad.json"), {});
-  const { club, jugadores } = calcular(datos, new Date(), {
+  const { club } = calcular(datos, new Date(), {
     alias: alias.alias,
     ocultos: privacidad.ocultos ?? [],
     sensibles: privacidad.nicks_sensibles ?? [],
   });
   await mkdir(path.join(RAIZ, "src", "data"), { recursive: true });
-  await mkdir(path.join(RAIZ, "public", "datos"), { recursive: true });
   await writeFile(path.join(RAIZ, "src", "data", "club.json"), JSON.stringify(club), "utf8");
-  await writeFile(path.join(RAIZ, "public", "datos", "jugadores.json"), JSON.stringify(jugadores), "utf8");
   const t = club.totales;
   console.log(
     `Historia del club: ${t.torneos} torneos (${t.arenas} arenas, ${t.suizos} suizos), ${t.participaciones} participaciones, ` +

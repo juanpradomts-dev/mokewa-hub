@@ -16,7 +16,7 @@ const preguntas = [
   { p: "¿Cuánto cuesta?", antes: "Mensualidad: ", campo: "precio_mensual", despues: ". Se paga por Yape o Plin." },
   { p: "¿Dónde son las clases?", antes: "En la sede del club: ", campo: "sede", despues: "." },
   { p: "¿Cómo sé en qué nivel inscribir a mi hijo o hija?", r: "Si nunca ha jugado, en básico. Si ya juega o compite, escríbenos y el club te recomienda el nivel." },
-  { p: "¿Pueden practicar en casa?", r: `Sí: el club tiene un equipo gratuito en Lichess con ${club.equipo.miembros} miembros, torneos online y el puzzle del día.` },
+  { p: "¿Pueden practicar en casa?", r: `Sí: el club tiene un equipo gratuito en Lichess con ${club.equipo.miembros} miembros donde se juegan torneos en línea desde el celular.` },
   { p: "¿Hay torneos para alumnos?", r: `Sí. El club ya organizó ${hibridos.length} torneos híbridos por nivel y ${club.totales.torneos} torneos online desde ${club.totales.desde}.` },
 ].filter((q) => !q.campo || valor(q.campo) || !esProduccion);
 ---
@@ -52,18 +52,6 @@ const preguntas = [
     </div>
   </section>
 
-  <section class="seccion">
-    <div class="contenedor">
-      <div class="tarjeta progreso">
-        <div>
-          <p class="antetitulo">Fase 2 · para los padres</p>
-          <h2>El progreso de tu hijo, a la vista</h2>
-          <p>Asistencia, tareas con estudios de Lichess, torneos jugados y títulos en una ficha que el padre puede ver desde el celular y descargar en PDF.</p>
-        </div>
-        <a class="boton boton-primario" href={`${b}/jugador/`}>Ver una ficha de ejemplo</a>
-      </div>
-    </div>
-  </section>
 
   <section class="seccion" id="preguntas">
     <div class="contenedor">
@@ -91,21 +79,6 @@ const preguntas = [
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-  }
-  .progreso {
-    display: grid;
-    gap: 16px;
-    align-items: center;
-    padding: 28px;
-  }
-  @media (min-width: 860px) {
-    .progreso {
-      grid-template-columns: 1fr auto;
-    }
-  }
-  .progreso p {
-    color: var(--suave);
-    margin: 0;
   }
   .faq {
     display: grid;

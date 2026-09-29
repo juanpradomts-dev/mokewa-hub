@@ -18,19 +18,19 @@ Se abre en http://localhost:4321. El panel del organizador está en `/panel/` (e
 
 | Página | Ruta | Datos |
 |---|---|---|
-| Inicio | `/` | Reales: cifras, historia, gráfico y hitos (Lichess, FIDE, prensa) |
+| Inicio | `/` | Héroe con caballo viajero, quiénes somos (misión y visión como propuesta), academia, por qué Mokewa y cierre |
 | Academia | `/academia/` | Niveles reales; horarios, precios y sede **por confirmar** |
-| Torneos | `/torneos/` | Los 156 torneos online con su campeón, con filtros |
+| Torneos | `/torneos/` | Solo torneos presenciales, cada uno con foto (ilustración del club mientras no haya foto autorizada) |
 | Inscripción | `/torneos/verano-2027/` | **Ejemplo** funcional: categoría automática, voucher, consentimiento del tutor |
-| Salón de la Fama | `/salon-de-la-fama/` | 85 campeones, récords, 64 fieles y temporadas: todo calculado |
-| Ficha de jugador | `/jugador/?u=USUARIO` | Trayectoria + constancia en PDF (vista previa de la Fase 2) |
-| Comunidad | `/comunidad/` | Equipo de Lichess, puzzle del día (tablero propio con datos de la API) y noticias con fuente |
+| El Club | `/el-club/` | «Nuestra historia»: logros en torneos presenciales (`src/data/historia.json`) y comunidad en Lichess |
 | Panel | `/panel/` | Validar pagos, exportar CSV, crear torneos, publicar resultados y noticias, editar datos del club |
+
+Qué se quitó a propósito (no generaba valor para el club): Salón de la Fama, fichas de jugador, historial de torneos en línea, gráfico en línea y puzzle del día. Está en el historial de git por si se necesita.
 
 ## Datos
 
 - `npm run datos`: descarga lo nuevo de Lichess (incremental, respeta el límite de 1 petición a la vez y espera 61 s ante un 429) y recalcula todo. Doble clic: `ACTUALIZAR-DATOS.bat`.
-- `scripts/estadisticas.mjs` genera `src/data/club.json` y `public/datos/jugadores.json`. **Ninguna cifra está escrita a mano.**
+- `scripts/estadisticas.mjs` genera `src/data/club.json`. **Ninguna cifra está escrita a mano.**
 - `npm test`: comprueba que el cálculo reproduce las cifras de la guía (758 jugadores, 85 campeones, 64 fieles, récord de 66, 644 por recuperar) y las reglas de categoría.
 
 ## Demo frente a producción

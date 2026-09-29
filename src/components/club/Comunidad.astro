@@ -1,80 +1,39 @@
 ---
-// Comunidad: equipo de Lichess, puzzle del día y noticias (verificadas, con fuente).
-import PuzzleDia from "../PuzzleDia.astro";
+// Comunidad: práctica entre clases en el equipo del club en Lichess y noticias del club.
+// Las noticias las publica el club desde el panel; si no hay, la sección no se muestra.
 import club from "../../data/club.json";
 import { fechaLarga } from "../../lib/formato.js";
 
-const ultimo = club.torneos.find((t) => t.id === club.ultimo);
 const proximos = club.proximos.map((id) => club.torneos.find((x) => x.id === id)).filter(Boolean);
-
-const noticias = [
-  ultimo && {
-    fecha: ultimo.dia,
-    titulo: ultimo.ganador_sensible ? `Se jugó «${ultimo.nombre}»` : `${ultimo.ganador} gana «${ultimo.nombre}»`,
-    cuerpo: `${ultimo.jugadores} jugadores disputaron el último torneo online del club (${ultimo.ritmo.texto}).`,
-    fuente: ultimo.url,
-    fuenteTexto: "Resultados en Lichess",
-  },
-  {
-    fechaTexto: "septiembre de 2026",
-    titulo: "Moquegua realiza su I Torneo Provincial de Ajedrez escolar",
-    cuerpo: "La Municipalidad Provincial Mariscal Nieto organizó el primer torneo provincial para escolares de 6 a 17 años, con 156 estudiantes de 12 primarias y 14 secundarias.",
-    fuente: "https://munimoquegua.gob.pe/estudiantes-moqueguanos-convierten-nuestra-plaza-en-capital-del-deporte-ciencia/",
-    fuenteTexto: "Municipalidad Provincial Mariscal Nieto",
-    entorno: true,
-  },
-  {
-    fecha: "2026-07-24",
-    titulo: "Un ajedrecista sub-12 de Moquegua va al Festival Panamericano de la Juventud",
-    cuerpo: "El Fondo de Apoyo Económico para Deportistas Destacados otorgó S/ 3 000 a un ajedrecista moqueguano sub-12 clasificado al Festival Panamericano de la Juventud, en Medellín.",
-    fuente: "https://prensaregional.pe/",
-    fuenteTexto: "La Prensa Regional",
-    entorno: true,
-  },
-].filter(Boolean);
 ---
 
 <div class="comunidad">
-  <p class="antetitulo">Comunidad</p>
-  <h2>Juega con el club todo el año</h2>
-  <p class="bajada">El equipo «{club.equipo.nombre}» en Lichess reúne a {club.equipo.miembros} miembros. Lichess es gratuito, sin publicidad y funciona en el celular.</p>
-
   <div class="comunidad-grid">
-    <div class="tarjeta">
-      <h3>Torneos online del equipo</h3>
-      {proximos.length ? (
+    <div>
+      <p class="antetitulo">Comunidad</p>
+      <h2>Entre clase y clase, se sigue jugando</h2>
+      <p class="bajada">El club tiene un equipo gratuito en Lichess con {club.equipo.miembros} miembros: ahí se juegan los torneos en línea y se practica desde el celular.</p>
+    </div>
+    <div class="tarjeta pasos-tarjeta">
+      {proximos.length > 0 && (
         <ul class="proximos">
           {proximos.map((p) => (
             <li><a href={p.url} rel="noopener" target="_blank"><strong>{p.nombre}</strong><span>{fechaLarga(p.dia)} · {p.ritmo.texto}</span></a></li>
           ))}
         </ul>
-      ) : (
-        <p class="suave">Cuando el club programe un torneo online en Lichess, aparece aquí solo (se revisa cada hora).</p>
       )}
       <ol class="pasos">
         <li>Crea tu cuenta gratis en <a href="https://lichess.org/signup" rel="noopener" target="_blank">Lichess</a>.</li>
         <li>Pide tu ingreso al <a href={club.equipo.url} rel="noopener" target="_blank">equipo del club</a>.</li>
-        <li>Recibe los torneos y juega desde el celular.</li>
+        <li>Juega los torneos del club desde el celular.</li>
       </ol>
       <a class="boton boton-secundario" href={club.equipo.url} rel="noopener" target="_blank">Unirme al equipo</a>
     </div>
-    <div class="tarjeta">
-      <h3>Puzzle del día</h3>
-      <PuzzleDia />
-      <p class="suave">Cortesía de Lichess. Cambia cada día.</p>
-    </div>
   </div>
 
-  <h3 class="h-sub">Noticias</h3>
-  <div class="noticias" id="noticias">
-    {noticias.map((n) => (
-      <article class="tarjeta noticia">
-        <p class="meta">{n.fechaTexto ?? fechaLarga(n.fecha)}{n.entorno && <span class="etiqueta">Ajedrez en Moquegua</span>}</p>
-        <h4>{n.titulo}</h4>
-        <p>{n.cuerpo}</p>
-        <a class="fuente" href={n.fuente} rel="noopener" target="_blank">Fuente: {n.fuenteTexto}</a>
-      </article>
-    ))}
+  <div class="noticias-bloque" id="noticias-bloque" hidden>
+    <h3 class="h-sub">Noticias del club</h3>
+    <div class="noticias" id="noticias"></div>
   </div>
 </div>
 
@@ -83,16 +42,14 @@ const noticias = [
   import { esc } from "../../lib/html.js";
   import { fechaLarga } from "../../lib/formato.js";
 
+  const bloque = document.getElementById("noticias-bloque")!;
   const caja = document.getElementById("noticias")!;
   function pintar() {
-    caja.querySelectorAll("[data-panel]").forEach((n) => n.remove());
-    for (const n of noticias().reverse()) {
-      const art = document.createElement("article");
-      art.className = "tarjeta noticia";
-      art.dataset.panel = "1";
-      art.innerHTML = `<p class="meta">${fechaLarga(n.fecha)} <span class="etiqueta etiqueta-ok">Publicada por el club</span></p><h4>${esc(n.titulo)}</h4><p>${esc(n.cuerpo).replace(/\n/g, "<br>")}</p>`;
-      caja.prepend(art);
-    }
+    const lista = noticias();
+    bloque.hidden = !lista.length;
+    caja.innerHTML = lista
+      .map((n) => `<article class="tarjeta noticia"><p class="meta">${fechaLarga(n.fecha)}</p><h4>${esc(n.titulo)}</h4><p>${esc(n.cuerpo).replace(/\n/g, "<br>")}</p></article>`)
+      .join("");
   }
   pintar();
   alCambiar(pintar);
@@ -101,34 +58,25 @@ const noticias = [
 <style>
   .comunidad-grid {
     display: grid;
-    gap: 16px;
-    margin-top: 24px;
+    gap: 20px;
   }
   @media (min-width: 900px) {
     .comunidad-grid {
-      grid-template-columns: 1fr 1fr;
-      align-items: start;
+      grid-template-columns: 1.1fr 1fr;
+      align-items: center;
+      gap: 48px;
     }
-  }
-  h3 {
-    font-size: 1.3rem;
-  }
-  .h-sub {
-    font-size: clamp(1.3rem, 3.5vw, 1.7rem);
-    margin: 40px 0 14px;
-  }
-  .suave {
-    color: var(--suave);
-    font-size: 0.93rem;
   }
   .proximos {
     list-style: none;
     padding: 0;
+    margin: 0 0 12px;
     display: grid;
     gap: 8px;
   }
   .proximos a {
     display: grid;
+    min-height: 44px;
     padding: 10px 12px;
     border-radius: 10px;
     background: var(--casilla);
@@ -137,10 +85,14 @@ const noticias = [
   }
   .pasos {
     padding-left: 1.3em;
-    margin: 16px 0 20px;
+    margin: 0 0 18px;
   }
   .pasos li {
     margin-bottom: 6px;
+  }
+  .h-sub {
+    font-size: clamp(1.3rem, 3.5vw, 1.7rem);
+    margin: 40px 0 14px;
   }
   .noticias {
     display: grid;
@@ -155,21 +107,10 @@ const noticias = [
     font-family: var(--serif);
     font-size: 1.15rem;
     margin: 0 0 8px;
-    line-height: 1.25;
   }
   :global(.noticia .meta) {
     font-size: 0.85rem;
     color: var(--suave);
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-bottom: 6px;
-  }
-  .fuente {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    font-size: 0.85rem;
+    margin: 0 0 6px;
   }
 </style>

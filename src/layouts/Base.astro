@@ -5,7 +5,6 @@ import "../styles/global.css";
 import Logo from "../components/Logo.astro";
 import BotonContacto from "../components/BotonContacto.astro";
 import club from "../data/club.json";
-import { fechaCorta } from "../lib/formato.js";
 import { MODO, esProduccion } from "../lib/contenido.js";
 
 interface Props {
@@ -25,7 +24,6 @@ const enlaces = [
   ["contacto", "/contacto/", "Contacto"],
 ];
 const tituloCompleto = seccion === "inicio" ? "Ajedrez Club Mokewa · Moquegua" : `${titulo} · Ajedrez Club Mokewa`;
-const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
 ---
 
 <!doctype html>
@@ -110,14 +108,15 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
               <li><a href={url("/privacidad/")}>Privacidad y datos de menores</a></li>
             </ul>
           </div>
-          <div class="pie-datos">
-            <h3>De dónde salen los datos</h3>
-            <p>Torneos, campeones y récords se calculan solos con la API pública de Lichess. Actualizado: {actualizado}.</p>
-            {!esProduccion && <p>Lo que aún no está verificado aparece marcado <span class="pc">por confirmar</span>.</p>}
-          </div>
+          {!esProduccion && (
+            <div class="pie-datos">
+              <h3>Esta demo</h3>
+              <p>Lo que el club aún no confirmó aparece marcado <span class="pc">por confirmar</span> y se completa desde el panel.</p>
+            </div>
+          )}
         </div>
         {!esProduccion && <p class="legal">
-          Demostración privada, no indexada, preparada sin costo para el club. No se difunde ni se presenta como web oficial hasta que el Ajedrez Club Mokewa la apruebe. En esta demo solo se muestran usuarios públicos de Lichess: ningún nombre real ni foto.
+          Demostración privada, no indexada, preparada sin costo para el club. No se difunde ni se presenta como web oficial hasta que el Ajedrez Club Mokewa la apruebe. No muestra nombres ni fotos de alumnos.
         </p>}
       </div>
     </footer>

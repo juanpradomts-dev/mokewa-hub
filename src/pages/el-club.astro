@@ -1,22 +1,16 @@
 ---
 import Base from "../layouts/Base.astro";
 import LineaTiempo from "../components/club/LineaTiempo.astro";
-import Trayectoria from "../components/club/Trayectoria.astro";
-import HistorialOnline from "../components/club/HistorialOnline.astro";
 import Comunidad from "../components/club/Comunidad.astro";
-import club from "../data/club.json";
-
-const t = club.totales;
 ---
 
-<Base titulo="El Club" seccion="club" descripcion={`Historia y comunidad del Ajedrez Club Mokewa: ${t.torneos} torneos desde ${t.desde}.`}>
+<Base titulo="El Club" seccion="club" descripcion="Historia del Ajedrez Club Mokewa: sus logros en torneos presenciales y su comunidad.">
   <section class="seccion club-cabeza">
     <div class="contenedor">
       <p class="antetitulo">El Club</p>
       <h1>El club por dentro</h1>
       <nav class="subnav" aria-label="Secciones de El Club">
         <a href="#historia">Nuestra historia</a>
-        <a href="#trayectoria">En línea</a>
         <a href="#comunidad">Comunidad</a>
       </nav>
     </div>
@@ -26,12 +20,8 @@ const t = club.totales;
     <div class="contenedor"><LineaTiempo /></div>
   </section>
 
-  <section class="seccion bloque tinte" id="trayectoria">
-    <div class="contenedor"><Trayectoria /></div>
-  </section>
-
-  <section class="seccion bloque" id="comunidad">
-    <div class="contenedor"><Comunidad /><HistorialOnline /></div>
+  <section class="seccion bloque tinte" id="comunidad">
+    <div class="contenedor"><Comunidad /></div>
   </section>
 </Base>
 

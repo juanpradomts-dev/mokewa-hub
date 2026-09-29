@@ -43,7 +43,7 @@ test("ningún usuario visible trae 7+ dígitos (cálculo y archivos generados)",
   const { club, jugadores } = calcular(datos, AHORA, configReal);
   const enCalculo = nombresVisibles([club, jugadores]).filter(tieneDigitosSensibles);
   assert.deepEqual(enCalculo, []);
-  const generados = [JSON.parse(await leer("../src/data/club.json")), JSON.parse(await leer("../public/datos/jugadores.json"))];
+  const generados = [JSON.parse(await leer("../src/data/club.json"))];
   assert.deepEqual(nombresVisibles(generados).filter(tieneDigitosSensibles), []);
 });
 
