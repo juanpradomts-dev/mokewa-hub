@@ -3,31 +3,31 @@ import Dato from "../components/Dato.astro";
 import Base from "../layouts/Base.astro";
 import BotonContacto from "../components/BotonContacto.astro";
 import club from "../data/club.json";
+import { valor } from "../lib/contenido.js";
 ---
 
-<Base titulo="Contacto" seccion="contacto" descripcion="Contacto del Ajedrez Club Mokewa en Moquegua: WhatsApp, sede y redes.">
-  <section class="seccion">
+<Base titulo="Contacto" seccion="contacto" descripcion="Contacto del Ajedrez Club Mokewa en Moquegua: clases, torneos, sede y redes.">
+  <section class="seccion cabeza">
     <div class="contenedor">
       <p class="antetitulo">Contacto</p>
       <h1>Hablemos</h1>
-      <p class="bajada">La forma más rápida es WhatsApp: el mensaje ya va escrito, solo toca enviar.</p>
+      <p class="bajada">Escríbenos y te contamos horarios, niveles y cómo empezar.</p>
 
       <div class="rejilla rejilla-2 contacto">
         <div class="tarjeta">
-          <h2 class="h-bloque">WhatsApp</h2>
-          <Dato como="p" etiqueta="Número oficial" campo="whatsapp" />
+          <h2 class="h-bloque">Escríbenos</h2>
+          <Dato como="p" etiqueta="WhatsApp" campo="whatsapp" />
           <div class="grupo-botones">
             <BotonContacto variante="primario" accion="Preguntar por clases" mensaje="Hola, quisiera información sobre las clases de ajedrez." />
             <BotonContacto variante="secundario" accion="Preguntar por torneos" mensaje="Hola, tengo una consulta sobre un torneo del club." />
           </div>
-          <p class="suave">Mientras el número se confirma, los botones abren la página de Facebook del club.</p>
         </div>
         <div class="tarjeta">
           <h2 class="h-bloque">Sede</h2>
           <Dato como="p" etiqueta="Dirección" campo="sede" />
           <p>Moquegua, Perú</p>
           <Dato como="p" etiqueta="Horario de atención" campo="atencion" />
-          <a class="boton boton-secundario" id="mapa" href="https://www.google.com/maps/search/?api=1&query=Moquegua%2C%20Per%C3%BA" rel="noopener" target="_blank">Ver en Google Maps</a>
+          <a class="boton boton-secundario" id="mapa" data-si-campos="mapa" hidden={!valor("mapa")} href={valor("mapa") ?? "#"} rel="noopener" target="_blank">Ver en Google Maps</a>
         </div>
         <div class="tarjeta">
           <h2 class="h-bloque">Redes</h2>
@@ -53,12 +53,19 @@ import club from "../data/club.json";
   const pintar = () => {
     const m = contenido("mapa");
     if (m && /^https:\/\//.test(m)) mapa.href = m;
+    mapa.hidden = !(m && /^https:\/\//.test(m));
   };
   pintar();
   alCambiar(pintar);
 </script>
 
 <style>
+  .cabeza {
+    background: linear-gradient(180deg, #fde7d1, var(--fondo) 60%);
+  }
+  #mapa[hidden] {
+    display: none;
+  }
   .contacto {
     margin-top: 24px;
   }

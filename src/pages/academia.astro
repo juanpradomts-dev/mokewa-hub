@@ -8,7 +8,6 @@ import { NIVELES } from "../lib/niveles.js";
 import { valor, esProduccion } from "../lib/contenido.js";
 
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
-const hibridos = club.torneos.filter((t) => t.formato === "Torneos híbridos por nivel");
 
 // Preguntas frecuentes. Las que dependen de un dato del club se ocultan en producción si falta.
 const preguntas = [
@@ -17,26 +16,21 @@ const preguntas = [
   { p: "¿Dónde son las clases?", antes: "En la sede del club: ", campo: "sede", despues: "." },
   { p: "¿Cómo sé en qué nivel inscribir a mi hijo o hija?", r: "Si nunca ha jugado, en básico. Si ya juega o compite, escríbenos y el club te recomienda el nivel." },
   { p: "¿Pueden practicar en casa?", r: `Sí: el club tiene un equipo gratuito en Lichess con ${club.equipo.miembros} miembros donde se juegan torneos en línea desde el celular.` },
-  { p: "¿Hay torneos para alumnos?", r: `Sí. El club ya organizó ${hibridos.length} torneos híbridos por nivel y ${club.totales.torneos} torneos online desde ${club.totales.desde}.` },
+  { p: "¿Hay torneos para alumnos?", r: "Sí. El club organiza torneos por nivel (básico, intermedio y avanzado) y en 2024 organizó un torneo oficial válido para el rating FIDE." },
 ].filter((q) => !q.campo || valor(q.campo) || !esProduccion);
 ---
 
 <Base titulo="Academia" seccion="academia" descripcion="Clases de ajedrez en Moquegua por niveles: básico, intermedio y avanzado. Horarios, precios e inscripción.">
-  <section class="seccion">
+  <section class="seccion cabeza">
     <div class="contenedor">
       <p class="antetitulo">Academia</p>
       <h1>Clases de ajedrez en Moquegua, por niveles</h1>
       <p class="bajada">
-        Tres niveles, los mismos que el club usa en sus torneos híbridos. En Mokewa se aprende jugando torneos desde el primer mes.
+        Tres niveles —básico, intermedio y avanzado—, los mismos que el club usa en sus torneos por nivel.
       </p>
       <div class="grupo-botones">
         <BotonContacto accion="Pedir informes" mensaje="Hola, quisiera inscribir a mi hijo/a en la academia de ajedrez. ¿Qué horarios tienen?" />
         <a class="boton boton-secundario" href="#preguntas">Preguntas frecuentes</a>
-      </div>
-      <div class="rejilla rejilla-3 resumen">
-        <Dato como="div" clase="tarjeta" etiqueta="Mensualidad" campo="precio_mensual" />
-        <Dato como="div" clase="tarjeta" etiqueta="Sede" campo="sede" />
-        <Dato como="div" clase="tarjeta" etiqueta="Entrenadores" campo="entrenadores" />
       </div>
     </div>
   </section>
@@ -69,16 +63,8 @@ const preguntas = [
 </Base>
 
 <style>
-  .resumen {
-    margin-top: 28px;
-  }
-  .resumen .tarjeta,
-  .dt {
-    font-size: 0.8rem;
-    color: var(--suave);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  .cabeza {
+    background: linear-gradient(180deg, #fde7d1, var(--fondo) 70%);
   }
   .faq {
     display: grid;
