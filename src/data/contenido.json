@@ -113,6 +113,30 @@
       "grupo": "Academia",
       "ayuda": "Uno por línea o separados por «;», con el formato «Nombre — título». Ej.: «Ana Pérez — Monitora FIDE». Si queda vacío, la sección de entrenadores no se muestra."
     },
+    "aprende_basico": {
+      "etiqueta": "Qué aprende · nivel básico",
+      "valor": null,
+      "tipo": "textarea",
+      "grupo": "Academia",
+      "propuesta": "Reglas, movimientos y jaque mate\nTácticas básicas: clavada y horquilla\nSu primer torneo: reloj y reglamento",
+      "ayuda": "Un tema por línea. Mientras quede vacío, la demo muestra nuestra propuesta marcada «por confirmar»; en producción no se muestra."
+    },
+    "aprende_intermedio": {
+      "etiqueta": "Qué aprende · nivel intermedio",
+      "valor": null,
+      "tipo": "textarea",
+      "grupo": "Academia",
+      "propuesta": "Aperturas y un repertorio propio\nCombinaciones y cálculo\nFinales de torres y de peones",
+      "ayuda": "Un tema por línea. Mientras quede vacío, la demo muestra nuestra propuesta marcada «por confirmar»; en producción no se muestra."
+    },
+    "aprende_avanzado": {
+      "etiqueta": "Qué aprende · nivel avanzado",
+      "valor": null,
+      "tipo": "textarea",
+      "grupo": "Academia",
+      "propuesta": "Preparación contra rivales concretos\nEstrategia y planes de medio juego\nManejo del tiempo y de la presión",
+      "ayuda": "Un tema por línea. Mientras quede vacío, la demo muestra nuestra propuesta marcada «por confirmar»; en producción no se muestra."
+    },
     "verano_fecha": {
       "etiqueta": "Torneo de Verano 2027 · fecha",
       "valor": null,

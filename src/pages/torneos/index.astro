@@ -5,8 +5,15 @@ import Base from "../../layouts/Base.astro";
 import Dato from "../../components/Dato.astro";
 import FotoTorneo from "../../components/FotoTorneo.astro";
 import presenciales from "../../data/torneos-presenciales.json";
+import BotonContacto from "../../components/BotonContacto.astro";
+import { valor, esProduccion } from "../../lib/contenido.js";
+import { hayBaseDeDatos } from "../../lib/backend.js";
+const enLinea = !esProduccion || hayBaseDeDatos;
 
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
+// El Torneo de Verano 2027 es un ejemplo hasta que el club confirma su fecha. En producción, sin fecha, no se publica.
+const veranoReal = !!valor("verano_fecha");
+const mostrarVerano = veranoReal || !esProduccion;
 const realizados = [...presenciales.torneos].sort((a, c) => c.fecha.localeCompare(a.fecha));
 ---
 
@@ -15,18 +22,25 @@ const realizados = [...presenciales.torneos].sort((a, c) => c.fecha.localeCompar
     <div class="contenedor">
       <p class="antetitulo">Torneos presenciales</p>
       <h1>Frente a frente, en el tablero</h1>
-      <p class="bajada">Inscríbete en línea a los próximos torneos y revive los que ya jugamos.</p>
+      <p class="bajada">{enLinea ? "Inscríbete en línea a los próximos torneos y revive los que ya jugamos." : "Los próximos torneos del club y los que ya jugamos."}</p>
     </div>
   </section>
 
   <section class="seccion proximos-seccion">
     <div class="contenedor">
       <h2 class="h-seccion">Próximos</h2>
+      {!mostrarVerano && (
+        <div class="tarjeta sin-proximos" id="sin-proximos">
+          <p>El próximo torneo se anuncia aquí y en la página de Facebook del club.</p>
+          <BotonContacto variante="secundario" accion="Preguntar por torneos" mensaje="Hola, quisiera saber cuándo es el próximo torneo del club." />
+        </div>
+      )}
       <div class="rejilla rejilla-2" id="proximos">
+        {mostrarVerano && (
         <article class="tarjeta torneo">
           <FotoTorneo alt="Torneo de Verano 2027" tono="naranja" />
           <div class="torneo-cuerpo">
-            <div class="etiquetas"><span class="etiqueta etiqueta-ejemplo">Ejemplo para la demo</span><span class="etiqueta">Presencial</span></div>
+            <div class="etiquetas">{!veranoReal && <span class="etiqueta etiqueta-ejemplo" data-sin-campo="verano_fecha">Ejemplo para la demo</span>}<span class="etiqueta">Presencial</span></div>
             <h3><a href={`${b}/torneos/verano-2027/`}>Torneo de Verano 2027</a></h3>
             <div class="datos">
               <Dato como="div" etiqueta="Fecha" campo="verano_fecha" />
@@ -41,6 +55,7 @@ const realizados = [...presenciales.torneos].sort((a, c) => c.fecha.localeCompar
             </div>
           </div>
         </article>
+        )}
       </div>
     </div>
   </section>
@@ -215,5 +230,15 @@ const realizados = [...presenciales.torneos].sort((a, c) => c.fecha.localeCompar
       align-content: center;
       padding: 28px 32px;
     }
+  }
+  .sin-proximos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+  }
+  .sin-proximos p {
+    margin: 0;
   }
 </style>

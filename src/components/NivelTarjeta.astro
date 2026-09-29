@@ -4,15 +4,21 @@
 // UN solo botón «Consultar horario». Cuando el club los carga (panel o contenido.json), aparecen.
 import Dato from "./Dato.astro";
 import BotonContacto from "./BotonContacto.astro";
-import { valor } from "../lib/contenido.js";
+import contenido from "../data/contenido.json";
+import { valor, lista, esProduccion } from "../lib/contenido.js";
 
 interface Props {
-  nivel: { id: string; nombre: string; pieza: string; horario: string; edad: string; para: string; aprende: string[] };
+  nivel: { id: string; nombre: string; pieza: string; horario: string; edad: string; para: string };
   titulo?: "h2" | "h3";
 }
 const { nivel: n, titulo = "h3" } = Astro.props;
 const Titulo = titulo;
 const hayHorario = !!(valor(n.horario) && valor("precio_mensual"));
+// Qué aprende: lo confirmado por el club; si no, en la demo la propuesta (marcada) y en producción nada.
+const campoAprende = `aprende_${n.id}`;
+const propuesta = ((contenido.campos as Record<string, { propuesta?: string }>)[campoAprende]?.propuesta ?? "").split("\n").filter(Boolean);
+const confirmado = lista(campoAprende);
+const aprende = confirmado.length ? confirmado : esProduccion ? [] : propuesta;
 const mensaje = `Hola, quisiera saber el horario y el precio del nivel ${n.nombre.toLowerCase()} de la academia.`;
 ---
 
@@ -25,9 +31,12 @@ const mensaje = `Hola, quisiera saber el horario y el precio del nivel ${n.nombr
     </div>
   </div>
   <p class="nivel-para">{n.para}</p>
-  <ul class="nivel-aprende">
-    {n.aprende.map((a) => <li>{a}</li>)}
-  </ul>
+  {aprende.length > 0 && (
+    <ul class="nivel-aprende" data-lista={campoAprende} data-propuesta={esProduccion ? undefined : propuesta.join("\n")}>
+      {aprende.map((a) => <li>{a}</li>)}
+    </ul>
+  )}
+  {!confirmado.length && !esProduccion && <span class="chip-propuesta" data-sin-campo={campoAprende}>Temas: propuesta · por confirmar</span>}
   <div class="nivel-pie">
     <div class="nivel-horario" data-si-campos={`${n.horario} precio_mensual`} hidden={!hayHorario}>
       <Dato etiqueta="Horario" campo={n.horario} />
@@ -87,18 +96,19 @@ const mensaje = `Hola, quisiera saber el horario y el precio del nivel ${n.nombr
     gap: 6px;
     font-size: 0.97rem;
   }
-  .nivel-aprende li {
+  /* :global porque el panel de la demo reescribe estos <li> en vivo (store.js) */
+  .nivel-aprende :global(li) {
     display: grid;
-    grid-template-columns: 16px 1fr;
+    grid-template-columns: 14px 1fr;
     gap: 8px;
   }
-  .nivel-aprende li::before {
+  /* Viñeta: una casilla de tablero */
+  .nivel-aprende :global(li)::before {
     content: "";
-    width: 8px;
-    height: 8px;
-    margin-top: 0.55em;
-    background: var(--tinta);
-    transform: rotate(45deg);
+    width: 7px;
+    height: 7px;
+    margin-top: 0.6em;
+    background: var(--acento-nivel, var(--oro));
   }
   .nivel-pie {
     margin-top: auto;

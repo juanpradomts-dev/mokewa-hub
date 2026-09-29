@@ -17,7 +17,7 @@ const bloques = (["mision", "vision"] as const)
   .filter((x) => x.texto && (x.confirmado || !esProduccion));
 ---
 
-<div class="quienes">
+<div class:list={["quienes", { solo: bloques.length === 0 }]}>
   <div class="quienes-texto">
     <p class="antetitulo">Quiénes somos</p>
     <h2>Un club que forma y <span class="lema">compite</span></h2>
@@ -58,6 +58,12 @@ const bloques = (["mision", "vision"] as const)
   .quienes h2 {
     max-width: 20ch;
   }
+  /* Sin misión ni visión confirmadas (producción): una sola columna de lectura */
+  @media (min-width: 900px) {
+    .quienes.solo {
+      grid-template-columns: minmax(0, 62ch);
+    }
+  }
   .lema {
     color: #a64b08;
   }
@@ -97,17 +103,5 @@ const bloques = (["mision", "vision"] as const)
     margin: 0;
     font-size: 0.97rem;
     line-height: 1.45;
-  }
-  .chip-propuesta {
-    justify-self: start;
-    font-size: 0.76rem;
-    font-weight: 600;
-    border: 1px dashed currentColor;
-    border-radius: 999px;
-    padding: 1px 9px;
-    opacity: 0.8;
-  }
-  .chip-propuesta[hidden] {
-    display: none;
   }
 </style>

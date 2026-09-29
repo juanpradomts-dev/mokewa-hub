@@ -6,6 +6,7 @@ import {
   TORNEO_VERANO,
 } from "./store.js";
 import { esc } from "./html.js";
+import contenidoBaseCompleto from "../data/contenido.json";
 
 const $ = (id) => document.getElementById(id);
 const base = document.body.dataset.base ?? "";
@@ -28,11 +29,6 @@ $("salir").addEventListener("click", () => {
   } catch {}
   location.reload();
 });
-let dentro = false;
-try {
-  dentro = sessionStorage.getItem(SESION) === "1";
-} catch {}
-if (dentro) entrar();
 
 // ------------------------------------------------------------------ pestañas
 const pestanas = [...document.querySelectorAll('[role="tab"]')];
@@ -360,7 +356,9 @@ function pintarDatos() {
           const v = contenido(k) ?? "";
           return `<div class="campo"><label for="d-${k}">${esc(c.etiqueta)} ${v ? '<span class="etiqueta etiqueta-ok">publicado</span>' : '<span class="pc">por confirmar</span>'}</label>
             ${c.tipo === "textarea" || k === "entrenadores"
-              ? `<textarea id="d-${k}" name="${k}">${esc(v)}</textarea>`
+              ? `<textarea id="d-${k}" name="${k}" ${c.propuesta ? `placeholder="${esc(c.propuesta)}"` : ""}>${esc(v)}</textarea>${
+                  c.propuesta && !v ? `<button class="boton boton-secundario boton-chico usar-propuesta" type="button" data-usar="${k}">Usar la propuesta</button>` : ""
+                }`
               : `<input id="d-${k}" name="${k}" type="${c.tipo === "email" ? "email" : c.tipo === "url" ? "url" : "text"}" value="${esc(v)}" ${c.tipo === "tel" ? 'inputmode="numeric"' : ""} />`}
             ${c.ayuda ? `<span class="ayuda">${esc(c.ayuda)}</span>` : ""}</div>`;
         })
@@ -388,6 +386,25 @@ $("form-datos").addEventListener("submit", (e) => {
   guardarContenido(valores);
   $("datos-aviso").innerHTML = `Guardado. Toda la web ya muestra estos datos. <a href="${base}/academia/" target="_blank">Revisar la Academia ↗</a>`;
 });
+$("datos-campos").addEventListener("click", (e) => {
+  const k = e.target.closest("[data-usar]")?.dataset.usar;
+  if (!k) return;
+  const campo = $(`d-${k}`);
+  campo.value = CAMPOS[k].propuesta;
+  campo.focus();
+  e.target.remove();
+});
+// Para que lo cargado en el panel quede en la web oficial: se descarga contenido.json con los
+// valores y se reemplaza src/data/contenido.json en el repositorio (ver README).
+$("datos-descargar").addEventListener("click", () => {
+  const salida = structuredClone(contenidoBaseCompleto);
+  for (const k of Object.keys(salida.campos)) salida.campos[k].valor = contenido(k);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(salida, null, 2) + "\n"], { type: "application/json" }));
+  a.download = "contenido.json";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
 $("reiniciar").addEventListener("click", async () => {
   if (!confirm("¿Reiniciar la demo? Se borra todo lo creado en este navegador.")) return;
   for (const v of urlsVoucher.values()) v && URL.revokeObjectURL(v.url);
@@ -410,3 +427,10 @@ function pintarTodo() {
 alCambiar(() => {
   if (!$("panel").hidden) pintarTodo();
 });
+
+// Al recargar con la sesión abierta se entra directo. Va al final: todo lo de arriba ya está definido.
+let dentro = false;
+try {
+  dentro = sessionStorage.getItem(SESION) === "1";
+} catch {}
+if (dentro) entrar();

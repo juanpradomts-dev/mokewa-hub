@@ -1,6 +1,6 @@
 // Niveles de la academia: los mismos que el club usa en sus torneos híbridos (Lichess).
-// «Qué aprende» es una propuesta para la demo: el club la ajusta a su programa real.
-// Horario, edad sugerida y precio NO están aquí: viven en contenido.json (por confirmar).
+// Qué aprende, horario, edad sugerida y precio NO están aquí: viven en contenido.json
+// (campos aprende_*, horario_*, edad_*, precio_mensual) y se confirman desde el panel.
 export const NIVELES = [
   {
     id: "basico",
@@ -9,7 +9,6 @@ export const NIVELES = [
     horario: "horario_basico",
     edad: "edad_basico",
     para: "Para quien empieza desde cero o recién aprende a mover las piezas.",
-    aprende: ["Reglas, movimientos y jaque mate", "Tácticas básicas: clavada y horquilla", "Su primer torneo: reloj y reglamento"],
   },
   {
     id: "intermedio",
@@ -18,7 +17,6 @@ export const NIVELES = [
     horario: "horario_intermedio",
     edad: "edad_intermedio",
     para: "Para quien ya juega y quiere empezar a competir.",
-    aprende: ["Aperturas y un repertorio propio", "Combinaciones y cálculo", "Finales de torres y de peones"],
   },
   {
     id: "avanzado",
@@ -27,6 +25,5 @@ export const NIVELES = [
     horario: "horario_avanzado",
     edad: "edad_avanzado",
     para: "Para quien se prepara para torneos regionales, nacionales o con rating FIDE.",
-    aprende: ["Preparación contra rivales concretos", "Estrategia y planes de medio juego", "Manejo del tiempo y de la presión"],
   },
 ];

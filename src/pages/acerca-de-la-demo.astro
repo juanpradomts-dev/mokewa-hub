@@ -3,7 +3,10 @@ import Base from "../layouts/Base.astro";
 import club from "../data/club.json";
 import { fechaLarga, miles } from "../lib/formato.js";
 
+import { esProduccion } from "../lib/contenido.js";
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
+// Explica la demo: en la web oficial no existe.
+if (esProduccion) return Astro.redirect(`${b}/`);
 const t = club.totales;
 const pantallas = [
   ["Inicio", "Quiénes somos, misión y visión, los tres niveles de la academia y por qué elegir el club.", "Real; misión y visión son una propuesta", "mixto"],
@@ -17,6 +20,7 @@ const fuentes = [
   ["Ajedrez Club Mokewa en Facebook", "https://www.facebook.com/ACMokewa/"],
   ["Equipo «Ajedrez Club Mokewa» en Lichess (API pública)", "https://lichess.org/api/team/ajedrez-club-mokewa"],
   ["FIDE Ratings: II IRT Clásico Cerrado «Ajedrez Club Mokewa», enero de 2024", "https://ratings.fide.com/report.phtml?event=350802"],
+  ["Radio Sol 94.5 FM (20-08-2021): «Promocionan Festival Ajedrez Club Moquegua», con la página de Facebook Ajedrez Club Mokewa", "https://www.radiosol.com.pe/promocionan-festival-ajedrez-club-moquegua.html"],
   ["Municipalidad de Mariscal Nieto: I Torneo Provincial de Ajedrez 2026 (156 escolares de 26 colegios)", "https://munimoquegua.gob.pe/estudiantes-moqueguanos-convierten-nuestra-plaza-en-capital-del-deporte-ciencia/"],
 ];
 ---

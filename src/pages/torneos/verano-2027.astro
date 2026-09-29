@@ -1,19 +1,29 @@
 ---
 import Dato from "../../components/Dato.astro";
 import Base from "../../layouts/Base.astro";
-import { esProduccion } from "../../lib/contenido.js";
+import BotonContacto from "../../components/BotonContacto.astro";
+import { esProduccion, valor } from "../../lib/contenido.js";
+import { hayBaseDeDatos } from "../../lib/backend.js";
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
+// Es un ejemplo hasta que el club confirme la fecha: en producción, sin fecha, esta página no se publica.
+const real = !!valor("verano_fecha");
+if (esProduccion && !real) return Astro.redirect(`${b}/torneos/`);
+// En producción, la inscripción en línea solo se ofrece con la base de datos conectada
+// (si no, el formulario guardaría en el navegador del padre y el club nunca lo recibiría).
+const enLinea = !esProduccion || hayBaseDeDatos;
 ---
 
-<Base titulo="Torneo de Verano 2027" seccion="torneos" descripcion="Inscripción en línea al Torneo de Verano 2027 del Ajedrez Club Mokewa (ejemplo de la demo).">
+<Base titulo="Torneo de Verano 2027" seccion="torneos" descripcion={real ? "Torneo de Verano 2027 del Ajedrez Club Mokewa en Moquegua: fecha, categorías e inscripción." : "Inscripción en línea al Torneo de Verano 2027 del Ajedrez Club Mokewa (ejemplo de la demo)."}>
   <section class="seccion">
     <div class="contenedor">
       <p class="migas"><a href={`${b}/torneos/`}>Torneos</a> / <span id="t-miga">Torneo de Verano 2027</span></p>
-      <div class="torneo-etiquetas" id="t-etiquetas"><span class="etiqueta etiqueta-ejemplo">Ejemplo para la demo</span><span class="etiqueta">Presencial</span></div>
+      <div class="torneo-etiquetas" id="t-etiquetas">{!real && <span class="etiqueta etiqueta-ejemplo">Ejemplo para la demo</span>}<span class="etiqueta">Presencial</span></div>
       <h1 id="t-nombre">Torneo de Verano 2027</h1>
-      <p class="bajada" id="t-bajada">
-        Este torneo es un <strong>ejemplo</strong> para mostrar cómo funciona la inscripción en línea. Las bases, fecha y costo reales los define el club.
-      </p>
+      {!real && (
+        <p class="bajada" id="t-bajada">
+          Este torneo es un <strong>ejemplo</strong> para mostrar cómo funciona la inscripción en línea. Las bases, fecha y costo reales los define el club.
+        </p>
+      )}
       <div class="rejilla rejilla-4 ficha-datos" id="t-datos">
         <Dato como="div" clase="tarjeta" etiqueta="Fecha" campo="verano_fecha" />
         <Dato como="div" clase="tarjeta" etiqueta="Ritmo de juego" campo="verano_ritmo" />
@@ -25,6 +35,18 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
     </div>
   </section>
 
+  {!enLinea && (
+    <section class="seccion" id="inscripcion">
+      <div class="contenedor">
+        <div class="tarjeta inscripcion-contacto">
+          <h2>Inscripción</h2>
+          <p>Escríbenos y te enviamos las bases y los pasos para inscribirte.</p>
+          <BotonContacto accion="Inscribirme" mensaje="Hola, quisiera inscribir a un jugador en el Torneo de Verano 2027." />
+        </div>
+      </div>
+    </section>
+  )}
+  {enLinea && (
   <section class="seccion" id="inscripcion">
     <div class="contenedor inscripcion-grid">
       <div>
@@ -115,7 +137,7 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 
           <div class="alerta alerta-error" id="errores" hidden role="alert"></div>
           <button class="boton boton-primario enviar" type="submit">Enviar inscripción</button>
-          <p class="ayuda demo-nota">Demo: los datos se guardan solo en este navegador. Puedes usar datos inventados.</p>
+          {!esProduccion && <p class="ayuda demo-nota">Demo: los datos se guardan solo en este navegador. Puedes usar datos inventados.</p>}
         </form>
       </div>
 
@@ -132,9 +154,10 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
       </aside>
     </div>
   </section>
+  )}
 </Base>
 
-<script src="../../lib/inscripcion.js"></script>
+{enLinea && <script src="../../lib/inscripcion.js"></script>}
 
 <style>
   .migas {
@@ -276,5 +299,15 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
     flex-wrap: wrap;
     gap: 8px 28px;
     margin: 4px 0 10px;
+  }
+  .inscripcion-contacto {
+    max-width: 640px;
+    display: grid;
+    gap: 12px;
+    justify-items: start;
+  }
+  .inscripcion-contacto h2,
+  .inscripcion-contacto p {
+    margin: 0;
   }
 </style>

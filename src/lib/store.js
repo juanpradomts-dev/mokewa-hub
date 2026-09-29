@@ -88,6 +88,13 @@ export function pintarCampos(raiz = document) {
       el.title = "Dato pendiente: el club lo completa desde el panel";
     }
   }
+  // Listas (un elemento por línea): lo confirmado o, en la demo, la propuesta.
+  for (const ul of raiz.querySelectorAll("[data-lista]")) {
+    const texto = contenido(ul.dataset.lista) ?? ul.dataset.propuesta ?? "";
+    const items = texto.split(/[;\n]/).map((x) => x.trim()).filter(Boolean);
+    ul.replaceChildren(...items.map((t) => Object.assign(document.createElement("li"), { textContent: t })));
+    ul.hidden = items.length === 0;
+  }
   // Bloques que solo se muestran cuando TODOS sus datos están confirmados (p. ej. horario + precio).
   const todos = (lista) => lista.split(/\s+/).filter(Boolean).every((c) => contenido(c));
   for (const el of raiz.querySelectorAll("[data-si-campos]")) el.hidden = !todos(el.dataset.siCampos);

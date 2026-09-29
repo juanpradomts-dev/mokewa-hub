@@ -45,9 +45,21 @@ Qué se quitó a propósito (no generaba valor para el club): Salón de la Fama,
 
 Para migrar: cambiar la implementación de las funciones de `store.js` por llamadas a Supabase; las páginas no cambian.
 
+### Qué cambia solo al construir con `PUBLIC_MODO=produccion`
+
+- Lo no confirmado se oculta: chips «por confirmar», misión, visión y temas de cada nivel propuestos por nosotros.
+- El «Torneo de Verano 2027» de ejemplo desaparece hasta que el club confirme su fecha (`verano_fecha`); entonces deja de decir «ejemplo».
+- «Acerca de la demo» redirige al inicio.
+- Sin base de datos (`PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY`, ver `src/lib/backend.js`), no hay inscripción en línea ni panel: la inscripción pasa al contacto del club, para que ninguna inscripción quede guardada solo en el navegador de un padre.
+- Se indexa: `index, follow`, URL canónica, `robots.txt` con el sitemap, `sitemap.xml` y la ficha del club para Google (`SportsClub`, solo con datos verificados o confirmados). El panel y la página 404 nunca se indexan.
+
+### Datos del club: del panel a la web oficial
+
+En la reunión se cargan en el panel («Datos del club»; «Usar la propuesta» acepta nuestros textos con un clic) y la demo se actualiza al instante. Para dejarlos en la web oficial: «Descargar contenido.json», reemplazar `src/data/contenido.json`, `npm test` y commit.
+
 ## Privacidad
 
-- `noindex` en todas las páginas y `robots.txt` con `Disallow: /` mientras sea demo.
+- `noindex` en todas las páginas y `robots.txt` con `Disallow: /` mientras sea demo (los genera `src/pages/robots.txt.ts` según el modo).
 - La web no muestra nombres ni fotos de alumnos. Fotos solo con autorización escrita de los padres.
 - Listas públicas: solo nombre, categoría y club (Ley N.º 29733). Los inscritos del torneo de ejemplo son nombres inventados y así se indica.
 
@@ -61,5 +73,6 @@ Para migrar: cambiar la implementación de las funciones de `store.js` por llama
 
 1. El club aprueba la demo y entrega los datos de `../PREGUNTAS-PARA-EL-CLUB.md`: WhatsApp, sede, horarios, precios, autorización del logo, victorias, fotos autorizadas, entrenadores y misión y visión.
 2. Si el club entrega el logo original, reemplazar el trazado (`src/components/Caballo.astro`, `public/favicon.svg`, `public/og.png`).
-3. Conectar Supabase y el correo transaccional.
-4. Quitar `noindex` (`src/layouts/Base.astro`) y `robots.txt`, añadir el sitemap y crear el perfil de Google Business.
+3. Conectar Supabase y el correo transaccional (sin ellos se puede publicar igual: la inscripción va por el contacto del club).
+4. Añadir `PUBLIC_MODO: produccion` al paso «Construir» de `.github/workflows/publicar.yml`. Eso quita el aviso de demo y el `noindex` y activa el sitemap.
+5. Crear el perfil de Google Business del club con la misma dirección y el mismo teléfono de la web.

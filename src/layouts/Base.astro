@@ -5,15 +5,18 @@ import "../styles/global.css";
 import Logo from "../components/Logo.astro";
 import BotonContacto from "../components/BotonContacto.astro";
 import club from "../data/club.json";
-import { MODO, esProduccion } from "../lib/contenido.js";
+import { MODO, esProduccion, valor } from "../lib/contenido.js";
+import { LEMA, NOMBRE } from "../lib/club.js";
+import { FACEBOOK } from "../lib/contacto.js";
 
 interface Props {
   titulo: string;
   descripcion?: string;
   seccion?: string;
   sinWhatsapp?: boolean;
+  privada?: boolean; // nunca se indexa (panel, 404)
 }
-const { titulo, descripcion = "Ajedrez Club Mokewa, Moquegua: academia por niveles, torneos, resultados y la historia del club desde 2020.", seccion = "", sinWhatsapp = false } = Astro.props;
+const { titulo, descripcion = "Ajedrez Club Mokewa, Moquegua: academia por niveles, torneos, resultados y la historia del club desde 2020.", seccion = "", sinWhatsapp = false, privada = false } = Astro.props;
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 const url = (p: string) => `${b}${p}`;
 // Menú de 4 + botón de contacto. El inicio se alcanza con el logo.
@@ -23,6 +26,27 @@ const enlaces = [
   ["club", "/el-club/", "El Club"],
   ["contacto", "/contacto/", "Contacto"],
 ];
+// Indexación: la demo nunca se indexa (guía, 10.2). En producción sí, salvo las páginas privadas.
+const indexable = esProduccion && !privada;
+const canonica = new URL(Astro.url.pathname, Astro.site).href;
+// Ficha del club para Google (solo producción y solo en el inicio), con datos verificados o confirmados.
+const whatsapp = valor("whatsapp");
+const fichaClub = indexable && seccion === "inicio"
+  ? JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "SportsClub",
+      name: NOMBRE,
+      slogan: LEMA,
+      sport: "Ajedrez",
+      url: new URL(`${b}/`, Astro.site).href,
+      logo: new URL(`${b}/icono-512.png`, Astro.site).href,
+      image: new URL(`${b}/og.png`, Astro.site).href,
+      address: { "@type": "PostalAddress", addressLocality: "Moquegua", addressCountry: "PE", ...(valor("sede") ? { streetAddress: valor("sede") } : {}) },
+      ...(whatsapp ? { telephone: `+${whatsapp}` } : {}),
+      ...(valor("correo") ? { email: valor("correo") } : {}),
+      sameAs: [FACEBOOK, club.equipo.url],
+    })
+  : null;
 const tituloCompleto = seccion === "inicio" ? "Ajedrez Club Mokewa · Moquegua" : `${titulo} · Ajedrez Club Mokewa`;
 ---
 
@@ -32,7 +56,10 @@ const tituloCompleto = seccion === "inicio" ? "Ajedrez Club Mokewa · Moquegua" 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- Demo privada: no se indexa hasta que el club apruebe la web (guía, sección 10.2). -->
-    <meta name="robots" content="noindex, nofollow" />
+    <meta name="robots" content={indexable ? "index, follow" : "noindex, nofollow"} />
+    {indexable && <link rel="canonical" href={canonica} />}
+    {indexable && <meta property="og:url" content={canonica} />}
+    {fichaClub && <script type="application/ld+json" set:html={fichaClub} />}
     <title>{tituloCompleto}</title>
     <meta name="description" content={descripcion} />
     <meta name="theme-color" content="#f28a1e" />
@@ -89,7 +116,7 @@ const tituloCompleto = seccion === "inicio" ? "Ajedrez Club Mokewa · Moquegua" 
 
     <footer class="pie">
       <div class="contenedor">
-        <div class="rejilla rejilla-3">
+        <div class:list={["rejilla", esProduccion ? "rejilla-2" : "rejilla-3"]}>
           <div>
             <h3>Ajedrez Club Mokewa</h3>
             <p>Club de ajedrez de Moquegua: academia por niveles, torneos y una comunidad de {club.equipo.miembros} miembros en Lichess.</p>
