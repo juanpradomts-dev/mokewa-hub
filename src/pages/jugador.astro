@@ -102,7 +102,7 @@ const cuenta = club.cuenta_club;
         <p class="bajada">Compite con el club desde ${fechaLarga(primera)}${ultima !== primera ? ` · última participación: ${fechaLarga(ultima)}` : ""}.</p>
         <div class="grupo-botones no-imprimir">
           <button class="boton boton-primario" type="button" id="pdf">Descargar constancia en PDF</button>
-          <a class="boton boton-secundario" href="https://lichess.org/@/${encodeURIComponent(j.u)}" rel="noopener" target="_blank">Perfil en Lichess</a>
+          ${j.u.includes("•") ? "" : `<a class="boton boton-secundario" href="https://lichess.org/@/${encodeURIComponent(j.u)}" rel="noopener" target="_blank">Perfil en Lichess</a>`}
           <a class="boton boton-whatsapp" id="compartir" rel="noopener" target="_blank" href="#">Compartir por WhatsApp</a>
         </div>
       </header>

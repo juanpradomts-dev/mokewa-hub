@@ -1,0 +1,5 @@
+{
+  "_nota": "Privacidad de jugadores. Los usuarios con 7 o más dígitos seguidos (posible DNI o código de alumno) se enmascaran solos en toda la web. «ocultos»: usuarios que no aparecen en ningún listado (se siguen contando en los totales). «nicks_sensibles»: no aparecen en la portada ni en destacados; en el Salón completo sí.",
+  "ocultos": [],
+  "nicks_sensibles": ["DinaBoluarte", "TheMrBeast", "ElDestructorDeMala"]
+}

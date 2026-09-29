@@ -1,0 +1,16 @@
+{
+  "_nota": "Cuentas secundarias de Lichess que podrían ser la misma persona. Son SUGERENCIAS por similitud de nombre, por confirmar del club. Solo se fusionan las que tengan \"confirmado\": true; al fusionar, los títulos, torneos y podios se suman al usuario principal y los totales se recalculan.",
+  "alias": [
+    { "principal": "ELFALLASSTJS", "secundarias": ["ELFALLASTJS", "ELFALLASS"], "confirmado": false, "nota": "Sugerencia: por confirmar del club. Nunca jugaron el mismo torneo. Si se confirma, suma 12 títulos y pasa a ser el máximo campeón." },
+    { "principal": "CarlosMokewa", "secundarias": ["CarlosMokewaa", "CarlosMokewita"], "confirmado": false, "nota": "Sugerencia: por confirmar del club. Nunca jugaron el mismo torneo." },
+    { "principal": "HUG0MOKEWA", "secundarias": ["HUGOMOKEWA"], "confirmado": false, "nota": "Sugerencia: por confirmar del club. Nunca jugaron el mismo torneo (una cuenta usa cero en vez de O)." },
+    { "principal": "AlexMokewa", "secundarias": ["AlexsMokewa"], "confirmado": false, "nota": "Sugerencia: por confirmar del club. OJO: jugaron 4 torneos juntos, probablemente son dos personas." },
+    { "principal": "Matiaz_Mokewa2", "secundarias": ["Matiaz_Mokewa", "Matiaz_Mokewa3-XD"], "confirmado": false, "nota": "Sugerencia: por confirmar del club. Nunca jugaron el mismo torneo." },
+    { "principal": "SamirMokewa", "secundarias": ["S4m1r_Mokewa234"], "confirmado": false, "nota": "Sugerencia: por confirmar del club. Nunca jugaron el mismo torneo." },
+    { "principal": "Fiorela_Mokewa", "secundarias": ["FiorelaMokewa"], "confirmado": false, "nota": "Sugerencia: por confirmar del club. Nunca jugaron el mismo torneo." },
+    { "principal": "JoaquinMokewa", "secundarias": ["Joaquinmokewa2"], "confirmado": false, "nota": "Sugerencia: por confirmar del club. Nunca jugaron el mismo torneo." },
+    { "principal": "GianpieroMokewa", "secundarias": ["GianPieroMokewa1"], "confirmado": false, "nota": "Sugerencia: por confirmar del club. Nunca jugaron el mismo torneo." },
+    { "principal": "SantiagoMokewa1", "secundarias": ["santiagomokewa"], "confirmado": false, "nota": "Sugerencia: por confirmar del club. Nunca jugaron el mismo torneo." },
+    { "principal": "EnriqueMokewa", "secundarias": ["Enrique123mokewa"], "confirmado": false, "nota": "Sugerencia: por confirmar del club. Nunca jugaron el mismo torneo." }
+  ]
+}

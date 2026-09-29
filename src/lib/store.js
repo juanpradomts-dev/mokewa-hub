@@ -7,6 +7,7 @@
 
 import contenidoBase from "../data/contenido.json";
 import { CATEGORIAS } from "./categorias.js";
+import { enlaceContacto } from "./contacto.js";
 
 const CLAVE = "mokewa-demo-v1";
 const EVENTO = "mokewa:cambio";
@@ -88,16 +89,13 @@ export function pintarCampos(raiz = document) {
     }
   }
   const wa = contenido("whatsapp");
-  for (const a of raiz.querySelectorAll("[data-whatsapp]")) {
-    const texto = a.dataset.whatsapp || "Hola, quisiera información sobre el Ajedrez Club Mokewa.";
-    if (wa) {
-      a.href = `https://wa.me/${wa.replace(/\D/g, "")}?text=${encodeURIComponent(texto)}`;
-      a.removeAttribute("aria-disabled");
-      a.querySelector("[data-wa-pendiente]")?.remove();
-    } else {
-      a.href = "https://www.facebook.com/ACMokewa/";
-      a.title = "WhatsApp oficial por confirmar: mientras tanto abre la página de Facebook del club";
-    }
+  for (const a of raiz.querySelectorAll("[data-contacto]")) {
+    const e = enlaceContacto(wa, a.dataset.mensaje, a.dataset.accion);
+    a.href = e.href;
+    a.dataset.tipo = e.tipo;
+    a.setAttribute("aria-label", e.aria);
+    const t = a.querySelector(".contacto-texto");
+    if (t) t.textContent = e.texto;
   }
 }
 

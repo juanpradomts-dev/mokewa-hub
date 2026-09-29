@@ -12,7 +12,7 @@ const proximos = club.proximos.map((id) => club.torneos.find((x) => x.id === id)
 const base = [
   ultimo && {
     fecha: ultimo.dia,
-    titulo: `${ultimo.ganador} gana «${ultimo.nombre}»`,
+    titulo: ultimo.ganador_sensible ? `Se jugó «${ultimo.nombre}»` : `${ultimo.ganador} gana «${ultimo.nombre}»`,
     cuerpo: `${ultimo.jugadores} jugadores disputaron el último torneo online del club (${ultimo.ritmo.texto}). Podio: ${ultimo.podio.map((p) => `${p.puesto}.º ${p.u} (${p.puntos} pts)`).join(", ")}.`,
     fuente: ultimo.url,
     fuenteTexto: "Resultados en Lichess",

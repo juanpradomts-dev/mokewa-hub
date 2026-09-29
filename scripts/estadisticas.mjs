@@ -9,6 +9,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { crearReglas, nombrePublico } from "../src/lib/jugadores.js";
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DIR = path.join(RAIZ, "data", "lichess");
@@ -53,7 +54,8 @@ const FORMATOS = [
 ];
 const formatoDe = (nombre) => (FORMATOS.find(([, re]) => re.test(nombre)) ?? ["Otros"])[0];
 
-export function calcular({ arenas, suizos, resultados, equipo, cuenta, meta }, ahora = new Date()) {
+export function calcular({ arenas, suizos, resultados, equipo, cuenta, meta }, ahora = new Date(), config = {}) {
+  const reglas = crearReglas(config);
   const info = new Map();
   for (const t of suizos) {
     const d = aFecha(t.startsAt);
@@ -74,7 +76,8 @@ export function calcular({ arenas, suizos, resultados, equipo, cuenta, meta }, a
   }
   for (const t of info.values()) t.formato = formatoDe(t.nombre);
 
-  // Jugadores: se agrupa por usuario en minúsculas (Lichess no distingue mayúsculas).
+  // Jugadores: se agrupa por usuario en minúsculas (Lichess no distingue mayúsculas) y,
+  // si el club lo confirmó, las cuentas secundarias se suman a la principal (src/data/alias.json).
   const jug = new Map();
   const grafias = new Map();
   for (const r of resultados) {
@@ -82,7 +85,7 @@ export function calcular({ arenas, suizos, resultados, equipo, cuenta, meta }, a
     if (!t) continue;
     const podio = [];
     for (const x of r.res ?? []) {
-      const u = x.username.toLowerCase();
+      const u = reglas.clave(x.username);
       const g = grafias.get(u) ?? new Map();
       g.set(x.username, (g.get(x.username) ?? 0) + 1);
       grafias.set(u, g);
@@ -91,22 +94,33 @@ export function calcular({ arenas, suizos, resultados, equipo, cuenta, meta }, a
       if (x.rank <= 3) podio.push({ u, puesto: x.rank, puntos: x.points ?? x.score ?? null });
     }
     podio.sort((a, b) => a.puesto - b.puesto);
-    t.podio = podio;
+    t.podio = podio.filter((p, i) => podio.findIndex((q) => q.u === p.u) === i);
     t.ganador = podio.find((p) => p.puesto === 1)?.u ?? null;
     t.con_resultados = (r.res ?? []).length;
   }
-  const mostrar = (u) => [...(grafias.get(u)?.entries() ?? [[u, 1]])].sort((a, b) => b[1] - a[1])[0][0];
+  // Grafía: la del alias principal o la más usada; luego se enmascara (DNI) o se reserva (ocultos).
+  const grafia = (u) => reglas.grafiaPrincipal(u) ?? [...(grafias.get(u)?.entries() ?? [[u, 1]])].sort((a, b) => b[1] - a[1])[0][0];
+  const mostrar = (u) => nombrePublico(grafia(u), { oculto: reglas.oculto(u) });
   for (const t of info.values()) {
     t.podio = (t.podio ?? []).map((p) => ({ ...p, u: mostrar(p.u) }));
-    if (t.ganador) t.ganador = mostrar(t.ganador);
+    if (t.ganador) {
+      t.ganador_sensible = reglas.sensible(t.ganador) || reglas.oculto(t.ganador);
+      t.ganador = mostrar(t.ganador);
+    }
   }
 
   const perfiles = [...jug.values()].map((j) => {
+    // Con alias fusionados, un mismo torneo puede venir dos veces: se deja el mejor puesto.
+    const porTorneo = new Map();
+    for (const h of j.hist) if (!porTorneo.has(h.id) || h.puesto < porTorneo.get(h.id).puesto) porTorneo.set(h.id, h);
+    j.hist = [...porTorneo.values()];
     const anios = [...new Set(j.hist.map((h) => h.anio))].sort();
     j.hist.sort((a, b) => a.dia.localeCompare(b.dia));
     return {
       u: mostrar(j.u),
       clave: j.u,
+      oculto: reglas.oculto(j.u),
+      sensible: reglas.sensible(j.u),
       torneos: new Set(j.hist.map((h) => h.id)).size,
       titulos: j.hist.filter((h) => h.puesto === 1).length,
       podios: j.hist.filter((h) => h.puesto <= 3).length,
@@ -146,6 +160,10 @@ export function calcular({ arenas, suizos, resultados, equipo, cuenta, meta }, a
   const orden = (k) => [...perfiles].sort((a, b) => b[k] - a[k] || b.torneos - a.torneos || a.u.localeCompare(b.u));
   const campeones = orden("titulos").filter((p) => p.titulos > 0);
   const fieles = orden("torneos").filter((p) => p.torneos >= 10);
+  const visibles = (lista) => lista.filter((p) => !p.oculto);
+  // Destacados (portada): sin nicks sensibles ni usuarios ocultos.
+  const destacados = campeones.filter((p) => !p.oculto && !p.sensible).slice(0, 3);
+  const titular = (p, n) => (p ? { u: p.u, n, sensible: p.sensible || p.oculto } : { u: null, n: null, sensible: false });
   const masPodios = orden("podios")[0];
   const masTemporadas = [...perfiles].sort((a, b) => b.temporadas.length - a.temporadas.length || b.torneos - a.torneos)[0];
   const mayorTorneo = [...torneos].sort((a, b) => b.jugadores - a.jugadores)[0];
@@ -200,14 +218,15 @@ export function calcular({ arenas, suizos, resultados, equipo, cuenta, meta }, a
       rating_mediano: mediana(suizosTerminados.map((t) => t.rating_promedio).filter(Boolean)),
     },
     records: {
-      mas_torneos: { u: fieles[0]?.u, n: fieles[0]?.torneos },
-      mas_titulos: { u: campeones[0]?.u, n: campeones[0]?.titulos },
-      mas_podios: { u: masPodios?.u, n: masPodios?.podios },
-      mas_temporadas: { u: masTemporadas?.u, n: masTemporadas?.temporadas.length },
+      mas_torneos: titular(fieles[0], fieles[0]?.torneos),
+      mas_titulos: titular(campeones[0], campeones[0]?.titulos),
+      mas_podios: titular(masPodios, masPodios?.podios),
+      mas_temporadas: titular(masTemporadas, masTemporadas?.temporadas.length),
       mayor_torneo: mayorTorneo ? { nombre: mayorTorneo.nombre, jugadores: mayorTorneo.jugadores, dia: mayorTorneo.dia, url: mayorTorneo.url } : null,
     },
-    campeones: campeones.map((p) => ({ u: p.u, titulos: p.titulos, podios: p.podios, torneos: p.torneos, temporadas: p.temporadas })),
-    fieles: fieles.map((p) => ({ u: p.u, torneos: p.torneos, temporadas: p.temporadas.length })),
+    campeones: visibles(campeones).map((p) => ({ u: p.u, titulos: p.titulos, podios: p.podios, torneos: p.torneos, temporadas: p.temporadas, ...(p.sensible && { sensible: true }) })),
+    fieles: visibles(fieles).map((p) => ({ u: p.u, torneos: p.torneos, temporadas: p.temporadas.length, ...(p.sensible && { sensible: true }) })),
+    destacados: destacados.map((p) => ({ u: p.u, titulos: p.titulos, podios: p.podios, torneos: p.torneos })),
     temporadas,
     formatos,
     torneos: torneos.map(({ rating_promedio, estado, ...t }) => t),
@@ -218,6 +237,7 @@ export function calcular({ arenas, suizos, resultados, equipo, cuenta, meta }, a
       por_recuperar: porRecuperar.length,
       criterio_recuperar: `Jugaron por primera vez en ${anioMax - 3} o antes y no compitieron en ${anioMax - 1} ni ${anioMax}.`,
       meses_sin_torneo_online: null,
+      alias_fusionados: reglas.fusionadas,
     },
     cuenta_club: cuentaClub,
   };
@@ -227,7 +247,7 @@ export function calcular({ arenas, suizos, resultados, equipo, cuenta, meta }, a
   const jugadores = {
     actualizado_en: club.actualizado_en,
     torneos: indiceTorneos,
-    jugadores: perfiles
+    jugadores: visibles(perfiles)
       .sort((a, b) => b.torneos - a.torneos || a.u.localeCompare(b.u))
       .map((p) => ({ u: p.u, t: p.torneos, c: p.titulos, p: p.podios, m: p.mejor, a: p.temporadas, h: p.hist.map((h) => [h.id, h.puesto, h.puntos]) })),
   };
@@ -243,7 +263,13 @@ async function main() {
     cuenta: await leerJson(path.join(DIR, "cuenta_club.json"), null),
     meta: await leerJson(path.join(DIR, "meta.json"), null),
   };
-  const { club, jugadores } = calcular(datos);
+  const alias = await leerJson(path.join(RAIZ, "src", "data", "alias.json"), { alias: [] });
+  const privacidad = await leerJson(path.join(RAIZ, "src", "data", "privacidad.json"), {});
+  const { club, jugadores } = calcular(datos, new Date(), {
+    alias: alias.alias,
+    ocultos: privacidad.ocultos ?? [],
+    sensibles: privacidad.nicks_sensibles ?? [],
+  });
   await mkdir(path.join(RAIZ, "src", "data"), { recursive: true });
   await mkdir(path.join(RAIZ, "public", "datos"), { recursive: true });
   await writeFile(path.join(RAIZ, "src", "data", "club.json"), JSON.stringify(club), "utf8");

@@ -58,22 +58,22 @@ const tramosFieles = [
         <div class="tarjeta record">
           <span class="record-que">Más torneos jugados</span>
           <strong class="record-num">{r.mas_torneos.n}</strong>
-          <a href={ficha(r.mas_torneos.u)}>{r.mas_torneos.u}</a>
+          {r.mas_torneos.sensible ? <a href="#campeones">Ver en la lista completa</a> : <a href={ficha(r.mas_torneos.u)}>{r.mas_torneos.u}</a>}
         </div>
         <div class="tarjeta record">
           <span class="record-que">Más títulos</span>
           <strong class="record-num">{r.mas_titulos.n}</strong>
-          <a href={ficha(r.mas_titulos.u)}>{r.mas_titulos.u}</a>
+          {r.mas_titulos.sensible ? <a href="#campeones">Ver en la lista completa</a> : <a href={ficha(r.mas_titulos.u)}>{r.mas_titulos.u}</a>}
         </div>
         <div class="tarjeta record">
           <span class="record-que">Más podios</span>
           <strong class="record-num">{r.mas_podios.n}</strong>
-          <a href={ficha(r.mas_podios.u)}>{r.mas_podios.u}</a>
+          {r.mas_podios.sensible ? <a href="#campeones">Ver en la lista completa</a> : <a href={ficha(r.mas_podios.u)}>{r.mas_podios.u}</a>}
         </div>
         <div class="tarjeta record">
           <span class="record-que">Más temporadas compitiendo</span>
           <strong class="record-num">{r.mas_temporadas.n}</strong>
-          <a href={ficha(r.mas_temporadas.u)}>{r.mas_temporadas.u}</a>
+          {r.mas_temporadas.sensible ? <a href="#campeones">Ver en la lista completa</a> : <a href={ficha(r.mas_temporadas.u)}>{r.mas_temporadas.u}</a>}
         </div>
         <div class="tarjeta record">
           <span class="record-que">Suizo más concurrido</span>
