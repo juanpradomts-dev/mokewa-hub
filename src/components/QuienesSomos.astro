@@ -5,7 +5,6 @@
 import club from "../data/club.json";
 import contenido from "../data/contenido.json";
 import { valor, esProduccion } from "../lib/contenido.js";
-import { LEMA } from "../lib/club.js";
 
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 const t = club.totales;
@@ -21,7 +20,7 @@ const bloques = (["mision", "vision"] as const)
 <div class="quienes">
   <div class="quienes-texto">
     <p class="antetitulo">Quiénes somos</p>
-    <h2>Ajedrez Club Mokewa, <span class="lema">{LEMA.toLowerCase()}</span></h2>
+    <h2>Un club que forma y <span class="lema">compite</span></h2>
     <p>
       Somos un club de ajedrez de Moquegua que enseña por niveles —básico, intermedio y avanzado— y organiza torneos desde {t.desde}, entre ellos un torneo oficial válido para el rating FIDE (2024).
     </p>

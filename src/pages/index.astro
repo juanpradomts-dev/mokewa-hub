@@ -23,6 +23,15 @@ const mapa = valor("mapa");
 <Base titulo="Inicio" seccion="inicio" descripcion="Academia de ajedrez en Moquegua: clases por niveles, torneos todo el año y una comunidad que compite desde 2020.">
   <!-- 1. HÉROE -->
   <section class="heroe">
+    <div class="piezas-fondo" aria-hidden="true">
+      <span class="pieza-deco glifo" style="--x:8%;--y:18%;--t:2.6rem;--p:0.6;--r:-12deg">♟&#xfe0e;</span>
+      <span class="pieza-deco glifo" style="--x:46%;--y:8%;--t:1.8rem;--p:1.1;--r:10deg">♝&#xfe0e;</span>
+      <span class="pieza-deco glifo" style="--x:92%;--y:78%;--t:2.2rem;--p:0.8;--r:14deg">♜&#xfe0e;</span>
+      <span class="pieza-deco glifo" style="--x:56%;--y:88%;--t:1.6rem;--p:1.4;--r:-8deg">♞&#xfe0e;</span>
+      <span class="casilla-fondo" style="--x:30%;--y:70%;--p:0.9"></span>
+      <span class="casilla-fondo" style="--x:72%;--y:14%;--p:1.3"></span>
+      <span class="aro-fondo" style="--x:84%;--y:40%;--p:0.5"></span>
+    </div>
     <div class="contenedor heroe-grid">
       <div class="escena" data-viaje-desde aria-hidden="true">
         <div class="halo"></div>
@@ -38,15 +47,18 @@ const mapa = valor("mapa");
         <div class="sombra"></div>
       </div>
       <div class="heroe-texto">
-        <p class="antetitulo">Academia de ajedrez en Moquegua</p>
-        <h1>Que tu hijo gane concentración, disciplina y ganas de competir</h1>
-        <p class="heroe-lema">«{LEMA}»</p>
-        <p class="heroe-bajada">Clases por niveles y torneos con el Ajedrez Club Mokewa, en Moquegua.</p>
-        <div class="grupo-botones">
+        <p class="antetitulo entra" style="--d:0">Academia de ajedrez en Moquegua</p>
+        <h1 class="titulo-club">
+          <span class="titulo-pre entra" style="--d:1">Ajedrez Club</span>
+          <span class="titulo-nombre entra" style="--d:2">Mokewa</span>
+        </h1>
+        <p class="heroe-lema entra" style="--d:3"><span>{LEMA}</span></p>
+        <p class="heroe-bajada entra" style="--d:4">Clases por niveles y torneos presenciales para niños, jóvenes y adultos.</p>
+        <div class="grupo-botones entra" style="--d:5">
           <BotonContacto cta />
           <a class="boton boton-secundario" href={`${b}/torneos/`}>Ver torneos</a>
         </div>
-        <dl class="prueba-social">
+        <dl class="prueba-social entra" style="--d:6">
           <div><dt>+{anios} años</dt><dd>organizando torneos (desde {t.desde})</dd></div>
           <div><dt>3 niveles</dt><dd>básico, intermedio y avanzado</dd></div>
           <div><dt>FIDE</dt><dd><a href="https://ratings.fide.com/report.phtml?event=350802" rel="noopener" target="_blank">torneo oficial con rating</a> en 2024</dd></div>
@@ -189,7 +201,6 @@ const mapa = valor("mapa");
   }
   .heroe h1 {
     color: var(--tinta);
-    font-size: clamp(2rem, 6.2vw, 3.3rem);
   }
   .heroe-lema {
     font-family: var(--serif);
@@ -290,7 +301,6 @@ const mapa = valor("mapa");
     height: 100%;
     transform-style: preserve-3d;
     transform: rotateX(var(--rx, 0deg)) rotateY(calc(var(--giro, 0deg) + var(--ry, 0deg))) rotateZ(var(--inclina, 0deg));
-    transition: transform 0.2s ease-out;
   }
   .cara,
   .dorso,
@@ -561,5 +571,139 @@ const mapa = valor("mapa");
     align-items: center;
     min-height: 44px;
     font-weight: 600;
+  }
+
+  /* ---------- Héroe dinámico ----------
+     Movimientos suaves y de poca amplitud: se ven para todos (el PC del dueño reporta
+     «reducir movimiento» y aun así debe verlos). Nada parpadea ni se mueve bruscamente. */
+
+  /* Título como el logo: «Ajedrez Club» pequeño y «Mokewa» grande */
+  .titulo-club {
+    display: grid;
+    margin: 0 0 0.2em;
+    line-height: 0.95;
+  }
+  .titulo-pre {
+    font-size: clamp(1.4rem, 4.6vw, 2.1rem);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--tinta);
+  }
+  .titulo-nombre {
+    font-size: clamp(3.5rem, 14vw, 6.6rem);
+    font-weight: 750;
+    letter-spacing: -0.025em;
+    color: #b0500a;
+  }
+  .heroe-lema {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(1.2rem, 3.6vw, 1.5rem);
+    color: var(--tinta);
+    margin: 0 0 0.5em;
+  }
+  .heroe-lema span {
+    background: linear-gradient(#f28a1e, #f28a1e) no-repeat 0 92% / 0% 0.18em;
+    animation: subraya 0.9s 0.75s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+  @keyframes subraya {
+    to {
+      background-size: 100% 0.18em;
+    }
+  }
+
+  /* Entrada escalonada */
+  .entra {
+    animation: entra 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--d, 0) * 90ms);
+  }
+  @keyframes entra {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+  }
+
+  /* Piezas del fondo: flotan despacio y se desplazan con el cursor y el scroll (profundidad --p) */
+  .piezas-fondo {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .pieza-deco,
+  .casilla-fondo,
+  .aro-fondo {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    transform: translate3d(calc(var(--mx, 0) * var(--p) * 22px), calc(var(--my, 0) * var(--p) * 22px + var(--sy, 0) * var(--p) * -0.12px), 0)
+      rotate(var(--r, 0deg));
+    animation: deriva-fondo 9s ease-in-out infinite;
+    animation-delay: calc(var(--p) * -4s);
+  }
+  .pieza-deco {
+    font-size: var(--t);
+    line-height: 1;
+    color: rgb(166 75 8 / 0.2);
+  }
+  .casilla-fondo {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgb(242 138 30 / 0.45);
+    border-radius: 3px;
+    --r: 45deg;
+  }
+  .aro-fondo {
+    width: 70px;
+    height: 70px;
+    border: 2px dashed rgb(166 75 8 / 0.2);
+    border-radius: 50%;
+  }
+  @keyframes deriva-fondo {
+    0%, 100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -10px;
+    }
+  }
+  @media (max-width: 899px) {
+    .pieza-deco:nth-child(2),
+    .aro-fondo {
+      display: none;
+    }
+  }
+
+  /* Moneda: brillo que la recorre y halo que respira */
+  .cara::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(115deg, transparent 38%, rgb(255 255 255 / 0.8) 50%, transparent 62%) no-repeat;
+    background-size: 260% 100%;
+    background-position: 130% 0;
+    animation: brillo 7s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes brillo {
+    0%, 55% {
+      background-position: 130% 0;
+    }
+    80%, 100% {
+      background-position: -30% 0;
+    }
+  }
+  .halo {
+    animation: respira 5.5s ease-in-out infinite;
+  }
+  @keyframes respira {
+    0%, 100% {
+      scale: 0.94;
+    }
+    50% {
+      scale: 1.06;
+    }
   }
 </style>

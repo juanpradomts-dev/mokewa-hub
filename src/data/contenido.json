@@ -6,7 +6,7 @@
       "valor": null,
       "tipo": "textarea",
       "grupo": "Quiénes somos",
-      "propuesta": "Formar ajedrecistas de todas las edades en Moquegua, con clases por niveles y torneos que desarrollan concentración, disciplina y espíritu competitivo.",
+      "propuesta": "Que cada niño y joven de Moquegua gane concentración, disciplina y ganas de competir, con clases por niveles y torneos presenciales para todas las edades.",
       "ayuda": "Mientras quede vacío, la demo muestra una propuesta marcada «por confirmar»; en producción no se muestra."
     },
     "vision": {
