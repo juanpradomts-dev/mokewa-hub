@@ -1,15 +1,19 @@
 ---
-// Barras de torneos online por año (una sola serie: sin leyenda, el título la nombra).
-// El año en curso va con textura porque está incompleto.
+// Trayectoria online del club: barras por año (una sola serie, sin leyenda).
+// Se destaca el año récord y se marca el tramo del formato actual. No se oculta ningún año:
+// solo cambia el encuadre. El año en curso va con textura porque está incompleto.
 import { miles } from "../lib/formato.js";
 
 interface Props {
   temporadas: { anio: number; torneos: number; jugadores: number; participaciones: number }[];
   anioParcial?: number;
   corte?: string;
+  destacar?: number;
+  etiquetaDestacado?: string;
+  tramo?: { desde: number; hasta: number; texto: string };
 }
-const { temporadas, anioParcial, corte = "" } = Astro.props;
-const W = 640, H = 260, M = { t: 28, r: 8, b: 34, l: 8 };
+const { temporadas, anioParcial, corte = "", destacar, etiquetaDestacado = "", tramo } = Astro.props;
+const W = 640, H = 280, M = { t: 44, r: 8, b: 34, l: 8 };
 const max = Math.max(...temporadas.map((t) => t.torneos));
 const paso = (W - M.l - M.r) / temporadas.length;
 const ancho = Math.min(56, paso - 14);
@@ -33,15 +37,33 @@ const barra = (x: number, v: number) => {
       </pattern>
     </defs>
     <line x1={M.l} x2={W - M.r} y1={base} y2={base} class="g-base"></line>
+    {tramo && (() => {
+      const i0 = temporadas.findIndex((t) => t.anio === tramo.desde);
+      const i1 = temporadas.findIndex((t) => t.anio === tramo.hasta);
+      if (i0 < 0 || i1 < 0) return null;
+      const x0 = M.l + i0 * paso + 6, x1 = M.l + (i1 + 1) * paso - 6;
+      const alto = Math.max(...temporadas.slice(i0, i1 + 1).map((t) => t.torneos));
+      const yT = y(alto) - 30;
+      return (
+        <g class="g-tramo">
+          <path d={`M${x0},${yT + 8}V${yT}H${x1}V${yT + 8}`} />
+          <text x={(x0 + x1) / 2} y={yT - 7} text-anchor="middle">{tramo.texto}</text>
+        </g>
+      );
+    })()}
     {
       temporadas.map((t, i) => {
         const x = M.l + i * paso + (paso - ancho) / 2;
         const parcial = t.anio === anioParcial;
+        const destacado = t.anio === destacar;
         return (
-          <g class="g-barra" tabindex="0" aria-label={`${t.anio}: ${t.torneos} torneos, ${t.jugadores} jugadores`}>
+          <g class:list={["g-barra", { destacado }]} tabindex="0" aria-label={`${t.anio}: ${t.torneos} torneos, ${t.jugadores} jugadores${destacado ? `, ${etiquetaDestacado}` : ""}`}>
             <rect x={M.l + i * paso} y={M.t - 20} width={paso} height={H - M.t + 20} fill="transparent" />
-            <path d={barra(x, t.torneos)} fill={parcial ? "url(#rayado)" : "var(--g-barra)"} />
+            <path d={barra(x, t.torneos)} fill={parcial ? "url(#rayado)" : destacado ? "var(--g-destacado)" : "var(--g-barra)"} />
             <text x={x + ancho / 2} y={y(t.torneos) - 8} class="g-valor" text-anchor="middle">{t.torneos}</text>
+            {destacado && etiquetaDestacado && (
+              <text x={x + ancho / 2} y={y(t.torneos) - 26} class="g-etiqueta" text-anchor="middle">{etiquetaDestacado}</text>
+            )}
             <text x={x + ancho / 2} y={H - 12} class="g-anio" text-anchor="middle">{t.anio}{parcial ? "*" : ""}</text>
             <foreignObject x={Math.min(Math.max(x + ancho / 2 - 80, 0), W - 160)} y={Math.max(y(t.torneos) - 74, 0)} width="160" height="62" class="g-tip">
               <div>
@@ -55,7 +77,7 @@ const barra = (x: number, v: number) => {
     }
   </svg>
   <figcaption>
-    {`Torneos online del club en Lichess (arena + suizo). ${anioParcial ? `*${anioParcial}: datos hasta el ${corte}. ` : ""}Fuente: API pública de Lichess, cálculo automático.`}
+    {`Torneos online del club en Lichess por año (arena + suizo). ${anioParcial ? `*${anioParcial}: datos hasta el ${corte}. ` : ""}Fuente: API pública de Lichess, cálculo automático.`}
   </figcaption>
   <details class="g-tabla">
     <summary>Ver como tabla</summary>
@@ -75,7 +97,23 @@ const barra = (x: number, v: number) => {
 <style>
   .grafico {
     margin: 0;
-    --g-barra: var(--vino);
+    --g-barra: color-mix(in srgb, var(--suave) 85%, var(--papel));
+    --g-destacado: var(--vino);
+  }
+  .g-etiqueta {
+    font: 700 12px var(--sans);
+    fill: var(--vino);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .g-tramo path {
+    fill: none;
+    stroke: var(--suave);
+    stroke-width: 1.2;
+  }
+  .g-tramo text {
+    font: 600 12.5px var(--sans);
+    fill: var(--tinta);
   }
   svg {
     width: 100%;
