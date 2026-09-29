@@ -124,7 +124,7 @@ form.addEventListener("submit", async (e) => {
     <p class="ayuda">Código: <code>${ins.id.slice(0, 8).toUpperCase()}</code>. En la versión oficial llega un correo a ${esc(ins.tutor_correo)} con esta confirmación y otro cuando se valide el pago.</p>
     <p class="tiempo">Te tomó ${tiempo} inscribirte.</p>
     <div class="grupo-botones">
-      <a class="boton boton-secundario" href="${document.body.dataset.base}/panel/">Ver cómo lo valida el organizador →</a>
+      ${document.body.dataset.modo === "produccion" ? "" : `<a class="boton boton-secundario" href="${document.body.dataset.base}/panel/">Demo: ver cómo lo valida el organizador →</a>`}
       <button class="boton boton-secundario" type="button" id="otra">Inscribir a otra persona</button>
     </div></div>`;
   $("otra").addEventListener("click", () => location.reload());

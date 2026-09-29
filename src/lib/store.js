@@ -88,6 +88,13 @@ export function pintarCampos(raiz = document) {
       el.title = "Dato pendiente: el club lo completa desde el panel";
     }
   }
+  const conClase = !!contenido("clase_prueba");
+  for (const a of raiz.querySelectorAll("[data-cta]")) {
+    a.dataset.accion = conClase ? "Clase de prueba" : "Pedir informes";
+    a.dataset.mensaje = conClase
+      ? "Hola, quisiera agendar una clase de prueba de ajedrez."
+      : "Hola, quisiera información sobre las clases de ajedrez.";
+  }
   const wa = contenido("whatsapp");
   for (const a of raiz.querySelectorAll("[data-contacto]")) {
     const e = enlaceContacto(wa, a.dataset.mensaje, a.dataset.accion);

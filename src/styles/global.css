@@ -298,6 +298,14 @@ main:focus {
 .menu-movil a[aria-current="page"] {
   color: var(--vino);
 }
+.menu-movil-cta {
+  padding-top: 14px;
+}
+.menu-movil-cta .boton {
+  width: 100%;
+  border-bottom: 0;
+  color: #111;
+}
 .cabecera .cta-cabecera {
   display: none;
 }

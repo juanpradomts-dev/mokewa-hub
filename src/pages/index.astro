@@ -165,7 +165,7 @@ const hitos = [
           <p class="antetitulo">Salón de la Fama</p>
           <h2>{t.campeones} campeones. ¿Estás tú?</h2>
         </div>
-        <form class="buscador" action={`${b}/salon-de-la-fama/`} method="get" role="search">
+        <form class="buscador" action={`${b}/el-club/`} method="get" role="search">
           <label class="visually-hidden" for="q-inicio">Busca tu usuario de Lichess</label>
           <input id="q-inicio" name="q" type="search" placeholder="Tu usuario de Lichess" autocomplete="off" />
           <button class="boton boton-primario" type="submit">Buscar</button>
@@ -180,7 +180,7 @@ const hitos = [
           </li>
         ))}
       </ol>
-      <p><a class="boton boton-secundario" href={`${b}/salon-de-la-fama/`}>Ver los {t.campeones} campeones, récords y fieles →</a></p>
+      <p><a class="boton boton-secundario" href={`${b}/el-club/#salon`}>Ver los {t.campeones} campeones, récords y fieles →</a></p>
     </div>
   </section>
 
@@ -204,7 +204,7 @@ const hitos = [
         </div>
         <div class="grupo-botones">
           <a class="boton boton-primario" href={club.equipo.url} rel="noopener" target="_blank">Unirme al equipo en Lichess</a>
-          <a class="boton boton-secundario" href={`${b}/comunidad/`}>Puzzle del día</a>
+          <a class="boton boton-secundario" href={`${b}/el-club/#comunidad`}>Puzzle del día</a>
         </div>
       </div>
     </div>

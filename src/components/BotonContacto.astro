@@ -5,12 +5,21 @@ import contenido from "../data/contenido.json";
 import { enlaceContacto } from "../lib/contacto.js";
 
 interface Props {
-  mensaje: string;
+  mensaje?: string;
+  cta?: boolean;
   accion?: string;
   variante?: "primario" | "secundario" | "claro" | "flotante";
   clase?: string;
 }
-const { mensaje, accion = "", variante = "primario", clase = "" } = Astro.props;
+const { cta = false, variante = "primario", clase = "" } = Astro.props;
+// El botón principal dice «Clase de prueba» solo si el club confirmó que la ofrece.
+const conClase = !!contenido.campos.clase_prueba?.valor;
+const accion = cta ? (conClase ? "Clase de prueba" : "Pedir informes") : (Astro.props.accion ?? "");
+const mensaje = cta
+  ? conClase
+    ? "Hola, quisiera agendar una clase de prueba de ajedrez."
+    : "Hola, quisiera información sobre las clases de ajedrez."
+  : (Astro.props.mensaje ?? "Hola, quisiera información sobre el Ajedrez Club Mokewa.");
 const e = enlaceContacto(contenido.campos.whatsapp?.valor, mensaje, accion);
 const flotante = variante === "flotante";
 ---
@@ -18,6 +27,7 @@ const flotante = variante === "flotante";
 <a
   class={`${flotante ? "contacto-flotante no-imprimir" : `boton boton-${variante}`} boton-contacto ${clase}`}
   data-contacto
+  data-cta={cta ? "" : undefined}
   data-mensaje={mensaje}
   data-accion={accion}
   data-tipo={e.tipo}

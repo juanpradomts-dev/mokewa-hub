@@ -1,0 +1,68 @@
+---
+import Base from "../layouts/Base.astro";
+import Historia from "../components/club/Historia.astro";
+import Salon from "../components/club/Salon.astro";
+import Comunidad from "../components/club/Comunidad.astro";
+import club from "../data/club.json";
+
+const t = club.totales;
+---
+
+<Base titulo="El Club" seccion="club" descripcion={`Historia, Salón de la Fama y comunidad del Ajedrez Club Mokewa: ${t.torneos} torneos y ${t.campeones} campeones desde ${t.desde}.`}>
+  <section class="seccion club-cabeza">
+    <div class="contenedor">
+      <p class="antetitulo">El Club</p>
+      <h1>Historia, campeones y comunidad</h1>
+      <nav class="subnav" aria-label="Secciones de El Club">
+        <a href="#historia">Historia</a>
+        <a href="#salon">Salón de la Fama</a>
+        <a href="#comunidad">Comunidad</a>
+      </nav>
+    </div>
+  </section>
+
+  <section class="seccion bloque" id="historia">
+    <div class="contenedor"><Historia /></div>
+  </section>
+
+  <section class="seccion bloque" id="salon">
+    <div class="contenedor"><Salon /></div>
+  </section>
+
+  <section class="seccion bloque" id="comunidad">
+    <div class="contenedor"><Comunidad /></div>
+  </section>
+</Base>
+
+<style>
+  .club-cabeza {
+    padding-bottom: 0;
+  }
+  .club-cabeza h1 {
+    margin-bottom: 16px;
+  }
+  .subnav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .subnav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--linea);
+    border-radius: 999px;
+    background: var(--papel);
+    color: var(--tinta);
+    text-decoration: none;
+    font-weight: 560;
+  }
+  .subnav a:hover {
+    border-color: var(--vino);
+    color: var(--vino);
+  }
+  .bloque {
+    scroll-margin-top: 70px;
+  }
+</style>

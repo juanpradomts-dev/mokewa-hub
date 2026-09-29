@@ -1,0 +1,27 @@
+---
+// Página vieja que ahora vive en otra ruta: conserva ?q= y el ancla al redirigir.
+interface Props {
+  a: string;
+  ancla?: string;
+}
+const { a, ancla = "" } = Astro.props;
+const destino = `${import.meta.env.BASE_URL.replace(/\/$/, "")}${a}`;
+---
+
+<!doctype html>
+<html lang="es-PE">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Esta página se movió · Ajedrez Club Mokewa</title>
+    <link rel="canonical" href={destino} />
+    <script is:inline define:vars={{ destino, ancla }}>
+      location.replace(destino + location.search + (location.hash || ancla));
+    </script>
+    <meta http-equiv="refresh" content={`0;url=${destino}${ancla}`} />
+  </head>
+  <body>
+    <p>Esta página ahora está en <a href={`${destino}${ancla}`}>El Club</a>.</p>
+  </body>
+</html>

@@ -17,12 +17,11 @@ interface Props {
 const { titulo, descripcion = "Ajedrez Club Mokewa, Moquegua: academia por niveles, torneos, resultados y la historia del club desde 2020.", seccion = "", sinWhatsapp = false } = Astro.props;
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 const url = (p: string) => `${b}${p}`;
+// Menú de 4 + botón de contacto. El inicio se alcanza con el logo.
 const enlaces = [
-  ["inicio", "/", "Inicio"],
   ["academia", "/academia/", "Academia"],
   ["torneos", "/torneos/", "Torneos"],
-  ["fama", "/salon-de-la-fama/", "Salón de la Fama"],
-  ["comunidad", "/comunidad/", "Comunidad"],
+  ["club", "/el-club/", "El Club"],
   ["contacto", "/contacto/", "Contacto"],
 ];
 const tituloCompleto = seccion === "inicio" ? "Ajedrez Club Mokewa · Moquegua" : `${titulo} · Ajedrez Club Mokewa`;
@@ -57,10 +56,12 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
   </head>
   <body data-base={b} data-modo={MODO}>
     <a class="saltar" href="#contenido">Saltar al contenido</a>
-    <div class="aviso-demo">
-      Demostración privada preparada para el Ajedrez Club Mokewa · aún no es la web oficial ·{" "}
-      <a href={url("/acerca-de-la-demo/")}>qué es esto</a>
-    </div>
+    {!esProduccion && (
+      <div class="aviso-demo">
+        Demostración privada preparada para el Ajedrez Club Mokewa · aún no es la web oficial ·{" "}
+        <a href={url("/acerca-de-la-demo/")}>qué es esto</a>
+      </div>
+    )}
     <header class="cabecera">
       <div class="contenedor">
         <a class="marca" href={url("/")} aria-label="Ajedrez Club Mokewa, ir al inicio">
@@ -70,14 +71,14 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
         <nav class="nav" aria-label="Principal">
           {enlaces.map(([id, href, texto]) => <a href={url(href)} aria-current={seccion === id ? "page" : undefined}>{texto}</a>)}
         </nav>
-        <a class="boton boton-primario boton-chico cta-cabecera" href={url("/torneos/verano-2027/#inscripcion")}>Inscribirme</a>
+        <BotonContacto cta clase="boton-chico cta-cabecera" />
         <button class="boton-menu" type="button" aria-expanded="false" aria-controls="menu-movil" aria-label="Abrir menú">
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
         </button>
       </div>
       <nav class="menu-movil" id="menu-movil" aria-label="Principal (móvil)">
         {enlaces.map(([id, href, texto]) => <a href={url(href)} aria-current={seccion === id ? "page" : undefined}>{texto}</a>)}
-        <a href={url("/torneos/verano-2027/#inscripcion")}>Inscribirme a un torneo →</a>
+        <div class="menu-movil-cta"><BotonContacto cta /></div>
       </nav>
     </header>
 
@@ -103,10 +104,10 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
             <ul>
               <li><a href={url("/academia/")}>Academia</a></li>
               <li><a href={url("/torneos/")}>Torneos y resultados</a></li>
-              <li><a href={url("/salon-de-la-fama/")}>Salón de la Fama</a></li>
-              <li><a href={url("/jugador/")}>Ficha de jugador</a></li>
+              <li><a href={url("/el-club/#salon")}>Salón de la Fama</a></li>
+              <li><a href={url("/el-club/#comunidad")}>Comunidad en Lichess</a></li>
+              <li><a href={url("/contacto/")}>Contacto</a></li>
               <li><a href={url("/privacidad/")}>Privacidad y datos de menores</a></li>
-              <li><a href={url("/panel/")}>Panel del organizador</a></li>
             </ul>
           </div>
           <div>
@@ -115,9 +116,9 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
             {!esProduccion && <p>Lo que aún no está verificado aparece marcado <span class="pc">por confirmar</span>.</p>}
           </div>
         </div>
-        <p class="legal">
+        {!esProduccion && <p class="legal">
           Demostración privada, no indexada, preparada sin costo para el club. No se difunde ni se presenta como web oficial hasta que el Ajedrez Club Mokewa la apruebe. En esta demo solo se muestran usuarios públicos de Lichess: ningún nombre real ni foto.
-        </p>
+        </p>}
       </div>
     </footer>
 
