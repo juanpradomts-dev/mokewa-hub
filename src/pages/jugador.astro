@@ -73,7 +73,7 @@ const cuenta = club.cuenta_club;
     const j = d.jugadores.find((x: any) => x.u.toLowerCase() === u.toLowerCase());
     if (!j) {
       caja.innerHTML = `<div class="tarjeta bloque"><h1>No encontramos a «${esc(u)}»</h1>
-        <p>Ese usuario no aparece en los resultados de los torneos online del club. Prueba en el <a href="${base}/el-club/?q=${encodeURIComponent(u)}#salon">buscador del Salón de la Fama</a>.</p></div>`;
+        <p>Ese usuario no aparece en los resultados de los torneos online del club. Revisa cómo se escribe o busca su nombre en el <a href="${base}/torneos/#historial">historial de torneos</a>.</p></div>`;
       return;
     }
     document.title = `${j.u} · Ficha · Ajedrez Club Mokewa`;

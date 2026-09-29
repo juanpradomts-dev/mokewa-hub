@@ -14,7 +14,7 @@ export const tieneDigitosSensibles = (u) => /\d{7,}/.test(String(u ?? ""));
  * Reglas del club sobre sus jugadores.
  * - alias: [{ principal, secundarias: [], confirmado }] → solo se fusionan los confirmados.
  * - ocultos: usuarios que no se muestran en ningún listado (se siguen contando en los totales).
- * - sensibles: nicks que no van en la portada ni en destacados (sí en el Salón completo).
+ * - sensibles: nicks que no van en la portada ni en destacados (sí en los listados completos).
  */
 export function crearReglas({ alias = [], ocultos = [], sensibles = [] } = {}) {
   const aPrincipal = new Map();

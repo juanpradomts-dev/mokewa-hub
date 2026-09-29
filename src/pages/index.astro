@@ -1,6 +1,6 @@
 ---
 // Portada: el público principal es el padre de familia. Máximo 5 secciones:
-// héroe · academia · por qué Mokewa · orgullo del club · cierre.
+// héroe · academia · por qué Mokewa · cierre.
 import Base from "../layouts/Base.astro";
 import Caballo from "../components/Caballo.astro";
 import BotonContacto from "../components/BotonContacto.astro";
@@ -118,38 +118,7 @@ const mapa = valor("mapa");
     </div>
   </section>
 
-  <!-- 4. ORGULLO DEL CLUB -->
-  <section class="seccion">
-    <div class="contenedor">
-      <div class="encabezado">
-        <div>
-          <p class="antetitulo">Orgullo del club</p>
-          <h2>{t.campeones} campeones desde {t.desde}</h2>
-        </div>
-        <a class="ver-mas" href={`${b}/el-club/#salon`}>Ver el Salón de la Fama →</a>
-      </div>
-      <ol class="podio">
-        {club.destacados.map((c, i) => (
-          <li class="tarjeta campeon tarjeta-enlace">
-            <span class="puesto" aria-label={`Puesto ${i + 1}`}>{i + 1}</span>
-            <div>
-              <a class="enlace-tarjeta" href={`${b}/jugador/?u=${encodeURIComponent(c.u)}`}><strong>{c.u}</strong></a>
-              <span>{c.titulos} títulos · {c.podios} podios · {c.torneos} torneos</span>
-            </div>
-          </li>
-        ))}
-      </ol>
-      <form class="buscador tarjeta" action={`${b}/el-club/`} method="get" role="search">
-        <label for="q-inicio">¿Estás en el Salón? Busca tu usuario de Lichess</label>
-        <div class="fila">
-          <input id="q-inicio" name="q" type="search" placeholder="Tu usuario" autocomplete="off" spellcheck="false" />
-          <button class="boton boton-secundario" type="submit">Buscar</button>
-        </div>
-      </form>
-    </div>
-  </section>
-
-  <!-- 5. CIERRE -->
+  <!-- 4. CIERRE -->
   <section class="seccion cierre-seccion">
     <div class="contenedor">
       <div class="cierre tarjeta">
@@ -166,14 +135,6 @@ const mapa = valor("mapa");
 </Base>
 
 <script>
-  // Al enviar el buscador, ir directo a la sección del Salón.
-  document.querySelector<HTMLFormElement>(".buscador")?.addEventListener("submit", (e) => {
-    const f = e.currentTarget as HTMLFormElement;
-    const q = (f.querySelector("input") as HTMLInputElement).value.trim();
-    e.preventDefault();
-    location.href = `${f.action}${q ? `?q=${encodeURIComponent(q)}` : ""}#salon`;
-  });
-
   // Caballo viajero: del héroe a «Por qué Mokewa», girando con el scroll.
   import { iniciarViaje } from "../lib/viajero.js";
   iniciarViaje();
@@ -547,72 +508,6 @@ const mapa = valor("mapa");
     background: rgb(255 255 255 / 0.08);
     color: #fff;
     font-size: 1.8rem;
-  }
-
-  /* ---------- 4. Orgullo del club ---------- */
-  .podio {
-    list-style: none;
-    margin: 0 0 16px;
-    padding: 0;
-    display: grid;
-    gap: 10px;
-  }
-  @media (min-width: 820px) {
-    .podio {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-  .campeon {
-    display: flex;
-    gap: 14px;
-    align-items: center;
-    padding: 16px 18px;
-  }
-  .campeon div {
-    display: grid;
-    min-width: 0;
-  }
-  .campeon a {
-    color: var(--tinta);
-    text-decoration: none;
-    overflow-wrap: anywhere;
-    font-size: 1.08rem;
-  }
-  .campeon a:hover {
-    color: var(--vino);
-    text-decoration: underline;
-  }
-  .campeon span:not(.puesto) {
-    font-size: 0.88rem;
-    color: var(--suave);
-  }
-  .puesto {
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    flex: none;
-    border-radius: 50%;
-    background: var(--casilla);
-    font-family: var(--serif);
-    font-weight: 700;
-    font-size: 1.2rem;
-  }
-  .campeon:first-child .puesto {
-    background: #141211;
-    color: #fff;
-  }
-  .buscador label {
-    font-weight: 650;
-    display: block;
-    margin-bottom: 8px;
-  }
-  .fila {
-    display: flex;
-    gap: 8px;
-  }
-  .fila input {
-    min-width: 0;
   }
 
   /* ---------- 5. Cierre ---------- */
