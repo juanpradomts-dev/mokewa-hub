@@ -170,7 +170,7 @@ const tramosFieles = [
 
   async function cargar() {
     if (datos) return datos;
-    estado.textContent = "Cargando el historial…";
+    estado.innerHTML = '<span class="cargando"><span class="cargador" aria-hidden="true"></span>Cargando el historial…</span>';
     const res = await fetch(`${base}/datos/jugadores.json`);
     datos = await res.json();
     return datos;

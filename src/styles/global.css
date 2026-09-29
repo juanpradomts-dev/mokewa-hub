@@ -664,6 +664,28 @@ textarea[aria-invalid="true"] {
   font-size: 0.84rem;
 }
 
+/* ---------- Cargador: mini tablero 2×2 que alterna casillas (solo CSS) ---------- */
+.cargando {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--suave);
+}
+.cargador {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 4px;
+  background:
+    conic-gradient(var(--oro) 25%, var(--tinta) 0 50%, var(--oro) 0 75%, var(--tinta) 0) 0 0 / 100% 100%;
+  animation: cargador 0.9s steps(1) infinite;
+}
+@keyframes cargador {
+  50% {
+    transform: rotate(90deg);
+  }
+}
+
 /* ---------- WhatsApp flotante ---------- */
 .wa-flotante {
   position: fixed;
