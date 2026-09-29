@@ -1,0 +1,21 @@
+{
+  "_nota": "Datos que NO se pudieron verificar en fuentes públicas. valor=null → la web muestra «por confirmar». El club los completa desde el panel (sección Datos del club).",
+  "campos": {
+    "whatsapp": { "etiqueta": "WhatsApp oficial (con código 51)", "valor": null, "tipo": "tel", "grupo": "Contacto", "ayuda": "Solo números, p. ej. 51987654321. Activa los botones de WhatsApp de toda la web." },
+    "correo": { "etiqueta": "Correo del club", "valor": null, "tipo": "email", "grupo": "Contacto" },
+    "sede": { "etiqueta": "Sede (dirección)", "valor": null, "tipo": "text", "grupo": "Contacto", "ayuda": "Dirección donde se dictan las clases presenciales." },
+    "mapa": { "etiqueta": "Enlace de Google Maps de la sede", "valor": null, "tipo": "url", "grupo": "Contacto" },
+    "atencion": { "etiqueta": "Horario de atención", "valor": null, "tipo": "text", "grupo": "Contacto" },
+    "horario_basico": { "etiqueta": "Horario · nivel básico", "valor": null, "tipo": "text", "grupo": "Academia" },
+    "horario_intermedio": { "etiqueta": "Horario · nivel intermedio", "valor": null, "tipo": "text", "grupo": "Academia" },
+    "horario_avanzado": { "etiqueta": "Horario · nivel avanzado", "valor": null, "tipo": "text", "grupo": "Academia" },
+    "precio_mensual": { "etiqueta": "Mensualidad de la academia", "valor": null, "tipo": "text", "grupo": "Academia", "ayuda": "Tal como se debe mostrar, p. ej. «S/ 80 al mes»." },
+    "edad_minima": { "etiqueta": "Edad mínima para la academia", "valor": null, "tipo": "text", "grupo": "Academia" },
+    "entrenadores": { "etiqueta": "Entrenadores (nombres y títulos)", "valor": null, "tipo": "text", "grupo": "Academia" },
+    "verano_fecha": { "etiqueta": "Torneo de Verano 2027 · fecha", "valor": null, "tipo": "text", "grupo": "Torneo de Verano 2027" },
+    "verano_costo": { "etiqueta": "Torneo de Verano 2027 · inscripción", "valor": null, "tipo": "text", "grupo": "Torneo de Verano 2027" },
+    "verano_ritmo": { "etiqueta": "Torneo de Verano 2027 · ritmo de juego", "valor": null, "tipo": "text", "grupo": "Torneo de Verano 2027" },
+    "verano_cupo": { "etiqueta": "Torneo de Verano 2027 · cupo", "valor": null, "tipo": "text", "grupo": "Torneo de Verano 2027" },
+    "yape": { "etiqueta": "Yape / Plin: número y titular", "valor": null, "tipo": "text", "grupo": "Pagos" }
+  }
+}

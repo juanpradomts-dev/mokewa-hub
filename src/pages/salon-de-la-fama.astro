@@ -1,0 +1,335 @@
+---
+import Base from "../layouts/Base.astro";
+import club from "../data/club.json";
+import { miles, fechaLarga, fechaCorta } from "../lib/formato.js";
+
+const b = import.meta.env.BASE_URL.replace(/\/$/, "");
+const t = club.totales;
+const r = club.records;
+const ficha = (u: string) => `${b}/jugador/?u=${encodeURIComponent(u)}`;
+
+// Campeones agrupados por número de títulos: compacto también en el celular.
+const porTitulos = new Map<number, typeof club.campeones>();
+for (const c of club.campeones) porTitulos.set(c.titulos, [...(porTitulos.get(c.titulos) ?? []), c]);
+const grupos = [...porTitulos.entries()].sort((a, b) => b[0] - a[0]);
+
+const tramosFieles = [
+  ["40 o más torneos", (n: number) => n >= 40],
+  ["De 20 a 39 torneos", (n: number) => n >= 20 && n < 40],
+  ["De 10 a 19 torneos", (n: number) => n >= 10 && n < 20],
+] as const;
+---
+
+<Base titulo="Salón de la Fama" seccion="fama" descripcion={`Los ${t.campeones} campeones, récords y jugadores más constantes del Ajedrez Club Mokewa desde ${t.desde}.`}>
+  <section class="seccion cabeza">
+    <div class="contenedor">
+      <p class="antetitulo">Salón de la Fama</p>
+      <h1>La historia de Mokewa, ordenada por primera vez</h1>
+      <p class="bajada">
+        {t.torneos} torneos online desde {t.desde}, calculados automáticamente con los resultados públicos de Lichess. Si jugaste con el club, aquí están tus títulos. Datos al {fechaLarga(club.actualizado_en.slice(0, 10))}.
+      </p>
+
+      <form class="buscador tarjeta" role="search" id="buscador" onsubmit="return false">
+        <label for="q">Busca tu usuario de Lichess</label>
+        <div class="buscador-fila">
+          <input id="q" name="q" type="search" placeholder="Ej.: CarlosMokewa" autocomplete="off" spellcheck="false" />
+        </div>
+        <p class="ayuda" id="q-estado" aria-live="polite">Escribe al menos 2 letras. Buscamos entre {miles(t.jugadores)} jugadores.</p>
+        <ul class="resultados" id="q-resultados"></ul>
+      </form>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="contenedor">
+      <div class="cifras">
+        <div class="cifra"><strong>{t.campeones}</strong><span>campeones distintos</span></div>
+        <div class="cifra"><strong>{t.fieles}</strong><span>jugadores con 10 o más torneos</span></div>
+        <div class="cifra"><strong>{miles(t.jugadores)}</strong><span>ajedrecistas compitieron</span></div>
+        <div class="cifra"><strong>{miles(t.participaciones)}</strong><span>participaciones acumuladas</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="contenedor">
+      <h2>Récords del club</h2>
+      <div class="rejilla rejilla-3 records">
+        <div class="tarjeta record">
+          <span class="record-que">Más torneos jugados</span>
+          <strong class="record-num">{r.mas_torneos.n}</strong>
+          <a href={ficha(r.mas_torneos.u)}>{r.mas_torneos.u}</a>
+        </div>
+        <div class="tarjeta record">
+          <span class="record-que">Más títulos</span>
+          <strong class="record-num">{r.mas_titulos.n}</strong>
+          <a href={ficha(r.mas_titulos.u)}>{r.mas_titulos.u}</a>
+        </div>
+        <div class="tarjeta record">
+          <span class="record-que">Más podios</span>
+          <strong class="record-num">{r.mas_podios.n}</strong>
+          <a href={ficha(r.mas_podios.u)}>{r.mas_podios.u}</a>
+        </div>
+        <div class="tarjeta record">
+          <span class="record-que">Más temporadas compitiendo</span>
+          <strong class="record-num">{r.mas_temporadas.n}</strong>
+          <a href={ficha(r.mas_temporadas.u)}>{r.mas_temporadas.u}</a>
+        </div>
+        <div class="tarjeta record">
+          <span class="record-que">Suizo más concurrido</span>
+          <strong class="record-num">{t.max_suizo}</strong>
+          <span>jugadores en un torneo suizo del club</span>
+        </div>
+        {r.mayor_torneo && (
+          <div class="tarjeta record">
+            <span class="record-que">Evento más grande</span>
+            <strong class="record-num">{r.mayor_torneo.jugadores}</strong>
+            <a href={r.mayor_torneo.url} rel="noopener" target="_blank">{r.mayor_torneo.nombre}</a>
+            <span class="record-pie">{fechaCorta(r.mayor_torneo.dia)} · batalla con otros clubes</span>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" id="campeones">
+    <div class="contenedor">
+      <h2>Los {t.campeones} campeones</h2>
+      <p class="bajada">Un título = primer puesto en un torneo del club. Toca un nombre para ver su trayectoria.</p>
+      <div class="grupos">
+        {grupos.map(([n, lista]) => (
+          <div class="grupo">
+            <h3><span class="num">{n}</span> {n === 1 ? "título" : "títulos"} <small>· {lista.length} {lista.length === 1 ? "jugador" : "jugadores"}</small></h3>
+            <ul class="chips">
+              {lista.map((c) => (
+                <li><a href={ficha(c.u)}>{c.u}</a></li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" id="fieles">
+    <div class="contenedor">
+      <h2>Los fieles de Mokewa</h2>
+      <p class="bajada">{t.fieles} jugadores han competido en 10 o más torneos del club. La constancia también se premia.</p>
+      <div class="grupos">
+        {tramosFieles.map(([titulo, f]) => {
+          const lista = club.fieles.filter((x) => f(x.torneos));
+          return lista.length ? (
+            <div class="grupo">
+              <h3>{titulo} <small>· {lista.length}</small></h3>
+              <ul class="chips">
+                {lista.map((x) => (
+                  <li><a href={ficha(x.u)}>{x.u} <b class="num">{x.torneos}</b></a></li>
+                ))}
+              </ul>
+            </div>
+          ) : null;
+        })}
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" id="temporadas">
+    <div class="contenedor">
+      <h2>Temporada por temporada</h2>
+      <div class="tabla-envoltura">
+        <table>
+          <thead>
+            <tr><th>Año</th><th class="num">Torneos</th><th class="num">Jugadores</th><th>Más títulos del año</th><th>Torneo más concurrido</th></tr>
+          </thead>
+          <tbody>
+            {[...club.temporadas].reverse().map((s) => (
+              <tr>
+                <td><strong>{s.anio}</strong></td>
+                <td class="num">{s.torneos}</td>
+                <td class="num">{miles(s.jugadores)}</td>
+                <td>{s.rey ? <><a href={ficha(s.rey.u)}>{s.rey.u}</a> ({s.rey.n})</> : "—"}</td>
+                <td>{s.mayor ? <><a href={s.mayor.url} rel="noopener" target="_blank">{s.mayor.nombre}</a> · {s.mayor.jugadores}</> : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="nota" style="margin-top:16px">
+        Por ahora el Salón de la Fama cubre los torneos <strong>online</strong> del club en Lichess. Los torneos presenciales se suman cuando el organizador publica sus resultados desde el panel.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const base = document.body.dataset.base ?? "";
+  const q = document.getElementById("q") as HTMLInputElement;
+  const lista = document.getElementById("q-resultados")!;
+  const estado = document.getElementById("q-estado")!;
+  let datos: any = null;
+
+  async function cargar() {
+    if (datos) return datos;
+    estado.textContent = "Cargando el historial…";
+    const res = await fetch(`${base}/datos/jugadores.json`);
+    datos = await res.json();
+    return datos;
+  }
+  const quitarTildes = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+  async function buscar() {
+    const texto = quitarTildes(q.value.trim());
+    lista.innerHTML = "";
+    if (texto.length < 2) {
+      estado.textContent = "Escribe al menos 2 letras.";
+      return;
+    }
+    const d = await cargar();
+    const hallados = d.jugadores.filter((j: any) => quitarTildes(j.u).includes(texto));
+    hallados.sort((a: any, b: any) => (quitarTildes(a.u) === texto ? -1 : 0) - (quitarTildes(b.u) === texto ? -1 : 0) || b.t - a.t);
+    estado.textContent = hallados.length
+      ? `${hallados.length} ${hallados.length === 1 ? "jugador encontrado" : "jugadores encontrados"}${hallados.length > 12 ? " (mostramos 12)" : ""}.`
+      : "No encontramos ese usuario en los torneos del club. ¿Quizá jugaste con otro usuario?";
+    for (const j of hallados.slice(0, 12)) {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = `${base}/jugador/?u=${encodeURIComponent(j.u)}`;
+      const nombre = document.createElement("strong");
+      nombre.textContent = j.u;
+      const info = document.createElement("span");
+      info.textContent = `${j.t} ${j.t === 1 ? "torneo" : "torneos"} · ${j.c} ${j.c === 1 ? "título" : "títulos"} · ${j.p} podios · ${j.a[0]}${j.a.length > 1 ? "–" + j.a.at(-1) : ""}`;
+      a.append(nombre, info);
+      li.append(a);
+      lista.append(li);
+    }
+  }
+  let espera: number | undefined;
+  q.addEventListener("input", () => {
+    clearTimeout(espera);
+    espera = window.setTimeout(buscar, 150);
+  });
+  const inicial = new URLSearchParams(location.search).get("q");
+  if (inicial) {
+    q.value = inicial;
+    buscar();
+  }
+</script>
+
+<style>
+  .cabeza {
+    padding-bottom: 8px;
+  }
+  .buscador {
+    margin-top: 24px;
+    max-width: 640px;
+  }
+  .buscador label {
+    font-weight: 650;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .ayuda {
+    font-size: 0.88rem;
+    color: var(--suave);
+    margin: 8px 0 0;
+  }
+  .resultados {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0;
+    display: grid;
+    gap: 6px;
+  }
+  .resultados :global(a) {
+    display: grid;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--casilla);
+    text-decoration: none;
+    color: var(--tinta);
+  }
+  .resultados :global(a:hover) {
+    outline: 2px solid var(--vino);
+  }
+  .resultados :global(span) {
+    font-size: 0.88rem;
+    color: var(--suave);
+  }
+  .records {
+    margin-top: 12px;
+  }
+  .record {
+    display: grid;
+    gap: 2px;
+    align-content: start;
+  }
+  .record-que {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--suave);
+    font-weight: 600;
+  }
+  .record-num {
+    font-family: var(--serif);
+    font-size: 2.6rem;
+    line-height: 1.1;
+    color: var(--vino);
+  }
+  .record a {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .record-pie {
+    font-size: 0.86rem;
+    color: var(--suave);
+  }
+  .grupos {
+    display: grid;
+    gap: 18px;
+    margin-top: 16px;
+  }
+  .grupo h3 {
+    font-size: 1.05rem;
+    margin-bottom: 8px;
+  }
+  .grupo h3 small {
+    font-family: var(--sans);
+    font-weight: 500;
+    color: var(--suave);
+    font-size: 0.85rem;
+  }
+  .chips {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chips a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 4px 12px;
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    border-radius: 999px;
+    color: var(--tinta);
+    text-decoration: none;
+    font-size: 0.92rem;
+    overflow-wrap: anywhere;
+  }
+  .chips a:hover {
+    border-color: var(--vino);
+    color: var(--vino);
+  }
+  .chips b {
+    font-size: 0.8rem;
+    color: var(--vino);
+    background: var(--casilla);
+    border-radius: 999px;
+    padding: 0 7px;
+  }
+</style>

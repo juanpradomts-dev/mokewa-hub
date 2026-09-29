@@ -1,0 +1,283 @@
+---
+import Base from "../layouts/Base.astro";
+import club from "../data/club.json";
+import { fechaLarga } from "../lib/formato.js";
+
+const cuenta = club.cuenta_club;
+---
+
+<Base titulo="Ficha de jugador" seccion="fama" descripcion="Trayectoria de un jugador en los torneos del Ajedrez Club Mokewa, exportable a PDF.">
+  <section class="seccion">
+    <div class="contenedor">
+      <div class="no-imprimir">
+        <p class="antetitulo">Ficha deportiva · vista previa de la Fase 2</p>
+        <form class="busca-ficha" id="busca-ficha" role="search">
+          <label class="visually-hidden" for="u">Usuario de Lichess</label>
+          <input id="u" name="u" type="search" placeholder="Usuario de Lichess" autocomplete="off" spellcheck="false" />
+          <button class="boton boton-secundario" type="submit">Ver ficha</button>
+        </form>
+      </div>
+
+      <div id="ficha" aria-live="polite">
+        <p class="cargando">Cargando la trayectoria…</p>
+      </div>
+
+      <div class="no-imprimir fondo tarjeta">
+        <h2>¿Para qué sirve esta ficha?</h2>
+        <p>
+          Un «CV ajedrecístico» emitido por el club ayuda a acreditar trayectoria ante el Fondo de Apoyo Económico para Deportistas Destacados de la Municipalidad Provincial Mariscal Nieto (Ordenanza Municipal N.º 016-2023-MPMN), becas y patrocinadores.{" "}
+          <a href="https://munimoquegua.gob.pe/" rel="noopener" target="_blank">Municipalidad</a>
+        </p>
+        <p>
+          En la versión oficial, el club añade a mano lo que Lichess no sabe: FIDE ID y rating FIDE (enlazado a <a href="https://ratings.fide.com/" rel="noopener" target="_blank">ratings.fide.com</a> para que cualquiera lo verifique), torneos presenciales y logros. La constancia la firma el club.
+        </p>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script is:inline define:vars={{ cuenta, actualizado: club.actualizado_en.slice(0, 10), actualizadoTexto: fechaLarga(club.actualizado_en.slice(0, 10)) }}>
+  window.__CUENTA_CLUB = cuenta;
+  window.__ACTUALIZADO = { dia: actualizado, texto: actualizadoTexto };
+</script>
+
+<script>
+  import { esc } from "../lib/html.js";
+  import { fechaLarga, fechaCorta, miles } from "../lib/formato.js";
+
+  const base = document.body.dataset.base ?? "";
+  const CUENTA = (window as any).__CUENTA_CLUB;
+  const ACT = (window as any).__ACTUALIZADO;
+  const caja = document.getElementById("ficha")!;
+  const entrada = document.getElementById("u") as HTMLInputElement;
+  const TIPOS: Record<string, string> = { suizo: "Suizo", arena: "Arena", batalla: "Batalla interclubes" };
+  const RITMOS: Record<string, string> = { bullet: "Bala", blitz: "Blitz", rapid: "Rápidas", classical: "Clásico", puzzle: "Puzzles" };
+
+
+  function tarjetaCuenta(u: string) {
+    if (!CUENTA || CUENTA.usuario.toLowerCase() !== u.toLowerCase()) return "";
+    const filas = Object.entries(CUENTA.ratings)
+      .filter(([, r]: any) => r.partidas)
+      .map(
+        ([k, r]: any) =>
+          `<div class="rating"><span>${RITMOS[k] ?? k}</span><strong class="num">${r.rating}${r.provisional ? "?" : ""}</strong><small>${miles(r.partidas)} ${k === "puzzle" ? "resueltos" : "partidas"}</small></div>`,
+      )
+      .join("");
+    return `<div class="tarjeta bloque"><h3>Ratings actuales en Lichess</h3><div class="ratings">${filas}</div>
+      <p class="pie-dato">«?» = rating provisional. Cuenta creada el ${fechaLarga(CUENTA.creada)}. Fuente: API pública de Lichess, ${ACT.texto}.</p></div>`;
+  }
+
+  async function mostrar(u: string) {
+    const res = await fetch(`${base}/datos/jugadores.json`);
+    const d = await res.json();
+    const j = d.jugadores.find((x: any) => x.u.toLowerCase() === u.toLowerCase());
+    if (!j) {
+      caja.innerHTML = `<div class="tarjeta bloque"><h1>No encontramos a «${esc(u)}»</h1>
+        <p>Ese usuario no aparece en los resultados de los torneos online del club. Prueba en el <a href="${base}/salon-de-la-fama/?q=${encodeURIComponent(u)}">buscador del Salón de la Fama</a>.</p></div>`;
+      return;
+    }
+    document.title = `${j.u} · Ficha · Ajedrez Club Mokewa`;
+    entrada.value = j.u;
+    const hist = j.h
+      .map(([id, puesto, puntos]: any) => ({ id, puesto, puntos, t: d.torneos[id] }))
+      .filter((x: any) => x.t)
+      .sort((a: any, b: any) => b.t[1].localeCompare(a.t[1]));
+    const titulos = hist.filter((x: any) => x.puesto === 1);
+    const podios = hist.filter((x: any) => x.puesto <= 3);
+    const primera = hist.at(-1)?.t[1];
+    const ultima = hist[0]?.t[1];
+    const url = (id: string, tipo: string) => (tipo === "suizo" ? `https://lichess.org/swiss/${id}` : `https://lichess.org/tournament/${id}`);
+    const medalla = (p: number) => (p === 1 ? "🥇" : p === 2 ? "🥈" : p === 3 ? "🥉" : "");
+    const hoy = new Date().toISOString().slice(0, 10);
+
+    caja.innerHTML = `
+      <header class="ficha-cabeza">
+        <div class="solo-imprimir constancia-cabeza">
+          <strong>Ajedrez Club Mokewa · Moquegua, Perú</strong>
+          <span>Constancia de trayectoria en torneos online del club</span>
+          <span class="marca-agua">DOCUMENTO DE DEMOSTRACIÓN — sin validez hasta que el club lo emita y firme</span>
+        </div>
+        <p class="antetitulo">Ficha deportiva</p>
+        <h1>${esc(j.u)}</h1>
+        <p class="bajada">Compite con el club desde ${fechaLarga(primera)}${ultima !== primera ? ` · última participación: ${fechaLarga(ultima)}` : ""}.</p>
+        <div class="grupo-botones no-imprimir">
+          <button class="boton boton-primario" type="button" id="pdf">Descargar constancia en PDF</button>
+          <a class="boton boton-secundario" href="https://lichess.org/@/${encodeURIComponent(j.u)}" rel="noopener" target="_blank">Perfil en Lichess</a>
+        </div>
+      </header>
+      <div class="cifras ficha-cifras">
+        <div class="cifra"><strong>${j.t}</strong><span>${j.t === 1 ? "torneo" : "torneos"} con el club</span></div>
+        <div class="cifra"><strong>${titulos.length}</strong><span>${titulos.length === 1 ? "título" : "títulos"}</span></div>
+        <div class="cifra"><strong>${podios.length}</strong><span>podios (1.º a 3.º)</span></div>
+        <div class="cifra"><strong>${j.a.length}</strong><span>${j.a.length === 1 ? "temporada" : "temporadas"} (${j.a[0]}${j.a.length > 1 ? "–" + j.a.at(-1) : ""})</span></div>
+      </div>
+      ${tarjetaCuenta(j.u)}
+      <div class="tarjeta bloque">
+        <h3>Datos oficiales</h3>
+        <dl class="oficiales">
+          <div><dt>FIDE ID</dt><dd><span class="pc">lo registra el club</span></dd></div>
+          <div><dt>Rating FIDE</dt><dd><span class="pc">verificado a mano</span></dd></div>
+          <div><dt>Categoría</dt><dd><span class="pc">por confirmar</span></dd></div>
+          <div><dt>Nivel en la academia</dt><dd><span class="pc">por confirmar</span></dd></div>
+        </dl>
+      </div>
+      ${
+        titulos.length
+          ? `<div class="tarjeta bloque"><h3>Títulos</h3><ul class="titulos">${titulos
+              .map((x: any) => `<li><span>🏆</span><a href="${url(x.id, x.t[2])}" rel="noopener" target="_blank">${esc(x.t[0])}</a><small>${fechaCorta(x.t[1])}</small></li>`)
+              .join("")}</ul></div>`
+          : ""
+      }
+      <div class="bloque">
+        <h3>Historial de torneos</h3>
+        <div class="tabla-envoltura">
+          <table>
+            <thead><tr><th>Fecha</th><th>Torneo</th><th>Formato</th><th class="num">Puesto</th><th class="num">Puntos</th></tr></thead>
+            <tbody>${hist
+              .map(
+                (x: any) => `<tr>
+                  <td>${fechaCorta(x.t[1])}</td>
+                  <td><a href="${url(x.id, x.t[2])}" rel="noopener" target="_blank">${esc(x.t[0])}</a></td>
+                  <td>${TIPOS[x.t[2]] ?? x.t[2]} · ${esc(x.t[4])}</td>
+                  <td class="num">${medalla(x.puesto)} ${x.puesto} / ${x.t[3]}</td>
+                  <td class="num">${x.puntos == null ? "—" : String(x.puntos).replace(".", ",")}</td>
+                </tr>`,
+              )
+              .join("")}</tbody>
+          </table>
+        </div>
+      </div>
+      <p class="pie-dato">Fuente: resultados públicos de Lichess, datos al ${ACT.texto}. Emitido el ${fechaLarga(hoy)}. Verificable en ${esc(location.origin + base)}/jugador/?u=${esc(encodeURIComponent(j.u))}</p>`;
+
+    document.getElementById("pdf")?.addEventListener("click", () => window.print());
+  }
+
+  const u = new URLSearchParams(location.search).get("u") || CUENTA?.usuario || "Ajedrez_Club_Mokewa";
+  mostrar(u).catch(() => {
+    caja.innerHTML = `<p class="alerta alerta-error">No se pudo cargar el historial. Revisa tu conexión y vuelve a intentar.</p>`;
+  });
+  document.getElementById("busca-ficha")!.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const v = entrada.value.trim();
+    if (!v) return;
+    history.pushState(null, "", `?u=${encodeURIComponent(v)}`);
+    mostrar(v);
+  });
+</script>
+
+<style>
+  .busca-ficha {
+    display: flex;
+    gap: 8px;
+    max-width: 520px;
+    margin-bottom: 28px;
+  }
+  .cargando {
+    color: var(--suave);
+  }
+  #ficha :global(.ficha-cabeza h1) {
+    overflow-wrap: anywhere;
+    margin-bottom: 0.2em;
+  }
+  #ficha :global(.ficha-cifras) {
+    margin: 24px 0;
+  }
+  #ficha :global(.bloque) {
+    margin-bottom: 20px;
+  }
+  #ficha :global(.ratings) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  #ficha :global(.rating) {
+    display: grid;
+    background: var(--casilla);
+    border-radius: 10px;
+    padding: 10px 14px;
+    min-width: 110px;
+  }
+  #ficha :global(.rating span) {
+    font-size: 0.82rem;
+    color: var(--suave);
+    font-weight: 600;
+  }
+  #ficha :global(.rating strong) {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    color: var(--vino);
+  }
+  #ficha :global(.rating small) {
+    color: var(--suave);
+  }
+  #ficha :global(.pie-dato) {
+    font-size: 0.84rem;
+    color: var(--suave);
+    margin: 10px 0 0;
+    overflow-wrap: anywhere;
+  }
+  #ficha :global(.oficiales) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 0;
+  }
+  #ficha :global(.oficiales dt) {
+    font-size: 0.82rem;
+    color: var(--suave);
+    font-weight: 600;
+  }
+  #ficha :global(.oficiales dd) {
+    margin: 4px 0 0;
+  }
+  #ficha :global(.titulos) {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  #ficha :global(.titulos li) {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: baseline;
+  }
+  #ficha :global(.titulos small) {
+    color: var(--suave);
+    white-space: nowrap;
+  }
+  #ficha :global(.solo-imprimir) {
+    display: none;
+  }
+  .fondo {
+    margin-top: 32px;
+  }
+  .fondo p {
+    color: var(--suave);
+  }
+  @media print {
+    #ficha :global(.solo-imprimir) {
+      display: grid;
+      gap: 2px;
+      border-bottom: 2px solid #6e1e2b;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+    #ficha :global(.marca-agua) {
+      color: #a1261b;
+      font-weight: 700;
+      font-size: 9pt;
+    }
+    #ficha :global(.cifra strong),
+    #ficha :global(.rating strong) {
+      color: #6e1e2b;
+    }
+    #ficha :global(table) {
+      font-size: 9pt;
+    }
+    #ficha :global(tr) {
+      break-inside: avoid;
+    }
+  }
+</style>

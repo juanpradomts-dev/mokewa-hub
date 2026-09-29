@@ -1,0 +1,192 @@
+---
+import Base from "../layouts/Base.astro";
+import club from "../data/club.json";
+
+const b = import.meta.env.BASE_URL.replace(/\/$/, "");
+const hibridos = club.torneos.filter((t) => t.formato === "Torneos híbridos por nivel");
+const niveles = [
+  {
+    id: "basico", nombre: "Básico", pieza: "♙︎", campo: "horario_basico",
+    para: "Niños y adultos que empiezan desde cero o saben mover las piezas.",
+    aprende: ["Reglas, movimientos y jaque mate", "Tácticas básicas: clavada, horquilla, ataque doble", "Primeros finales: rey y dama, rey y torre", "Cómo jugar un torneo: reloj, planilla y reglamento"],
+  },
+  {
+    id: "intermedio", nombre: "Intermedio", pieza: "♘︎", campo: "horario_intermedio",
+    para: "Jugadores que ya compiten y quieren dar el salto en torneos.",
+    aprende: ["Principios de apertura y un repertorio propio", "Combinaciones y cálculo", "Finales de torres y de peones", "Análisis de sus propias partidas"],
+  },
+  {
+    id: "avanzado", nombre: "Avanzado", pieza: "♕︎", campo: "horario_avanzado",
+    para: "Competidores que se preparan para torneos regionales, nacionales o con rating FIDE.",
+    aprende: ["Preparación de aperturas contra rivales concretos", "Estrategia y planes de medio juego", "Temáticos (Siciliana, India de Rey, Española…)", "Gestión del tiempo y preparación psicológica"],
+  },
+];
+const preguntas = [
+  ["¿Desde qué edad pueden empezar?", `<span class="pc" data-campo="edad_minima">por confirmar</span>`],
+  ["¿Cuánto cuesta?", `Mensualidad: <span class="pc" data-campo="precio_mensual">por confirmar</span>. Se paga por Yape o Plin.`],
+  ["¿Dónde son las clases?", `En la sede del club: <span class="pc" data-campo="sede">por confirmar</span>.`],
+  ["¿Cómo sé en qué nivel inscribir a mi hijo o hija?", "Si nunca ha jugado, en básico. Si ya juega o compite, escríbenos por WhatsApp y el club te recomienda el nivel."],
+  ["¿Pueden practicar en casa?", `Sí: el club tiene un equipo gratuito en Lichess con ${club.equipo.miembros} miembros, torneos online y el puzzle del día.`],
+  ["¿Hay torneos para alumnos?", `Sí. El club ya organizó ${hibridos.length} torneos híbridos por nivel y ${club.totales.torneos} torneos online desde ${club.totales.desde}.`],
+];
+---
+
+<Base titulo="Academia" seccion="academia" descripcion="Clases de ajedrez en Moquegua por niveles: básico, intermedio y avanzado. Horarios, precios e inscripción.">
+  <section class="seccion">
+    <div class="contenedor">
+      <p class="antetitulo">Academia</p>
+      <h1>Clases de ajedrez en Moquegua, por niveles</h1>
+      <p class="bajada">
+        Tres niveles: los mismos que el club usa en sus torneos híbridos. El ajedrez entrena la concentración, el cálculo y la toma de decisiones, y en Mokewa se aprende jugando torneos desde el primer mes.
+      </p>
+      <div class="grupo-botones">
+        <a class="boton boton-whatsapp" data-whatsapp="Hola, quisiera inscribir a mi hijo/a en la academia de ajedrez. ¿Qué horarios tienen?" href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Consultar por WhatsApp</a>
+        <a class="boton boton-secundario" href="#preguntas">Preguntas frecuentes</a>
+      </div>
+      <div class="rejilla rejilla-3 resumen">
+        <div class="tarjeta"><span class="dt">Mensualidad</span><span class="pc" data-campo="precio_mensual">por confirmar</span></div>
+        <div class="tarjeta"><span class="dt">Sede</span><span class="pc" data-campo="sede">por confirmar</span></div>
+        <div class="tarjeta"><span class="dt">Entrenadores</span><span class="pc" data-campo="entrenadores">por confirmar</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="contenedor rejilla rejilla-3">
+      {niveles.map((n) => (
+        <article class="tarjeta nivel" id={n.id}>
+          <span class="pieza glifo" aria-hidden="true">{n.pieza}</span>
+          <h2>{n.nombre}</h2>
+          <p class="para">{n.para}</p>
+          <h3>Qué aprende</h3>
+          <ul>{n.aprende.map((a) => <li>{a}</li>)}</ul>
+          <p class="horario"><span class="dt">Horario</span><span class="pc" data-campo={n.campo}>por confirmar</span></p>
+          <a class="boton boton-secundario" data-whatsapp={`Hola, quisiera información del nivel ${n.nombre.toLowerCase()} de la academia.`} href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Quiero este nivel</a>
+        </article>
+      ))}
+    </div>
+    <div class="contenedor">
+      <p class="nota" style="margin-top:20px">
+        Los contenidos de cada nivel son una propuesta para la demo: el club los ajusta a su programa real antes de publicar.
+      </p>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="contenedor">
+      <div class="tarjeta progreso">
+        <div>
+          <p class="antetitulo">Fase 2 · para los padres</p>
+          <h2>El progreso de tu hijo, a la vista</h2>
+          <p>Asistencia, tareas con estudios de Lichess, torneos jugados y títulos en una ficha que el padre puede ver desde el celular y descargar en PDF.</p>
+        </div>
+        <a class="boton boton-primario" href={`${b}/jugador/`}>Ver una ficha de ejemplo</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" id="preguntas">
+    <div class="contenedor">
+      <h2>Preguntas frecuentes</h2>
+      <div class="faq">
+        {preguntas.map(([p, r]) => (
+          <details class="tarjeta">
+            <summary>{p}</summary>
+            <p set:html={r} />
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .resumen {
+    margin-top: 28px;
+  }
+  .resumen .tarjeta,
+  .horario {
+    display: grid;
+    gap: 4px;
+    justify-items: start;
+  }
+  .dt {
+    font-size: 0.8rem;
+    color: var(--suave);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .nivel {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    scroll-margin-top: 90px;
+  }
+  .nivel h2 {
+    margin: 0;
+  }
+  .nivel h3 {
+    font-size: 1rem;
+    margin: 8px 0 0;
+    font-family: var(--sans);
+    font-weight: 650;
+  }
+  .nivel ul {
+    margin: 0;
+    padding-left: 1.2em;
+    color: var(--suave);
+  }
+  .nivel li {
+    margin-bottom: 4px;
+  }
+  .nivel .boton {
+    margin-top: auto;
+  }
+  .pieza {
+    font-size: 2.6rem;
+    line-height: 1;
+    color: var(--vino);
+  }
+  .para {
+    color: var(--suave);
+    margin: 0;
+  }
+  .horario {
+    margin: 10px 0 12px;
+  }
+  .progreso {
+    display: grid;
+    gap: 16px;
+    align-items: center;
+    padding: 28px;
+  }
+  @media (min-width: 860px) {
+    .progreso {
+      grid-template-columns: 1fr auto;
+    }
+  }
+  .progreso p {
+    color: var(--suave);
+    margin: 0;
+  }
+  .faq {
+    display: grid;
+    gap: 10px;
+    max-width: 780px;
+  }
+  .faq details {
+    padding: 0;
+  }
+  .faq summary {
+    cursor: pointer;
+    padding: 16px 20px;
+    font-weight: 600;
+    list-style-position: inside;
+  }
+  .faq p {
+    padding: 0 20px 16px;
+    margin: 0;
+    color: var(--suave);
+  }
+</style>

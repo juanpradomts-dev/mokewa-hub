@@ -1,0 +1,128 @@
+---
+import "@fontsource-variable/fraunces";
+import "@fontsource-variable/inter";
+import "../styles/global.css";
+import Logo from "../components/Logo.astro";
+import club from "../data/club.json";
+import { fechaCorta } from "../lib/formato.js";
+
+interface Props {
+  titulo: string;
+  descripcion?: string;
+  seccion?: string;
+  sinWhatsapp?: boolean;
+}
+const { titulo, descripcion = "Ajedrez Club Mokewa, Moquegua: academia por niveles, torneos, resultados y la historia del club desde 2020.", seccion = "", sinWhatsapp = false } = Astro.props;
+const b = import.meta.env.BASE_URL.replace(/\/$/, "");
+const url = (p: string) => `${b}${p}`;
+const enlaces = [
+  ["inicio", "/", "Inicio"],
+  ["academia", "/academia/", "Academia"],
+  ["torneos", "/torneos/", "Torneos"],
+  ["fama", "/salon-de-la-fama/", "Salón de la Fama"],
+  ["comunidad", "/comunidad/", "Comunidad"],
+  ["contacto", "/contacto/", "Contacto"],
+];
+const tituloCompleto = seccion === "inicio" ? "Ajedrez Club Mokewa · Moquegua" : `${titulo} · Ajedrez Club Mokewa`;
+const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
+---
+
+<!doctype html>
+<html lang="es-PE">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Demo privada: no se indexa hasta que el club apruebe la web (guía, sección 10.2). -->
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{tituloCompleto}</title>
+    <meta name="description" content={descripcion} />
+    <meta name="theme-color" content="#6e1e2b" />
+    <link rel="icon" href={url("/favicon.svg")} type="image/svg+xml" />
+    <link rel="manifest" href={url("/manifest.webmanifest")} />
+    <meta property="og:title" content={tituloCompleto} />
+    <meta property="og:description" content={descripcion} />
+    <meta property="og:locale" content="es_PE" />
+    <slot name="head" />
+  </head>
+  <body data-base={b}>
+    <div class="aviso-demo">
+      Demostración privada preparada para el Ajedrez Club Mokewa · aún no es la web oficial ·{" "}
+      <a href={url("/acerca-de-la-demo/")}>qué es esto</a>
+    </div>
+    <header class="cabecera">
+      <div class="contenedor">
+        <a class="marca" href={url("/")} aria-label="Ajedrez Club Mokewa, ir al inicio">
+          <Logo tam={40} />
+          <span class="marca-texto"><strong>Ajedrez Club Mokewa</strong><span>Moquegua · Perú</span></span>
+        </a>
+        <nav class="nav" aria-label="Principal">
+          {enlaces.map(([id, href, texto]) => <a href={url(href)} aria-current={seccion === id ? "page" : undefined}>{texto}</a>)}
+        </nav>
+        <a class="boton boton-primario boton-chico cta-cabecera" href={url("/torneos/verano-2027/#inscripcion")}>Inscribirme</a>
+        <button class="boton-menu" type="button" aria-expanded="false" aria-controls="menu-movil" aria-label="Abrir menú">
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+        </button>
+      </div>
+      <nav class="menu-movil" id="menu-movil" aria-label="Principal (móvil)">
+        {enlaces.map(([id, href, texto]) => <a href={url(href)} aria-current={seccion === id ? "page" : undefined}>{texto}</a>)}
+        <a href={url("/torneos/verano-2027/#inscripcion")}>Inscribirme a un torneo →</a>
+      </nav>
+    </header>
+
+    <main id="contenido">
+      <slot />
+    </main>
+
+    {!sinWhatsapp && <a class="wa-flotante no-imprimir" data-whatsapp="Hola, quisiera información sobre el Ajedrez Club Mokewa." href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank" aria-label="Escribir al club por WhatsApp">
+      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7c.1.2 1.9 2.9 4.6 4 1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.4-.3Z"></path></svg>
+    </a>}
+
+    <footer class="pie">
+      <div class="contenedor">
+        <div class="rejilla rejilla-3">
+          <div>
+            <h3>Ajedrez Club Mokewa</h3>
+            <p>Club de ajedrez de Moquegua. Academia por niveles, torneos presenciales y online, y una comunidad de {club.equipo.miembros} miembros en Lichess.</p>
+            <p>
+              <a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook</a> ·{" "}
+              <a href={club.equipo.url} rel="noopener" target="_blank">Equipo en Lichess</a>
+            </p>
+          </div>
+          <div>
+            <h3>Explorar</h3>
+            <ul>
+              <li><a href={url("/academia/")}>Academia</a></li>
+              <li><a href={url("/torneos/")}>Torneos y resultados</a></li>
+              <li><a href={url("/salon-de-la-fama/")}>Salón de la Fama</a></li>
+              <li><a href={url("/jugador/")}>Ficha de jugador</a></li>
+              <li><a href={url("/privacidad/")}>Privacidad y datos de menores</a></li>
+              <li><a href={url("/panel/")}>Panel del organizador</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3>De dónde salen los datos</h3>
+            <p>Los torneos online, campeones y récords se calculan automáticamente con la API pública de Lichess. Última actualización: {actualizado}.</p>
+            <p>Lo que aún no está verificado aparece marcado <span class="pc">por confirmar</span>.</p>
+          </div>
+        </div>
+        <p class="legal">
+          Demostración privada, no indexada, preparada sin costo para el club. No se difunde ni se presenta como web oficial hasta que el Ajedrez Club Mokewa la apruebe. En esta demo solo se muestran usuarios públicos de Lichess: ningún nombre real ni foto.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      import { pintarCampos, alCambiar } from "../lib/store.js";
+      pintarCampos();
+      alCambiar(() => pintarCampos());
+
+      const boton = document.querySelector(".boton-menu");
+      const menu = document.getElementById("menu-movil");
+      boton?.addEventListener("click", () => {
+        const abierto = menu?.classList.toggle("abierto");
+        boton.setAttribute("aria-expanded", String(!!abierto));
+        boton.setAttribute("aria-label", abierto ? "Cerrar menú" : "Abrir menú");
+      });
+    </script>
+  </body>
+</html>

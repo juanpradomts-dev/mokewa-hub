@@ -1,0 +1,459 @@
+---
+import Base from "../layouts/Base.astro";
+import club from "../data/club.json";
+import { miles } from "../lib/formato.js";
+
+const b = import.meta.env.BASE_URL.replace(/\/$/, "");
+// Indicadores internos (no se publican en páginas públicas).
+const mesesSinOnline = (() => {
+  const corte = club.actualizado_en.slice(0, 7);
+  const ultimo = club.torneos.find((t) => t.id === club.ultimo)?.dia.slice(0, 7) ?? corte;
+  const [a1, m1] = ultimo.split("-").map(Number);
+  const [a2, m2] = corte.split("-").map(Number);
+  return (a2 - a1) * 12 + (m2 - m1);
+})();
+const interno = { ...club.interno, meses_sin_online: mesesSinOnline, miembros: club.equipo.miembros };
+---
+
+<Base titulo="Panel del organizador" sinWhatsapp descripcion="Panel privado del Ajedrez Club Mokewa (demo).">
+  <section class="seccion">
+    <div class="contenedor">
+      <div id="puerta" class="tarjeta puerta">
+        <p class="antetitulo">Panel del organizador</p>
+        <h1>Todo lo operativo, sin programar</h1>
+        <p class="bajada">Crear torneos, validar pagos, publicar resultados y noticias, y completar los datos del club. En la versión oficial se entra con correo y contraseña (roles: administrador y entrenador).</p>
+        <button class="boton boton-primario" type="button" id="entrar">Entrar como organizador (demo)</button>
+      </div>
+
+      <div id="panel" hidden>
+        <div class="panel-cabeza">
+          <div>
+            <p class="antetitulo">Panel del organizador · demo</p>
+            <h1>Hola, organizador</h1>
+          </div>
+          <div class="grupo-botones">
+            <a class="boton boton-secundario boton-chico" href={`${b}/`} target="_blank">Ver la web ↗</a>
+            <button class="boton boton-secundario boton-chico" type="button" id="salir">Salir</button>
+          </div>
+        </div>
+
+        <div class="pestanas" role="tablist" aria-label="Secciones del panel">
+          <button role="tab" aria-selected="true" aria-controls="p-resumen" id="t-resumen">Resumen</button>
+          <button role="tab" aria-selected="false" aria-controls="p-inscripciones" id="t-inscripciones">Inscripciones <span class="globo" id="globo-pendientes"></span></button>
+          <button role="tab" aria-selected="false" aria-controls="p-torneos" id="t-torneos">Torneos</button>
+          <button role="tab" aria-selected="false" aria-controls="p-resultados" id="t-resultados">Resultados</button>
+          <button role="tab" aria-selected="false" aria-controls="p-noticias" id="t-noticias">Noticias</button>
+          <button role="tab" aria-selected="false" aria-controls="p-datos" id="t-datos">Datos del club <span class="globo" id="globo-datos"></span></button>
+        </div>
+
+        <!-- RESUMEN -->
+        <div role="tabpanel" id="p-resumen" aria-labelledby="t-resumen" class="pestana">
+          <div class="cifras" id="kpis"></div>
+          <div class="rejilla rejilla-2 resumen-bloques">
+            <div class="tarjeta">
+              <h2 class="h-bloque">Para publicar la web oficial</h2>
+              <p class="suave">Faltan estos datos del club. Se completan en la pestaña «Datos del club» y la web se actualiza al instante.</p>
+              <ul class="lista-check" id="checklist"></ul>
+            </div>
+            <div class="tarjeta">
+              <h2 class="h-bloque">Comunidad por recuperar</h2>
+              <p class="dato-grande"><strong>{miles(interno.por_recuperar)}</strong> jugadores</p>
+              <p class="suave">{interno.criterio_recuperar}</p>
+              <p>
+                Además, el equipo de Lichess ({interno.miembros} miembros) lleva <strong>{interno.meses_sin_online} meses</strong> sin torneos online. Propuesta: un circuito anual (Grand Prix Mokewa) con puntos por torneo y premiación en diciembre, para tener un motivo de volver cada mes.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- INSCRIPCIONES -->
+        <div role="tabpanel" id="p-inscripciones" aria-labelledby="t-inscripciones" class="pestana" hidden>
+          <div class="barra">
+            <div class="campo">
+              <label for="i-torneo">Torneo</label>
+              <select id="i-torneo"></select>
+            </div>
+            <div class="campo">
+              <label for="i-estado">Estado del pago</label>
+              <select id="i-estado">
+                <option value="">Todos</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="validado">Validados</option>
+                <option value="rechazado">Rechazados</option>
+              </select>
+            </div>
+            <div class="barra-acciones">
+              <button class="boton boton-secundario" type="button" id="i-csv">Exportar a Excel (CSV)</button>
+            </div>
+          </div>
+          <p class="suave" id="i-resumen" aria-live="polite"></p>
+          <div id="i-lista" class="lista-inscripciones"></div>
+        </div>
+
+        <!-- TORNEOS -->
+        <div role="tabpanel" id="p-torneos" aria-labelledby="t-torneos" class="pestana" hidden>
+          <div class="rejilla rejilla-2">
+            <form class="tarjeta" id="form-torneo">
+              <h2 class="h-bloque">Crear torneo</h2>
+              <div class="campo"><label for="tr-nombre">Nombre *</label><input id="tr-nombre" name="nombre" type="text" required placeholder="Ej.: Relámpago de Aniversario" /></div>
+              <div class="dos-columnas">
+                <div class="campo">
+                  <label for="tr-modalidad">Modalidad</label>
+                  <select id="tr-modalidad" name="modalidad"><option>Presencial</option><option>Online</option><option>Híbrido</option></select>
+                </div>
+                <div class="campo"><label for="tr-fecha">Fecha</label><input id="tr-fecha" name="fecha" type="date" /></div>
+                <div class="campo"><label for="tr-ritmo">Ritmo de juego</label><input id="tr-ritmo" name="ritmo" type="text" placeholder="Ej.: 10+5" /></div>
+                <div class="campo"><label for="tr-cupo">Cupo</label><input id="tr-cupo" name="cupo" type="number" min="2" placeholder="Ej.: 40" /></div>
+                <div class="campo"><label for="tr-costo">Inscripción</label><input id="tr-costo" name="costo" type="text" placeholder="Ej.: S/ 15" /></div>
+                <div class="campo"><label for="tr-sede">Sede</label><input id="tr-sede" name="sede" type="text" /></div>
+              </div>
+              <fieldset class="campo">
+                <legend>Categorías</legend>
+                <div class="casillas-categorias">
+                  {["Sub-8", "Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Libre"].map((c) => (
+                    <label class="casilla"><input type="checkbox" name="categorias" value={c} checked /> {c}</label>
+                  ))}
+                </div>
+              </fieldset>
+              <div class="campo"><label for="tr-bases">Enlace a las bases (PDF)</label><input id="tr-bases" name="bases" type="url" placeholder="https://" /></div>
+              <div class="campo"><label for="tr-desc">Descripción corta</label><textarea id="tr-desc" name="descripcion"></textarea></div>
+              <button class="boton boton-primario" type="submit">Publicar torneo</button>
+              <p class="suave" id="tr-aviso" aria-live="polite"></p>
+            </form>
+            <div>
+              <h2 class="h-bloque">Torneos publicados</h2>
+              <div id="tr-lista" class="lista-simple"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESULTADOS -->
+        <div role="tabpanel" id="p-resultados" aria-labelledby="t-resultados" class="pestana" hidden>
+          <div class="rejilla rejilla-2">
+            <div class="tarjeta">
+              <h2 class="h-bloque">Publicar resultados</h2>
+              <div class="campo"><label for="r-nombre">Nombre del torneo *</label><input id="r-nombre" type="text" placeholder="Ej.: Relámpago de Aniversario" /></div>
+              <div class="campo">
+                <label for="r-lichess">Desde Lichess: pega el enlace o el ID del torneo</label>
+                <div class="fila"><input id="r-lichess" type="text" placeholder="https://lichess.org/swiss/YAbQ3yeA" /><button class="boton boton-secundario" type="button" id="r-traer">Traer</button></div>
+              </div>
+              <div class="campo">
+                <label for="r-csv">…o desde un CSV de Swiss-Manager / Excel</label>
+                <input id="r-csv-archivo" type="file" accept=".csv,.txt,text/csv" aria-label="Archivo CSV" />
+                <textarea id="r-csv" placeholder={"Puesto;Nombre;Categoría;Puntos\n1;Ana Pérez;Sub-12;5"}></textarea>
+                <button class="boton boton-secundario" type="button" id="r-leer">Leer CSV</button>
+              </div>
+              <div class="campo"><label for="r-cronica">Crónica corta (opcional)</label><textarea id="r-cronica"></textarea></div>
+              <p class="suave" id="r-estado" aria-live="polite"></p>
+            </div>
+            <div>
+              <h2 class="h-bloque">Vista previa</h2>
+              <div id="r-vista" class="tarjeta"><p class="suave">Aquí aparece la tabla de posiciones antes de publicarla.</p></div>
+              <button class="boton boton-primario" type="button" id="r-publicar" disabled>Publicar en la web</button>
+              <h2 class="h-bloque" style="margin-top:24px">Ya publicados</h2>
+              <div id="r-lista" class="lista-simple"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTICIAS -->
+        <div role="tabpanel" id="p-noticias" aria-labelledby="t-noticias" class="pestana" hidden>
+          <div class="rejilla rejilla-2">
+            <form class="tarjeta" id="form-noticia">
+              <h2 class="h-bloque">Escribir noticia</h2>
+              <div class="campo"><label for="n-titulo">Título *</label><input id="n-titulo" name="titulo" type="text" required /></div>
+              <div class="campo"><label for="n-cuerpo">Texto *</label><textarea id="n-cuerpo" name="cuerpo" required></textarea></div>
+              <button class="boton boton-primario" type="submit">Publicar noticia</button>
+              <p class="suave">Las noticias reemplazan al feed de Facebook como archivo permanente y aparecen en «Comunidad».</p>
+            </form>
+            <div>
+              <h2 class="h-bloque">Publicadas</h2>
+              <div id="n-lista" class="lista-simple"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DATOS DEL CLUB -->
+        <div role="tabpanel" id="p-datos" aria-labelledby="t-datos" class="pestana" hidden>
+          <form class="tarjeta" id="form-datos">
+            <h2 class="h-bloque">Datos del club</h2>
+            <p class="suave">Cada dato que guardes reemplaza la etiqueta <span class="pc">por confirmar</span> en toda la web. Deja vacío lo que aún no quieras publicar.</p>
+            <div id="datos-campos"></div>
+            <div class="grupo-botones"><button class="boton boton-primario" type="submit">Guardar datos</button></div>
+            <p class="suave" id="datos-aviso" aria-live="polite"></p>
+          </form>
+          <div class="tarjeta zona-demo">
+            <h2 class="h-bloque">Demo</h2>
+            <p class="suave">Borra todo lo creado en este navegador (inscripciones, torneos, noticias, datos) y vuelve a los datos de prueba.</p>
+            <button class="boton boton-secundario" type="button" id="reiniciar">Reiniciar demo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <dialog id="visor" aria-labelledby="visor-titulo">
+    <div class="visor-cabeza">
+      <h2 id="visor-titulo" class="h-bloque">Comprobante</h2>
+      <button class="boton boton-secundario boton-chico" type="button" id="visor-cerrar">Cerrar</button>
+    </div>
+    <div id="visor-cuerpo"></div>
+  </dialog>
+</Base>
+
+<script src="../lib/panel.js"></script>
+
+<style>
+  .puerta {
+    max-width: 680px;
+    padding: 32px;
+  }
+  .panel-cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: end;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .panel-cabeza h1 {
+    font-size: clamp(1.8rem, 5vw, 2.4rem);
+    margin: 0;
+  }
+  .pestanas {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--linea);
+    margin-bottom: 20px;
+    scrollbar-width: thin;
+  }
+  .pestanas button {
+    flex: none;
+    font: 600 0.95rem var(--sans);
+    color: var(--suave);
+    background: none;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    padding: 12px 14px;
+    cursor: pointer;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .pestanas button[aria-selected="true"] {
+    color: var(--vino);
+    border-bottom-color: var(--vino);
+  }
+  .globo:empty {
+    display: none;
+  }
+  .globo {
+    background: var(--vino);
+    color: var(--papel);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    padding: 1px 7px;
+  }
+  .suave,
+  :global(.suave) {
+    color: var(--suave);
+    font-size: 0.93rem;
+  }
+  .h-bloque {
+    font-size: 1.3rem;
+  }
+  .resumen-bloques {
+    margin-top: 16px;
+  }
+  .dato-grande strong {
+    font-family: var(--serif);
+    font-size: 2.6rem;
+    color: var(--vino);
+  }
+  :global(.lista-check) {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  :global(.lista-check li) {
+    display: flex;
+    gap: 10px;
+  }
+  :global(.lista-check li span[aria-hidden]) {
+    color: var(--pc-texto);
+    font-weight: 700;
+    width: 1.2em;
+  }
+  :global(.lista-check li.hecho) {
+    color: var(--suave);
+    text-decoration: line-through;
+  }
+  :global(.lista-check li.hecho span[aria-hidden]) {
+    color: var(--ok);
+  }
+  .barra {
+    display: grid;
+    gap: 0 12px;
+    align-items: end;
+  }
+  @media (min-width: 760px) {
+    .barra {
+      grid-template-columns: 1fr 200px auto;
+    }
+  }
+  .barra-acciones {
+    margin-bottom: 16px;
+  }
+  .lista-inscripciones {
+    display: grid;
+    gap: 12px;
+  }
+  :global(.inscripcion) {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  :global(.inscripcion p) {
+    margin: 4px 0 0;
+  }
+  :global(.ins-titulo) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    overflow-wrap: anywhere;
+  }
+  :global(.voucher) {
+    width: 84px;
+    height: 112px;
+    padding: 0;
+    border: 1px solid var(--linea);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--casilla);
+    cursor: zoom-in;
+    display: grid;
+    place-items: center;
+  }
+  :global(.voucher img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  :global(.voucher .pdf) {
+    font-weight: 700;
+    color: var(--vino);
+  }
+  :global(.acciones) {
+    margin-top: 10px;
+    align-items: center;
+  }
+  :global(.acciones select) {
+    width: auto;
+    min-height: 38px;
+    padding: 4px 10px;
+    font-size: 0.88rem;
+    max-width: 100%;
+  }
+  :global(.peligro) {
+    color: var(--error);
+  }
+  :global(.peligro:hover) {
+    color: var(--error);
+    border-color: var(--error);
+  }
+  :global(.lista-simple) {
+    display: grid;
+    gap: 10px;
+  }
+  :global(.fila-simple) {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 14px 16px;
+  }
+  .casillas-categorias {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0 0 16px;
+    min-width: 0;
+  }
+  legend {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+    padding: 0;
+  }
+  :global(.grupo-datos legend) {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+  :global(.grupo-datos label) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .fila {
+    display: flex;
+    gap: 8px;
+  }
+  .fila input {
+    min-width: 0;
+  }
+  #r-csv {
+    margin: 8px 0;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 0.9rem;
+  }
+  #r-publicar {
+    margin-top: 12px;
+  }
+  .zona-demo {
+    margin-top: 20px;
+  }
+  dialog {
+    border: 0;
+    border-radius: var(--radio);
+    padding: 16px;
+    width: min(560px, calc(100vw - 32px));
+    background: var(--papel);
+    color: var(--tinta);
+    box-shadow: var(--sombra);
+  }
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0.55);
+  }
+  .visor-cabeza {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .visor-cabeza h2 {
+    margin: 0;
+  }
+  :global(#visor-cuerpo img) {
+    width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+  }
+  :global(#visor-cuerpo iframe) {
+    width: 100%;
+    height: 70vh;
+    border: 0;
+  }
+</style>

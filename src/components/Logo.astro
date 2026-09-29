@@ -1,0 +1,18 @@
+---
+// Marca provisional. El logo oficial del club se coloca aquí cuando el club autorice su uso
+// (es uno de los «cinco datos» que se piden en la presentación).
+interface Props {
+  tam?: number;
+}
+const { tam = 40 } = Astro.props;
+---
+
+<svg width={tam} height={tam} viewBox="0 0 100 100" aria-hidden="true" class="logo">
+  <rect width="100" height="100" rx="24" fill="#6e1e2b"></rect>
+  <path
+    fill="#f7ecd9"
+    fill-rule="evenodd"
+    d="M27 84h48v-8h-5c2-12 4-22 2-32-2-15-12-26-26-28l-3-7-6 9c-8 5-13 12-16 21l-5 12c-1 4 2 7 6 6l11-4c4-1 7-3 10-5-1 8-6 15-11 22l-2 6h-3zM36 28a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"
+  ></path>
+  <rect x="72" y="12" width="13" height="13" rx="3" fill="#c9a227"></rect>
+</svg>

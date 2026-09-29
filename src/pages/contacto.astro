@@ -1,0 +1,78 @@
+---
+import Base from "../layouts/Base.astro";
+import club from "../data/club.json";
+---
+
+<Base titulo="Contacto" seccion="contacto" descripcion="Contacto del Ajedrez Club Mokewa en Moquegua: WhatsApp, sede y redes.">
+  <section class="seccion">
+    <div class="contenedor">
+      <p class="antetitulo">Contacto</p>
+      <h1>Hablemos</h1>
+      <p class="bajada">La forma más rápida es WhatsApp: el mensaje ya va escrito, solo toca enviar.</p>
+
+      <div class="rejilla rejilla-2 contacto">
+        <div class="tarjeta">
+          <h2 class="h-bloque">WhatsApp</h2>
+          <p>Número oficial: <span class="pc" data-campo="whatsapp">por confirmar</span></p>
+          <div class="grupo-botones">
+            <a class="boton boton-whatsapp" data-whatsapp="Hola, quisiera información sobre las clases de ajedrez." href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Preguntar por clases</a>
+            <a class="boton boton-secundario" data-whatsapp="Hola, tengo una consulta sobre un torneo del club." href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Preguntar por torneos</a>
+          </div>
+          <p class="suave">Mientras el número se confirma, los botones abren la página de Facebook del club.</p>
+        </div>
+        <div class="tarjeta">
+          <h2 class="h-bloque">Sede</h2>
+          <p><span class="pc" data-campo="sede">por confirmar</span></p>
+          <p>Moquegua, Perú</p>
+          <p>Horario de atención: <span class="pc" data-campo="atencion">por confirmar</span></p>
+          <a class="boton boton-secundario" id="mapa" href="https://www.google.com/maps/search/?api=1&query=Moquegua%2C%20Per%C3%BA" rel="noopener" target="_blank">Ver en Google Maps</a>
+        </div>
+        <div class="tarjeta">
+          <h2 class="h-bloque">Redes</h2>
+          <ul class="redes">
+            <li><a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook · ACMokewa</a></li>
+            <li><a href={club.equipo.url} rel="noopener" target="_blank">Lichess · equipo {club.equipo.nombre}</a></li>
+            <li>Correo: <span class="pc" data-campo="correo">por confirmar</span></li>
+          </ul>
+        </div>
+        <div class="tarjeta">
+          <h2 class="h-bloque">Colegios y empresas</h2>
+          <p>Talleres escolares, torneos intercolegiales, delegaciones y patrocinio. Moquegua reunió a 156 escolares de 26 colegios en su I Torneo Provincial 2026: hay espacio para más ajedrez.</p>
+          <a class="boton boton-secundario" data-whatsapp="Hola, escribo de un colegio/empresa y quisiera información sobre talleres o patrocinio." href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Escribir al club</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { contenido, alCambiar } from "../lib/store.js";
+  const mapa = document.getElementById("mapa") as HTMLAnchorElement;
+  const pintar = () => {
+    const m = contenido("mapa");
+    if (m && /^https:\/\//.test(m)) mapa.href = m;
+  };
+  pintar();
+  alCambiar(pintar);
+</script>
+
+<style>
+  .contacto {
+    margin-top: 24px;
+  }
+  .h-bloque {
+    font-size: 1.3rem;
+  }
+  .suave {
+    color: var(--suave);
+    font-size: 0.9rem;
+    margin: 12px 0 0;
+  }
+  .redes {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 10px;
+  }
+</style>

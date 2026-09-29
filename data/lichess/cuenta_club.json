@@ -1,0 +1,76 @@
+{
+ "id": "ajedrez_club_mokewa",
+ "username": "Ajedrez_Club_Mokewa",
+ "perfs": {
+  "bullet": {
+   "games": 1,
+   "rating": 1731,
+   "rd": 301,
+   "prog": 0,
+   "prov": true
+  },
+  "blitz": {
+   "games": 19,
+   "rating": 1593,
+   "rd": 140,
+   "prog": -139,
+   "prov": true
+  },
+  "rapid": {
+   "games": 8,
+   "rating": 1824,
+   "rd": 151,
+   "prog": 0,
+   "prov": true
+  },
+  "classical": {
+   "games": 0,
+   "rating": 1500,
+   "rd": 500,
+   "prog": 0,
+   "prov": true
+  },
+  "correspondence": {
+   "games": 0,
+   "rating": 1500,
+   "rd": 500,
+   "prog": 0,
+   "prov": true
+  },
+  "crazyhouse": {
+   "games": 2,
+   "rating": 1494,
+   "rd": 351,
+   "prog": 0,
+   "prov": true
+  },
+  "puzzle": {
+   "games": 1071,
+   "rating": 1888,
+   "rd": 89,
+   "prog": 0
+  },
+  "racer": {
+   "runs": 3,
+   "score": 4
+  }
+ },
+ "createdAt": 1603577129670,
+ "seenAt": 1787240268751,
+ "playTime": {
+  "total": 149454,
+  "tv": 0
+ },
+ "url": "https://lichess.org/@/Ajedrez_Club_Mokewa",
+ "count": {
+  "all": 178,
+  "rated": 30,
+  "draw": 10,
+  "loss": 90,
+  "win": 78,
+  "bookmark": 0,
+  "playing": 0,
+  "import": 0,
+  "me": 0
+ }
+}

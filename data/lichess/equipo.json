@@ -1,0 +1,23 @@
+{
+ "id": "ajedrez-club-mokewa",
+ "name": "Ajedrez Club Mokewa",
+ "description": "Equipo del \"Ajedrez Club Mokewa\"",
+ "open": false,
+ "leader": {
+  "name": "Jkoa",
+  "id": "jkoa"
+ },
+ "nbMembers": 371,
+ "leaders": [
+  {
+   "name": "Jkoa",
+   "id": "jkoa"
+  },
+  {
+   "name": "Ajedrez_Club_Mokewa",
+   "id": "ajedrez_club_mokewa"
+  }
+ ],
+ "joined": false,
+ "requested": false
+}
