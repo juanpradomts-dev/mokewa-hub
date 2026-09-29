@@ -88,6 +88,12 @@ export function pintarCampos(raiz = document) {
       el.title = "Dato pendiente: el club lo completa desde el panel";
     }
   }
+  // Bloques que solo se muestran cuando TODOS sus datos están confirmados (p. ej. horario + precio).
+  const todos = (lista) => lista.split(/\s+/).filter(Boolean).every((c) => contenido(c));
+  for (const el of raiz.querySelectorAll("[data-si-campos]")) el.hidden = !todos(el.dataset.siCampos);
+  for (const a of raiz.querySelectorAll("[data-segun]")) {
+    a.dataset.accion = todos(a.dataset.segun) ? a.dataset.accionCon : a.dataset.accionSin;
+  }
   const conClase = !!contenido("clase_prueba");
   for (const a of raiz.querySelectorAll("[data-cta]")) {
     a.dataset.accion = conClase ? "Clase de prueba" : "Pedir informes";

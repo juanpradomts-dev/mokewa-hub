@@ -1,0 +1,118 @@
+---
+// Tarjeta de un nivel de la academia.
+// Si el horario o el precio no están confirmados, en vez de repetir «por confirmar» muestra
+// UN solo botón «Consultar horario». Cuando el club los carga (panel o contenido.json), aparecen.
+import Dato from "./Dato.astro";
+import BotonContacto from "./BotonContacto.astro";
+import { valor } from "../lib/contenido.js";
+
+interface Props {
+  nivel: { id: string; nombre: string; pieza: string; horario: string; edad: string; para: string; aprende: string[] };
+  titulo?: "h2" | "h3";
+}
+const { nivel: n, titulo = "h3" } = Astro.props;
+const Titulo = titulo;
+const hayHorario = !!(valor(n.horario) && valor("precio_mensual"));
+const mensaje = `Hola, quisiera saber el horario y el precio del nivel ${n.nombre.toLowerCase()} de la academia.`;
+---
+
+<article class="tarjeta nivel" id={n.id}>
+  <div class="nivel-cabeza">
+    <span class="nivel-pieza glifo" aria-hidden="true">{n.pieza}</span>
+    <div>
+      <Titulo class="nivel-nombre">{n.nombre}</Titulo>
+      <Dato clase="nivel-edad" etiqueta="Edad sugerida" campo={n.edad} />
+    </div>
+  </div>
+  <p class="nivel-para">{n.para}</p>
+  <ul class="nivel-aprende">
+    {n.aprende.map((a) => <li>{a}</li>)}
+  </ul>
+  <div class="nivel-pie">
+    <div class="nivel-horario" data-si-campos={`${n.horario} precio_mensual`} hidden={!hayHorario}>
+      <Dato etiqueta="Horario" campo={n.horario} />
+      <Dato etiqueta="Mensualidad" campo="precio_mensual" />
+    </div>
+    <BotonContacto
+      variante="secundario"
+      accion={hayHorario ? "Inscribirme" : "Consultar horario"}
+      mensaje={mensaje}
+      clase="nivel-boton"
+      data-segun={`${n.horario} precio_mensual`}
+      data-accion-con="Inscribirme"
+      data-accion-sin="Consultar horario"
+    />
+  </div>
+</article>
+
+<style>
+  .nivel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
+    scroll-margin-top: 90px;
+  }
+  .nivel-cabeza {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .nivel-pieza {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex: none;
+    border-radius: 14px;
+    background: var(--casilla);
+    color: var(--tinta);
+    font-size: 1.9rem;
+    line-height: 1;
+  }
+  .nivel-nombre {
+    font-size: 1.35rem;
+    margin: 0;
+  }
+  .nivel-para {
+    margin: 0;
+    color: var(--suave);
+  }
+  .nivel-aprende {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 6px;
+    font-size: 0.97rem;
+  }
+  .nivel-aprende li {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 8px;
+  }
+  .nivel-aprende li::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    margin-top: 0.55em;
+    background: var(--tinta);
+    transform: rotate(45deg);
+  }
+  .nivel-pie {
+    margin-top: auto;
+    display: grid;
+    gap: 12px;
+    padding-top: 6px;
+  }
+  .nivel-horario {
+    display: grid;
+    gap: 4px;
+  }
+  .nivel-horario[hidden] {
+    display: none;
+  }
+  .nivel-pie :global(.nivel-boton) {
+    width: 100%;
+  }
+</style>

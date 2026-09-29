@@ -3,27 +3,13 @@ import Dato from "../components/Dato.astro";
 import Base from "../layouts/Base.astro";
 import BotonContacto from "../components/BotonContacto.astro";
 import club from "../data/club.json";
+import NivelTarjeta from "../components/NivelTarjeta.astro";
+import { NIVELES } from "../lib/niveles.js";
 import { valor, esProduccion } from "../lib/contenido.js";
 
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 const hibridos = club.torneos.filter((t) => t.formato === "Torneos híbridos por nivel");
-const niveles = [
-  {
-    id: "basico", nombre: "Básico", pieza: "♙︎", campo: "horario_basico",
-    para: "Niños y adultos que empiezan desde cero o saben mover las piezas.",
-    aprende: ["Reglas, movimientos y jaque mate", "Tácticas básicas: clavada, horquilla, ataque doble", "Primeros finales: rey y dama, rey y torre", "Cómo jugar un torneo: reloj, planilla y reglamento"],
-  },
-  {
-    id: "intermedio", nombre: "Intermedio", pieza: "♘︎", campo: "horario_intermedio",
-    para: "Jugadores que ya compiten y quieren dar el salto en torneos.",
-    aprende: ["Principios de apertura y un repertorio propio", "Combinaciones y cálculo", "Finales de torres y de peones", "Análisis de sus propias partidas"],
-  },
-  {
-    id: "avanzado", nombre: "Avanzado", pieza: "♕︎", campo: "horario_avanzado",
-    para: "Competidores que se preparan para torneos regionales, nacionales o con rating FIDE.",
-    aprende: ["Preparación de aperturas contra rivales concretos", "Estrategia y planes de medio juego", "Temáticos (Siciliana, India de Rey, Española…)", "Gestión del tiempo y preparación psicológica"],
-  },
-];
+
 // Preguntas frecuentes. Las que dependen de un dato del club se ocultan en producción si falta.
 const preguntas = [
   { p: "¿Desde qué edad pueden empezar?", campo: "edad_minima" },
@@ -41,7 +27,7 @@ const preguntas = [
       <p class="antetitulo">Academia</p>
       <h1>Clases de ajedrez en Moquegua, por niveles</h1>
       <p class="bajada">
-        Tres niveles: los mismos que el club usa en sus torneos híbridos. El ajedrez entrena la concentración, el cálculo y la toma de decisiones, y en Mokewa se aprende jugando torneos desde el primer mes.
+        Tres niveles, los mismos que el club usa en sus torneos híbridos. En Mokewa se aprende jugando torneos desde el primer mes.
       </p>
       <div class="grupo-botones">
         <BotonContacto accion="Pedir informes" mensaje="Hola, quisiera inscribir a mi hijo/a en la academia de ajedrez. ¿Qué horarios tienen?" />
@@ -57,17 +43,7 @@ const preguntas = [
 
   <section class="seccion">
     <div class="contenedor rejilla rejilla-3">
-      {niveles.map((n) => (
-        <article class="tarjeta nivel" id={n.id}>
-          <span class="pieza glifo" aria-hidden="true">{n.pieza}</span>
-          <h2>{n.nombre}</h2>
-          <p class="para">{n.para}</p>
-          <h3>Qué aprende</h3>
-          <ul>{n.aprende.map((a) => <li>{a}</li>)}</ul>
-          <Dato como="p" clase="horario" etiqueta="Horario" campo={n.campo} />
-          <BotonContacto variante="secundario" accion="Quiero este nivel" mensaje={`Hola, quisiera información del nivel ${n.nombre.toLowerCase()} de la academia.`} />
-        </article>
-      ))}
+      {NIVELES.map((n) => <NivelTarjeta nivel={n} titulo="h2" />)}
     </div>
     <div class="contenedor">
       <p class="nota" style="margin-top:20px">
@@ -109,55 +85,12 @@ const preguntas = [
     margin-top: 28px;
   }
   .resumen .tarjeta,
-  .horario {
-    display: grid;
-    gap: 4px;
-    justify-items: start;
-  }
   .dt {
     font-size: 0.8rem;
     color: var(--suave);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-  }
-  .nivel {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    scroll-margin-top: 90px;
-  }
-  .nivel h2 {
-    margin: 0;
-  }
-  .nivel h3 {
-    font-size: 1rem;
-    margin: 8px 0 0;
-    font-family: var(--sans);
-    font-weight: 650;
-  }
-  .nivel ul {
-    margin: 0;
-    padding-left: 1.2em;
-    color: var(--suave);
-  }
-  .nivel li {
-    margin-bottom: 4px;
-  }
-  .nivel .boton {
-    margin-top: auto;
-  }
-  .pieza {
-    font-size: 2.6rem;
-    line-height: 1;
-    color: var(--vino);
-  }
-  .para {
-    color: var(--suave);
-    margin: 0;
-  }
-  .horario {
-    margin: 10px 0 12px;
   }
   .progreso {
     display: grid;

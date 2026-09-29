@@ -93,7 +93,7 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
         <div class="rejilla rejilla-3">
           <div>
             <h3>Ajedrez Club Mokewa</h3>
-            <p>Club de ajedrez de Moquegua. Academia por niveles, torneos presenciales y online, y una comunidad de {club.equipo.miembros} miembros en Lichess.</p>
+            <p>Club de ajedrez de Moquegua: academia por niveles, torneos y una comunidad de {club.equipo.miembros} miembros en Lichess.</p>
             <p>
               <a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook</a> ·{" "}
               <a href={club.equipo.url} rel="noopener" target="_blank">Equipo en Lichess</a>
@@ -112,7 +112,7 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
           </div>
           <div>
             <h3>De dónde salen los datos</h3>
-            <p>Los torneos online, campeones y récords se calculan automáticamente con la API pública de Lichess. Última actualización: {actualizado}.</p>
+            <p>Torneos, campeones y récords se calculan solos con la API pública de Lichess. Actualizado: {actualizado}.</p>
             {!esProduccion && <p>Lo que aún no está verificado aparece marcado <span class="pc">por confirmar</span>.</p>}
           </div>
         </div>

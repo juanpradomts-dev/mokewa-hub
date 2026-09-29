@@ -59,6 +59,17 @@ const historial = club.torneos.filter((x) => x.terminado || new Date(x.fecha) < 
     </div>
   </section>
 
+  <section class="seccion" id="formatos">
+    <div class="contenedor">
+      <p class="antetitulo">Formatos del club</p>
+      <h2>Los torneos que Mokewa repite</h2>
+      <ul class="formatos">
+        {club.formatos.filter((f) => f.nombre !== "Otros").map((f) => <li><span>{f.nombre}</span><b class="num">{f.n}</b></li>)}
+      </ul>
+      <p class="cat">Torneos online agrupados por familia de nombre, calculado desde Lichess.</p>
+    </div>
+  </section>
+
   <section class="seccion" id="historial">
     <div class="contenedor">
       <h2>Historial: {t.torneos} torneos online</h2>
@@ -238,6 +249,31 @@ const historial = club.torneos.filter((x) => x.terminado || new Date(x.fecha) < 
   .contador {
     font-size: 0.9rem;
     color: var(--suave);
+  }
+  .formatos {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .formatos li {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    border-radius: 999px;
+    padding: 6px 8px 6px 16px;
+    font-weight: 550;
+  }
+  .formatos b {
+    background: var(--casilla);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 0.88rem;
   }
   .historial td.fecha {
     white-space: nowrap;

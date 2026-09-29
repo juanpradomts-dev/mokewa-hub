@@ -1,0 +1,141 @@
+---
+// Entrenadores y fotos del club. Nada inventado ni de stock:
+// - con datos en contenido.json («entrenadores», «fotos») se muestran;
+// - sin datos, en producción no se dibuja nada; en demo se ve el marco vacío para que el club sepa qué va ahí.
+import Dato from "./Dato.astro";
+import { lista, esProduccion } from "../lib/contenido.js";
+
+interface Props {
+  oscuro?: boolean;
+}
+const { oscuro = false } = Astro.props;
+const entrenadores = lista("entrenadores").map((e) => {
+  const [nombre, titulo = ""] = e.split(/\s+[—–-]\s+/);
+  return { nombre: nombre.trim(), titulo: titulo.trim() };
+});
+const fotos = lista("fotos").filter((u) => /^https:\/\//.test(u));
+const mostrarEntrenadores = entrenadores.length > 0 || !esProduccion;
+const mostrarFotos = fotos.length > 0 || !esProduccion;
+const iniciales = (n: string) => n.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
+---
+
+{(mostrarEntrenadores || mostrarFotos) && (
+  <div class:list={["equipo", { oscuro }]}>
+    {mostrarEntrenadores && (
+      <div class="bloque-equipo">
+        <h3>Entrenadores</h3>
+        {entrenadores.length ? (
+          <ul class="entrenadores">
+            {entrenadores.map((e) => (
+              <li>
+                <span class="avatar" aria-hidden="true">{iniciales(e.nombre)}</span>
+                <span><strong>{e.nombre}</strong>{e.titulo && <small>{e.titulo}</small>}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="vacio"><Dato campo="entrenadores" /> Nombres y títulos de los entrenadores.</p>
+        )}
+      </div>
+    )}
+    {mostrarFotos && (
+      <div class="bloque-equipo">
+        <h3>El club en fotos</h3>
+        <div class="fotos">
+          {fotos.length
+            ? fotos.slice(0, 3).map((u) => (
+                <figure class="marco"><img src={u} alt="Actividad del Ajedrez Club Mokewa" loading="lazy" decoding="async" /></figure>
+              ))
+            : [1, 2, 3].map(() => <figure class="marco marco-vacio" aria-hidden="true"></figure>)}
+        </div>
+        {!fotos.length && <p class="vacio">Espacio para fotos reales del club, solo con autorización escrita de los padres.</p>}
+      </div>
+    )}
+  </div>
+)}
+
+<style>
+  .equipo {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  @media (min-width: 860px) {
+    .equipo {
+      grid-template-columns: 1fr 1.4fr;
+      gap: 28px;
+    }
+  }
+  h3 {
+    font-size: 1.15rem;
+    margin-bottom: 12px;
+  }
+  .entrenadores {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .entrenadores li {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .entrenadores small {
+    display: block;
+    color: var(--suave);
+  }
+  .avatar {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--casilla);
+    font-weight: 700;
+    flex: none;
+  }
+  .fotos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  @media (min-width: 860px) {
+    .fotos {
+      gap: 10px;
+    }
+  }
+  .marco {
+    margin: 0;
+    aspect-ratio: 4 / 3;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 3px solid var(--papel);
+    box-shadow: 0 0 0 1px var(--linea);
+    background: var(--casilla);
+  }
+  .marco img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .marco-vacio {
+    border: 2px dashed var(--linea);
+    box-shadow: none;
+    background: transparent;
+  }
+  .vacio {
+    font-size: 0.88rem;
+    color: var(--suave);
+    margin: 10px 0 0;
+  }
+  .oscuro .marco-vacio {
+    border-color: rgb(255 255 255 / 0.22);
+  }
+  .oscuro .avatar {
+    background: rgb(255 255 255 / 0.08);
+  }
+</style>

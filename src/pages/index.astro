@@ -1,35 +1,27 @@
 ---
-import Dato from "../components/Dato.astro";
+// Portada: el público principal es el padre de familia. Máximo 5 secciones:
+// héroe · academia · por qué Mokewa · orgullo del club · cierre.
 import Base from "../layouts/Base.astro";
-import GraficoAnual from "../components/GraficoAnual.astro";
 import Caballo from "../components/Caballo.astro";
 import BotonContacto from "../components/BotonContacto.astro";
+import NivelTarjeta from "../components/NivelTarjeta.astro";
+import Equipo from "../components/Equipo.astro";
+import Dato from "../components/Dato.astro";
 import club from "../data/club.json";
-import { miles, fechaLarga, mesAnio, fechaCorta } from "../lib/formato.js";
+import { NIVELES } from "../lib/niveles.js";
+import { valor } from "../lib/contenido.js";
 
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 const t = club.totales;
-const corte = club.actualizado_en.slice(0, 10);
-const anioActual = Number(corte.slice(0, 4));
-const primero = [...club.torneos].sort((a, b) => a.dia.localeCompare(b.dia))[0];
-const pico = [...club.temporadas].sort((a, b) => b.torneos - a.torneos)[0];
-const ultimo = club.torneos.find((x) => x.id === club.ultimo);
-const proximosLichess = club.proximos.map((id) => club.torneos.find((x) => x.id === id)).filter(Boolean);
-const top = club.destacados;
-const formatos = club.formatos.filter((f) => f.nombre !== "Otros");
-
-// Hitos: los de Lichess se calculan; los externos llevan su fuente.
-const hitos = [
-  { cuando: mesAnio(primero.dia), texto: `Primer torneo online del club en Lichess: «${primero.nombre}».`, fuente: primero.url, fuenteTexto: "Lichess" },
-  { cuando: "agosto de 2021", texto: "Festival virtual multidisciplinario: ajedrez sub-09, sub-13 y libre, junto a recitación, cuento, deletreo y dibujo.", fuente: "https://www.radiosol.com.pe/promocionan-festival-ajedrez-club-moquegua.html", fuenteTexto: "Radio Sol 94.5" },
-  { cuando: String(pico.anio), texto: `Año récord online: ${pico.torneos} torneos y ${miles(pico.jugadores)} jugadores distintos, con batallas interclubes como la «Integración Inca».`, fuente: club.equipo.url, fuenteTexto: "Lichess" },
-  { cuando: "enero de 2024", texto: "II IRT Clásico Cerrado «Ajedrez Club Mokewa», torneo válido para rating FIDE.", fuente: "https://ratings.fide.com/report.phtml?event=350802", fuenteTexto: "FIDE" },
-  ultimo && { cuando: mesAnio(ultimo.dia), texto: `Último torneo online: «${ultimo.nombre}», con ${ultimo.jugadores} jugadores.`, fuente: ultimo.url, fuenteTexto: "Lichess" },
-].filter(Boolean);
+const anioActual = Number(club.actualizado_en.slice(0, 4));
+const anios = anioActual - t.desde; // desde el primer torneo online registrado (cota inferior)
+const hibridos = club.torneos.filter((x) => x.formato === "Torneos híbridos por nivel").length;
+const mapa = valor("mapa");
 ---
 
-<Base titulo="Inicio" seccion="inicio">
-  <section class="heroe tablero-fondo">
+<Base titulo="Inicio" seccion="inicio" descripcion="Academia de ajedrez en Moquegua: clases por niveles, torneos todo el año y una comunidad que compite desde 2020.">
+  <!-- 1. HÉROE -->
+  <section class="heroe seccion-oscura">
     <div class="contenedor heroe-grid">
       <div class="escena" aria-hidden="true">
         <div class="halo"></div>
@@ -37,181 +29,127 @@ const hitos = [
         <div class="sombra"></div>
       </div>
       <div class="heroe-texto">
-        <p class="antetitulo heroe-ante">Moquegua · compitiendo online desde {t.desde}</p>
-        <h1><span class="num">{miles(t.jugadores)}</span> ajedrecistas ya han jugado con Mokewa</h1>
-        <p class="heroe-bajada">
-          Academia por niveles, torneos presenciales y online, y {t.torneos} torneos de historia ordenados por primera vez. Encuentra tu clase, inscríbete en línea y busca tus títulos en el Salón de la Fama.
-        </p>
+        <p class="antetitulo">Academia de ajedrez en Moquegua</p>
+        <h1>Que tu hijo gane concentración, disciplina y ganas de competir</h1>
+        <p class="heroe-bajada">Clases por niveles y torneos todo el año con el Ajedrez Club Mokewa.</p>
         <div class="grupo-botones">
-          <a class="boton boton-oro" href={`${b}/torneos/verano-2027/#inscripcion`}>Inscribirme al Torneo de Verano 2027</a>
-          <BotonContacto variante="claro" accion="Clases para mi hijo/a" mensaje="Hola, quisiera información sobre las clases de ajedrez para mi hijo/a." />
+          <BotonContacto cta />
+          <a class="boton boton-claro" href={`${b}/torneos/`}>Ver torneos</a>
         </div>
-        <p class="heroe-nota">El torneo de verano es un <strong>ejemplo</strong> para probar la inscripción.</p>
-        <dl class="heroe-cifras">
-          <div><dt class="num">{t.torneos}</dt><dd>torneos organizados</dd></div>
-          <div><dt class="num">{t.campeones}</dt><dd>campeones en su historia</dd></div>
-          <div><dt class="num">{club.equipo.miembros}</dt><dd>miembros en Lichess</dd></div>
+        <dl class="prueba-social">
+          <div><dt>+{anios} años</dt><dd>organizando torneos (desde {t.desde})</dd></div>
+          <div><dt>{t.torneos}</dt><dd>torneos organizados en línea</dd></div>
+          <div><dt>FIDE</dt><dd><a href="https://ratings.fide.com/report.phtml?event=350802" rel="noopener" target="_blank">torneo oficial con rating</a> en 2024</dd></div>
         </dl>
       </div>
-      <aside class="heroe-tarjeta heroe-evento" aria-label="Próximo evento">
-        <p class="antetitulo">Próximo evento</p>
-        {
-          proximosLichess.length ? (
-            proximosLichess.slice(0, 2).map((p) => (
-              <a class="evento" href={p.url} rel="noopener" target="_blank">
-                <strong>{p.nombre}</strong>
-                <span>{fechaLarga(p.dia)} · {p.ritmo.texto} · online en Lichess</span>
-              </a>
-            ))
-          ) : (
-            <a class="evento" href={`${b}/torneos/verano-2027/`}>
-              <span class="etiqueta etiqueta-ejemplo">Ejemplo</span>
-              <strong>Torneo de Verano 2027</strong>
-              <span>Presencial · categorías Sub-8 a Libre · <Dato etiqueta="fecha" campo="verano_fecha" /></span>
-            </a>
-          )
-        }
-        <p class="heroe-tarjeta-pie">
-          Último torneo online: <a href={ultimo?.url} rel="noopener" target="_blank">{ultimo?.nombre}</a>, {fechaCorta(ultimo?.dia)}, {ultimo?.jugadores} jugadores.
-        </p>
-      </aside>
     </div>
   </section>
 
-  <section class="seccion">
+  <!-- 2. ACADEMIA -->
+  <section class="seccion" id="academia">
+    <div class="contenedor">
+      <div class="encabezado">
+        <div>
+          <p class="antetitulo">Academia</p>
+          <h2>Clases por niveles</h2>
+        </div>
+        <a class="ver-mas" href={`${b}/academia/`}>Ver la academia →</a>
+      </div>
+      <p class="deslizar" aria-hidden="true">Desliza para ver los 3 niveles →</p>
+      <div class="carrusel" tabindex="0" aria-label="Niveles de la academia">
+        {NIVELES.map((n) => <NivelTarjeta nivel={n} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. POR QUÉ MOKEWA -->
+  <section class="seccion seccion-oscura">
     <div class="contenedor">
       <p class="antetitulo">Por qué Mokewa</p>
       <h2>Un club que compite, no solo una clase</h2>
-      <div class="rejilla rejilla-4 razones">
-        <div class="tarjeta razon">
-          <span class="razon-icono glifo" aria-hidden="true">♟︎</span>
-          <h3>Se aprende jugando</h3>
-          <p>{t.torneos} torneos online desde {t.desde}: Jueves de Bala, Viernes de Rápidas, temáticos, finales y torneos por nivel.</p>
-        </div>
-        <div class="tarjeta razon">
-          <span class="razon-icono glifo" aria-hidden="true">♜︎</span>
-          <h3>Torneos oficiales</h3>
-          <p>El club organizó el II IRT Clásico Cerrado «Ajedrez Club Mokewa» (2024), válido para rating FIDE.</p>
-        </div>
-        <div class="tarjeta razon">
-          <span class="razon-icono glifo" aria-hidden="true">♞︎</span>
-          <h3>Tres niveles</h3>
-          <p>Básico, intermedio y avanzado: cada alumno compite con rivales de su nivel.</p>
-        </div>
-        <div class="tarjeta razon">
-          <span class="razon-icono glifo" aria-hidden="true">♚︎</span>
-          <h3>Comunidad todo el año</h3>
-          <p>{club.equipo.miembros} miembros en el equipo de Lichess, batallas contra otros clubes y un Salón de la Fama con {t.campeones} campeones.</p>
-        </div>
-      </div>
+      <ul class="razones">
+        <li class="razon">
+          <span class="razon-icono glifo" aria-hidden="true">♜&#xfe0e;</span>
+          <div>
+            <h3>Compite de verdad</h3>
+            <p>{t.torneos} torneos desde {t.desde}: semanales de bala y rápidas, temáticos y {hibridos} torneos por nivel.</p>
+          </div>
+        </li>
+        <li class="razon">
+          <span class="razon-icono glifo" aria-hidden="true">♚&#xfe0e;</span>
+          <div>
+            <h3>Torneo oficial FIDE</h3>
+            <p>El club organizó el II IRT Clásico Cerrado «Ajedrez Club Mokewa» (2024), válido para rating FIDE.</p>
+          </div>
+        </li>
+        <li class="razon">
+          <span class="razon-icono glifo" aria-hidden="true">♞&#xfe0e;</span>
+          <div>
+            <h3>Comunidad todo el año</h3>
+            <p>{club.equipo.miembros} miembros en el equipo de Lichess y batallas contra otros clubes.</p>
+          </div>
+        </li>
+      </ul>
+      <Equipo oscuro />
     </div>
   </section>
 
+  <!-- 4. ORGULLO DEL CLUB -->
   <section class="seccion">
     <div class="contenedor">
-      <p class="antetitulo">Academia</p>
-      <h2>Aprende a tu ritmo, del primer movimiento a la competencia</h2>
-      <p class="bajada">El club trabaja por niveles: los mismos que usa en sus torneos híbridos. Horarios y precios se publican aquí apenas el club los confirme.</p>
-      <div class="rejilla rejilla-3 niveles">
-        <a class="tarjeta nivel" href={`${b}/academia/#basico`}>
-          <span class="nivel-icono glifo" aria-hidden="true">♙︎</span>
-          <h3>Básico</h3>
-          <p>Para quienes empiezan: reglas, movimientos y primeras ideas de táctica.</p>
-          <Dato clase="nivel-dato" etiqueta="Horario" campo="horario_basico" />
-        </a>
-        <a class="tarjeta nivel" href={`${b}/academia/#intermedio`}>
-          <span class="nivel-icono glifo" aria-hidden="true">♘︎</span>
-          <h3>Intermedio</h3>
-          <p>Para quienes ya juegan: aperturas, táctica y finales para competir.</p>
-          <Dato clase="nivel-dato" etiqueta="Horario" campo="horario_intermedio" />
-        </a>
-        <a class="tarjeta nivel" href={`${b}/academia/#avanzado`}>
-          <span class="nivel-icono glifo" aria-hidden="true">♕︎</span>
-          <h3>Avanzado</h3>
-          <p>Para competidores: preparación de torneos, estrategia y análisis de partidas.</p>
-          <Dato clase="nivel-dato" etiqueta="Horario" campo="horario_avanzado" />
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <section class="seccion">
-    <div class="contenedor historia">
-      <div>
-        <p class="antetitulo">Nuestra historia</p>
-        <h2>{t.torneos} torneos y {miles(t.participaciones)} participaciones, año por año</h2>
-        <p class="bajada">
-          El club llegó a organizar {pico.torneos} torneos online en {pico.anio}. Desde 2024, sus torneos online se concentran en la temporada de verano.
-        </p>
-        <ol class="hitos">
-          {hitos.map((h) => (
-            <li>
-              <span class="hito-cuando">{h.cuando}</span>
-              <span>{h.texto} <a class="fuente" href={h.fuente} rel="noopener" target="_blank">{h.fuenteTexto}</a></span>
-            </li>
-          ))}
-        </ol>
-      </div>
-      <div class="tarjeta">
-        <GraficoAnual temporadas={club.temporadas} anioParcial={anioActual} corte={fechaLarga(corte)} />
-      </div>
-    </div>
-  </section>
-
-  <section class="seccion">
-    <div class="contenedor">
-      <div class="encabezado-fila">
+      <div class="encabezado">
         <div>
-          <p class="antetitulo">Salón de la Fama</p>
-          <h2>{t.campeones} campeones. ¿Estás tú?</h2>
+          <p class="antetitulo">Orgullo del club</p>
+          <h2>{t.campeones} campeones desde {t.desde}</h2>
         </div>
-        <form class="buscador" action={`${b}/el-club/`} method="get" role="search">
-          <label class="visually-hidden" for="q-inicio">Busca tu usuario de Lichess</label>
-          <input id="q-inicio" name="q" type="search" placeholder="Tu usuario de Lichess" autocomplete="off" />
-          <button class="boton boton-primario" type="submit">Buscar</button>
-        </form>
+        <a class="ver-mas" href={`${b}/el-club/#salon`}>Ver el Salón de la Fama →</a>
       </div>
-      <ol class="podio-lista">
-        {top.map((c, i) => (
+      <ol class="podio">
+        {club.destacados.map((c, i) => (
           <li class="tarjeta campeon">
-            <span class="campeon-pos">{i + 1}</span>
-            <a href={`${b}/jugador/?u=${encodeURIComponent(c.u)}`}><strong>{c.u}</strong></a>
-            <span class="campeon-dato"><b>{c.titulos}</b> {c.titulos === 1 ? "título" : "títulos"} · {c.podios} podios · {c.torneos} torneos</span>
+            <span class="puesto" aria-label={`Puesto ${i + 1}`}>{i + 1}</span>
+            <div>
+              <a href={`${b}/jugador/?u=${encodeURIComponent(c.u)}`}><strong>{c.u}</strong></a>
+              <span>{c.titulos} títulos · {c.podios} podios · {c.torneos} torneos</span>
+            </div>
           </li>
         ))}
       </ol>
-      <p><a class="boton boton-secundario" href={`${b}/el-club/#salon`}>Ver los {t.campeones} campeones, récords y fieles →</a></p>
+      <form class="buscador tarjeta" action={`${b}/el-club/`} method="get" role="search">
+        <label for="q-inicio">¿Estás en el Salón? Busca tu usuario de Lichess</label>
+        <div class="fila">
+          <input id="q-inicio" name="q" type="search" placeholder="Tu usuario" autocomplete="off" spellcheck="false" />
+          <button class="boton boton-secundario" type="submit">Buscar</button>
+        </div>
+      </form>
     </div>
   </section>
 
-  <section class="seccion">
+  <!-- 5. CIERRE -->
+  <section class="seccion cierre-seccion">
     <div class="contenedor">
-      <p class="antetitulo">Formatos del club</p>
-      <h2>Los torneos que Mokewa repite</h2>
-      <ul class="formatos">
-        {formatos.map((f) => <li><span>{f.nombre}</span><b class="num">{f.n}</b></li>)}
-      </ul>
-      <p class="bajada">Torneos online del club agrupados por familia de nombre, calculado desde Lichess.</p>
-    </div>
-  </section>
-
-  <section class="seccion">
-    <div class="contenedor">
-      <div class="tarjeta unete">
+      <div class="cierre tarjeta">
         <div>
-          <h2>Juega con el club esta semana</h2>
-          <p>El equipo «{club.equipo.nombre}» en Lichess reúne a {club.equipo.miembros} miembros. Es gratis y sin publicidad: pide tu ingreso y recibe los torneos online del club.</p>
+          <h2>La primera jugada: escríbenos</h2>
+          <p>Te contamos horarios, niveles y cómo empezar.</p>
+          <Dato como="p" etiqueta="Sede" campo="sede" />
+          {mapa && <a class="mapa" href={mapa} rel="noopener" target="_blank">Ver en Google Maps</a>}
         </div>
-        <div class="grupo-botones">
-          <a class="boton boton-primario" href={club.equipo.url} rel="noopener" target="_blank">Unirme al equipo en Lichess</a>
-          <a class="boton boton-secundario" href={`${b}/el-club/#comunidad`}>Puzzle del día</a>
-        </div>
+        <BotonContacto cta />
       </div>
     </div>
   </section>
 </Base>
 
 <script>
+  // Al enviar el buscador, ir directo a la sección del Salón.
+  document.querySelector<HTMLFormElement>(".buscador")?.addEventListener("submit", (e) => {
+    const f = e.currentTarget as HTMLFormElement;
+    const q = (f.querySelector("input") as HTMLInputElement).value.trim();
+    e.preventDefault();
+    location.href = `${f.action}${q ? `?q=${encodeURIComponent(q)}` : ""}#salon`;
+  });
+
   // El caballo se inclina un poco hacia el cursor (responde al usuario, no se mueve solo).
   const heroe = document.querySelector<HTMLElement>(".heroe");
   const caballo = document.querySelector<HTMLElement>(".flotante");
@@ -231,82 +169,95 @@ const hitos = [
 </script>
 
 <style>
-  .heroe-cifras {
+  /* ---------- 1. Héroe ---------- */
+  .heroe {
+    padding: 28px 0 44px;
+  }
+  .heroe-grid {
     display: grid;
-    grid-template-columns: repeat(3, auto);
-    justify-content: start;
-    gap: 12px 20px;
-    margin: 28px 0 0;
+    gap: 20px;
+    align-items: center;
   }
-  @media (max-width: 480px) {
-    .heroe-cifras dt {
-      font-size: 1.6rem !important;
+  @media (min-width: 900px) {
+    .heroe {
+      padding: 72px 0 80px;
     }
-    .heroe-cifras div {
-      padding-left: 8px !important;
+    .heroe-grid {
+      grid-template-columns: 1.5fr 1fr;
+      gap: 48px;
+    }
+    .escena {
+      order: 2;
     }
   }
-  .heroe-cifras div {
-    border-left: 3px solid #f28a1e;
-    padding-left: 12px;
+  .heroe h1 {
+    color: #fff;
+    font-size: clamp(2rem, 6.2vw, 3.3rem);
   }
-  .heroe-cifras dt {
+  .heroe .antetitulo {
+    color: #c9c0b5;
+  }
+  .heroe-bajada {
+    font-size: 1.12rem;
+    color: #ddd5cb;
+    max-width: 52ch;
+    margin-bottom: 1.4em;
+  }
+  .boton-claro {
+    background: transparent;
+    color: #fff;
+    border-color: rgb(255 255 255 / 0.4);
+  }
+  .boton-claro:hover {
+    color: #fff;
+    border-color: #fff;
+  }
+  .prueba-social {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 32px 0 0;
+    padding-top: 20px;
+    border-top: 1px solid rgb(255 255 255 / 0.14);
+    max-width: 560px;
+  }
+  .prueba-social dt {
     font-family: var(--serif);
-    font-size: 2rem;
+    font-size: clamp(1.45rem, 5vw, 2rem);
     font-weight: 650;
     color: #fff;
     line-height: 1.1;
   }
-  .heroe-cifras dd {
-    margin: 0;
-    font-size: 0.85rem;
+  .prueba-social dd {
+    margin: 4px 0 0;
+    font-size: 0.84rem;
     color: #c9c0b5;
+    line-height: 1.35;
   }
-  .razones {
-    margin-top: 20px;
-  }
-  .razon h3 {
-    margin: 8px 0 6px;
-  }
-  .razon p {
-    color: var(--suave);
-    margin: 0;
-    font-size: 0.97rem;
-  }
-  .razon-icono {
-    display: grid;
-    place-items: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    background: var(--casilla);
-    color: var(--vino);
-    font-size: 1.7rem;
-  }
-  .heroe {
+  .prueba-social a {
     color: #f3eee8;
-    padding: 48px 0 56px;
   }
-  .heroe-grid {
-    display: grid;
-    gap: 28px;
-    align-items: center;
-  }
+
+  /* caballo flotante (se anima para todos: es suave y de poca amplitud) */
   .escena {
     position: relative;
-    width: min(46vw, 190px);
+    width: min(32vw, 124px);
     aspect-ratio: 1;
     justify-self: center;
     display: grid;
     place-items: center;
     perspective: 600px;
   }
+  @media (min-width: 900px) {
+    .escena {
+      width: 280px;
+    }
+  }
   .halo {
     position: absolute;
-    inset: 6%;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgb(242 138 30 / 0.32), rgb(242 138 30 / 0.08) 50%, transparent 68%);
     inset: -8%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(242 138 30 / 0.3), rgb(242 138 30 / 0.07) 50%, transparent 68%);
   }
   .flotante {
     position: relative;
@@ -319,7 +270,7 @@ const hitos = [
     aspect-ratio: 1;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #ffffff, #f1ece5 70%);
-    box-shadow: 0 0 0 5px rgb(242 138 30 / 0.9), 0 0 0 12px rgb(242 138 30 / 0.18), 0 24px 40px rgb(0 0 0 / 0.5);
+    box-shadow: 0 0 0 5px rgb(242 138 30 / 0.9), 0 0 0 12px rgb(242 138 30 / 0.16), 0 24px 40px rgb(0 0 0 / 0.5);
     display: grid;
     place-items: center;
     padding: 10%;
@@ -335,7 +286,7 @@ const hitos = [
   }
   .sombra {
     position: absolute;
-    bottom: 0;
+    bottom: -4%;
     width: 46%;
     height: 7%;
     border-radius: 50%;
@@ -345,7 +296,7 @@ const hitos = [
   }
   @keyframes flotar {
     0%, 100% { translate: 0 0; rotate: -2deg; }
-    50% { translate: 0 -16px; rotate: 1.5deg; }
+    50% { translate: 0 -14px; rotate: 1.5deg; }
   }
   @keyframes corona {
     0%, 100% { transform: rotate(0deg); }
@@ -355,281 +306,188 @@ const hitos = [
     0%, 100% { transform: scaleX(1); opacity: 0.55; }
     50% { transform: scaleX(0.78); opacity: 0.3; }
   }
-  @media (min-width: 900px) {
-    .heroe-grid {
-      grid-template-areas: "texto escena" "texto evento";
-      row-gap: 8px;
-    }
-    .heroe-texto { grid-area: texto; }
-    .escena { grid-area: escena; width: 260px; }
-    .heroe-evento { grid-area: evento; }
+
+  /* ---------- encabezados de sección ---------- */
+  .encabezado {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: end;
+    gap: 4px 20px;
+    margin-bottom: 20px;
   }
-  @media (min-width: 900px) {
-    .heroe {
-      padding: 80px 0;
-    }
-    .heroe-grid {
-      grid-template-columns: 1.5fr 1fr;
-      gap: 48px;
-    }
+  .encabezado h2 {
+    margin: 0;
+    max-width: 22ch;
   }
-  .heroe h1 {
-    color: #fff;
-  }
-  .heroe-ante {
-    color: #f5a04a;
-  }
-  .heroe-bajada {
-    font-size: 1.12rem;
-    color: #ddd5cb;
-    max-width: 58ch;
-    margin-bottom: 1.5em;
-  }
-  .heroe-nota {
-    margin-top: 14px;
-    font-size: 0.88rem;
-    color: #c9c0b5;
-  }
-  .boton-oro {
-    background: #f28a1e;
-    color: #111;
-  }
-  .boton-oro:hover {
-    background: #f59b3d;
-    color: #111;
-  }
-  .boton-claro {
-    background: transparent;
-    color: #fff;
-    border-color: rgb(255 255 255 / 0.4);
-  }
-  .boton-claro:hover {
-    color: #fff;
-    border-color: #fff;
-  }
-  .heroe-tarjeta {
-    background: rgb(255 253 248 / 0.07);
-    border: 1px solid rgb(255 255 255 / 0.16);
-    border-radius: var(--radio);
-    padding: 20px;
-  }
-  .heroe-tarjeta .antetitulo {
-    color: #f5a04a;
-  }
-  .evento {
-    display: grid;
-    gap: 6px;
-    justify-items: start;
-    padding: 14px;
-    border-radius: 10px;
-    background: rgb(0 0 0 / 0.22);
-    color: #fff;
-    text-decoration: none;
-    margin-bottom: 10px;
-  }
-  .evento:hover {
-    color: #fff;
-    background: rgb(0 0 0 / 0.32);
-  }
-  .evento strong {
-    font-family: var(--serif);
-    font-size: 1.3rem;
+  .ver-mas {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     font-weight: 600;
   }
-  .evento > span:last-child {
-    color: #ddd5cb;
-    font-size: 0.94rem;
-  }
-  .heroe-tarjeta-pie {
-    font-size: 0.86rem;
-    color: #c9c0b5;
-    margin: 0;
-  }
-  .heroe-tarjeta-pie a {
-    color: #f5a04a;
-  }
-  .niveles {
-    margin-top: 20px;
-  }
-  .nivel {
-    text-decoration: none;
-    color: var(--tinta);
-    display: grid;
-    align-content: start;
-    gap: 4px;
-    transition: border-color 0.15s;
-  }
-  .nivel:hover {
-    color: var(--tinta);
-    border-color: var(--vino);
-  }
-  .nivel h3 {
-    margin: 0;
-  }
-  .nivel p {
+
+  /* ---------- 2. Academia: carrusel en móvil, 3 columnas en escritorio ---------- */
+  .deslizar {
+    font-size: 0.85rem;
     color: var(--suave);
-    margin: 0 0 8px;
+    margin: -8px 0 10px;
   }
-  .nivel-icono {
-    font-size: 2rem;
-    line-height: 1;
-    color: var(--vino);
-  }
-  .nivel-dato {
-    font-size: 0.9rem;
-  }
-  .historia {
+  .carrusel {
     display: grid;
-    gap: 28px;
-  }
-  @media (min-width: 960px) {
-    .historia {
-      grid-template-columns: 1fr 1.15fr;
-      align-items: start;
-    }
-  }
-  .hitos {
-    list-style: none;
-    padding: 0;
-    margin: 20px 0 0;
-    border-left: 2px solid var(--linea);
-  }
-  .hitos li {
-    position: relative;
-    padding: 0 0 16px 20px;
-    display: grid;
-    gap: 2px;
-    font-size: 0.97rem;
-  }
-  .hitos li::before {
-    content: "";
-    position: absolute;
-    left: -7px;
-    top: 5px;
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
-    background: var(--oro);
-  }
-  .hito-cuando {
-    font-weight: 650;
-    color: var(--vino);
-    font-size: 0.86rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .fuente {
-    font-size: 0.8rem;
-    color: var(--suave);
-  }
-  .encabezado-fila {
-    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 84%;
     gap: 12px;
-    align-items: end;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 4px 2px 12px;
+    scrollbar-width: thin;
+  }
+  .carrusel > :global(*) {
+    scroll-snap-align: start;
   }
   @media (min-width: 820px) {
-    .encabezado-fila {
-      grid-template-columns: 1fr auto;
+    .deslizar {
+      display: none;
+    }
+    .carrusel {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(3, 1fr);
+      overflow: visible;
     }
   }
-  .buscador {
-    display: flex;
-    gap: 8px;
-  }
-  .buscador input {
-    min-width: 0;
-  }
-  .podio-lista {
+
+  /* ---------- 3. Por qué Mokewa ---------- */
+  .razones {
     list-style: none;
+    margin: 20px 0 0;
     padding: 0;
-    margin: 20px 0;
+    display: grid;
+    gap: 18px;
+  }
+  @media (min-width: 860px) {
+    .razones {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+  }
+  .razon {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+  .razon h3 {
+    margin: 4px 0 4px;
+    font-size: 1.15rem;
+  }
+  .razon p {
+    margin: 0;
+    color: var(--suave);
+    font-size: 0.97rem;
+  }
+  .razon-icono {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgb(255 255 255 / 0.08);
+    color: #fff;
+    font-size: 1.8rem;
+  }
+
+  /* ---------- 4. Orgullo del club ---------- */
+  .podio {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
     display: grid;
     gap: 10px;
   }
-  @media (min-width: 720px) {
-    .podio-lista {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  @media (min-width: 1040px) {
-    .podio-lista {
+  @media (min-width: 820px) {
+    .podio {
       grid-template-columns: repeat(3, 1fr);
     }
   }
   .campeon {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    column-gap: 14px;
+    display: flex;
+    gap: 14px;
     align-items: center;
-    padding: 14px 16px;
+    padding: 16px 18px;
   }
-  .campeon-pos {
-    grid-row: span 2;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+  .campeon div {
     display: grid;
-    place-items: center;
-    background: var(--casilla);
-    font-family: var(--serif);
-    font-weight: 650;
-    color: var(--vino);
-  }
-  .campeon:first-child .campeon-pos {
-    background: var(--oro);
-    color: #111;
+    min-width: 0;
   }
   .campeon a {
     color: var(--tinta);
     text-decoration: none;
     overflow-wrap: anywhere;
+    font-size: 1.08rem;
   }
   .campeon a:hover {
     color: var(--vino);
     text-decoration: underline;
   }
-  .campeon-dato {
+  .campeon span:not(.puesto) {
     font-size: 0.88rem;
     color: var(--suave);
   }
-  .formatos {
-    list-style: none;
-    padding: 0;
-    margin: 16px 0;
+  .puesto {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--casilla);
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 1.2rem;
+  }
+  .campeon:first-child .puesto {
+    background: #141211;
+    color: #fff;
+  }
+  .buscador label {
+    font-weight: 650;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .fila {
     display: flex;
-    flex-wrap: wrap;
     gap: 8px;
   }
-  .formatos li {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--papel);
-    border: 1px solid var(--linea);
-    border-radius: 999px;
-    padding: 8px 8px 8px 16px;
-    font-weight: 550;
+  .fila input {
+    min-width: 0;
   }
-  .formatos b {
-    background: var(--casilla);
-    color: var(--vino);
-    border-radius: 999px;
-    padding: 2px 10px;
-    font-size: 0.88rem;
-  }
-  .unete {
+
+  /* ---------- 5. Cierre ---------- */
+  .cierre {
     display: grid;
     gap: 16px;
     align-items: center;
-    padding: 28px;
+    padding: 22px;
+    border-top: 4px solid var(--oro);
   }
-  @media (min-width: 900px) {
-    .unete {
-      grid-template-columns: 1.4fr auto;
+  @media (min-width: 860px) {
+    .cierre {
+      grid-template-columns: 1fr auto;
+      padding: 36px 40px;
     }
   }
-  .unete p {
+  .cierre h2 {
+    margin-bottom: 6px;
+  }
+  .cierre p {
+    margin: 0 0 8px;
     color: var(--suave);
-    margin: 0;
+  }
+  .mapa {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
   }
 </style>
