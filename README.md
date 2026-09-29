@@ -48,12 +48,18 @@ Para migrar: cambiar la implementación de las funciones de `store.js` por llama
 ## Privacidad
 
 - `noindex` en todas las páginas y `robots.txt` con `Disallow: /` mientras sea demo.
-- Solo usuarios públicos de Lichess: ningún nombre real ni foto.
-- Listas públicas: solo nombre, categoría y club (Ley N.º 29733).
+- La web no muestra nombres ni fotos de alumnos. Fotos solo con autorización escrita de los padres.
+- Listas públicas: solo nombre, categoría y club (Ley N.º 29733). Los inscritos del torneo de ejemplo son nombres inventados y así se indica.
+
+## Diseño
+
+- Tipografía: **Archivo** (Omnibus-Type, variable, `@fontsource-variable/archivo`). Una sola familia: títulos angostos y gruesos (eje de ancho al 80 %, «MOKEWA» al 70 %), como un cartel de torneo, y texto en ancho normal. Se precarga el archivo latino (`Base.astro`).
+- Paleta clara y cálida del logo: naranja `#f28a1e`, durazno, ámbar, crema y café. Sin modo oscuro: la marca no cambia.
+- El caballo viajero (`src/lib/viajero.js`) nunca pasa por encima del texto y se anima para todos, también con «reducir movimiento» del sistema.
 
 ## Antes de publicar
 
-1. El club aprueba y entrega los cinco datos: horarios, precios, sede, WhatsApp oficial y autorización del logo.
-2. Reemplazar el logo provisional (`src/components/Logo.astro`, `public/favicon.svg`).
+1. El club aprueba la demo y entrega los datos de `../PREGUNTAS-PARA-EL-CLUB.md`: WhatsApp, sede, horarios, precios, autorización del logo, victorias, fotos autorizadas, entrenadores y misión y visión.
+2. Si el club entrega el logo original, reemplazar el trazado (`src/components/Caballo.astro`, `public/favicon.svg`, `public/og.png`).
 3. Conectar Supabase y el correo transaccional.
 4. Quitar `noindex` (`src/layouts/Base.astro`) y `robots.txt`, añadir el sitemap y crear el perfil de Google Business.

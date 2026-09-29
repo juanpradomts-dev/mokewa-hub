@@ -1,5 +1,5 @@
 // Calcula la historia del club a partir de la caché de Lichess (data/lichess/).
-// Nada de lo que muestra el Salón de la Fama está escrito a mano: sale de aquí.
+// Ninguna cifra del club que muestra la web está escrita a mano: sale de aquí.
 //
 // Salidas:
 //   src/data/club.json         → cifras, temporadas, récords y torneos (se usa al construir)

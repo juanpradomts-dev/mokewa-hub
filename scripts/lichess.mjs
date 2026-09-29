@@ -123,10 +123,6 @@ async function main() {
   const cuenta = await pedir(`${API}/api/user/${CUENTA_CLUB}`);
   if (cuenta) await writeFile(path.join(DIR, "cuenta_club.json"), JSON.stringify(cuenta, null, 1), "utf8");
 
-  console.log("Puzzle del día…");
-  const puzzle = await pedir(`${API}/api/puzzle/daily`).catch(() => null);
-  if (puzzle?.puzzle?.fen) await writeFile(path.join(DIR, "puzzle.json"), JSON.stringify(puzzle, null, 1), "utf8");
-
   meta.actualizado_en = new Date().toISOString();
   meta.fuente = `${API}/api/team/${EQUIPO}`;
   await writeFile(path.join(DIR, "meta.json"), JSON.stringify(meta, null, 1), "utf8");

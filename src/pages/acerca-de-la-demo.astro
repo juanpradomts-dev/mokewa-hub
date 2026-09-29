@@ -6,19 +6,18 @@ import { fechaLarga, miles } from "../lib/formato.js";
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 const t = club.totales;
 const pantallas = [
-  ["Inicio", "Historia del club, contador de jugadores y torneos, próximo evento.", "Real (Lichess, FIDE, prensa)", "ok"],
-  ["Torneos", `Los ${t.torneos} torneos online del club y un «Torneo de Verano 2027» con inscripción funcionando.`, "Real + ejemplo marcado", "mixto"],
+  ["Inicio", "Quiénes somos, misión y visión, los tres niveles de la academia y por qué elegir el club.", "Real; misión y visión son una propuesta", "mixto"],
+  ["Academia", "Niveles básico, intermedio y avanzado, con lo que aprende cada uno y preguntas frecuentes.", "Niveles reales; contenidos, horarios y precios por confirmar", "mixto"],
+  ["Torneos", "Solo torneos presenciales: el II IRT FIDE de 2024 y un «Torneo de Verano 2027» de ejemplo con la inscripción funcionando.", "Real + ejemplo marcado", "mixto"],
+  ["El Club", "Nuestra historia (línea de tiempo de logros en torneos presenciales) y la comunidad en Lichess.", "Real; victorias por confirmar", "mixto"],
   ["Inscripción y panel", "Formulario, carga de comprobante y la vista del organizador validando pagos.", "Funcional, con datos de prueba", "prueba"],
-  ["Academia", "Niveles básico, intermedio y avanzado (los que el club usa en sus torneos híbridos).", "Niveles reales; horarios y precios por confirmar", "mixto"],
-  ["Contacto", "WhatsApp, sede y redes.", "Por confirmar (solo Facebook y Lichess verificados)", "prueba"],
+  ["Contacto", "Facebook, Lichess, sede y WhatsApp.", "Facebook y Lichess verificados; lo demás por confirmar", "prueba"],
 ];
 const fuentes = [
   ["Ajedrez Club Mokewa en Facebook", "https://www.facebook.com/ACMokewa/"],
   ["Equipo «Ajedrez Club Mokewa» en Lichess (API pública)", "https://lichess.org/api/team/ajedrez-club-mokewa"],
   ["FIDE Ratings: II IRT Clásico Cerrado «Ajedrez Club Mokewa», enero de 2024", "https://ratings.fide.com/report.phtml?event=350802"],
-  ["Radio Sol 94.5 FM: Festival Ajedrez Club Moquegua (2021)", "https://www.radiosol.com.pe/promocionan-festival-ajedrez-club-moquegua.html"],
-  ["Municipalidad Provincial Mariscal Nieto: I Torneo Provincial de Ajedrez (2026)", "https://munimoquegua.gob.pe/estudiantes-moqueguanos-convierten-nuestra-plaza-en-capital-del-deporte-ciencia/"],
-  ["La Prensa Regional: I Torneo Provincial de Ajedrez (2026)", "https://prensaregional.pe/primer-torneo-provincial-de-ajedrez-reunira-a-escolares-en-moquegua/"],
+  ["Municipalidad de Mariscal Nieto: I Torneo Provincial de Ajedrez 2026 (156 escolares de 26 colegios)", "https://munimoquegua.gob.pe/estudiantes-moqueguanos-convierten-nuestra-plaza-en-capital-del-deporte-ciencia/"],
 ];
 ---
 
@@ -32,9 +31,9 @@ const fuentes = [
       </p>
 
       <div class="cifras">
-        <div class="cifra"><strong>{t.torneos}</strong><span>torneos leídos de Lichess</span></div>
-        <div class="cifra"><strong>{miles(t.jugadores)}</strong><span>jugadores distintos</span></div>
-        <div class="cifra"><strong>{t.campeones}</strong><span>campeones calculados</span></div>
+        <div class="cifra"><strong>{t.desde}</strong><span>primer torneo del club en Lichess</span></div>
+        <div class="cifra"><strong>{miles(club.equipo.miembros)}</strong><span>miembros en su equipo de Lichess</span></div>
+        <div class="cifra"><strong>FIDE</strong><span>torneo oficial organizado en 2024</span></div>
         <div class="cifra"><strong>S/ 0</strong><span>costo de la infraestructura</span></div>
       </div>
 
@@ -50,18 +49,19 @@ const fuentes = [
         </table>
       </div>
 
-      <h2>Solo faltan cinco datos del club</h2>
+      <h2>Lo que falta del club</h2>
       <ol class="cinco">
-        <li>Horarios de la academia.</li>
-        <li>Precios (mensualidad e inscripciones).</li>
-        <li>Dirección de la sede.</li>
-        <li>WhatsApp oficial.</li>
-        <li>Autorización para usar el logo.</li>
+        <li>WhatsApp oficial, dirección de la sede y horario de atención.</li>
+        <li>Horarios, precios y edades de cada nivel de la academia.</li>
+        <li>Autorización para usar el logo (y el archivo original).</li>
+        <li>Victorias en torneos presenciales oficiales: torneo, fecha, puesto y categoría.</li>
+        <li>Fotos de torneos y clases, con autorización escrita de los padres.</li>
+        <li>Entrenadores, y aprobar o ajustar la misión y la visión.</li>
       </ol>
       <p>Todo lo marcado <span class="pc">por confirmar</span> se completa en segundos desde el <a href={`${b}/panel/`}>panel del organizador</a>, pestaña «Datos del club».</p>
 
       <h2>Privacidad en la demo</h2>
-      <p>Solo se muestran nombres de usuario públicos de Lichess: ningún nombre real ni foto. Las inscripciones que hagas aquí se guardan únicamente en tu navegador. La página no se indexa en buscadores.</p>
+      <p>La web no muestra nombres ni fotos de alumnos. Los inscritos del «Torneo de Verano 2027» son nombres de ejemplo, y lo que escribas en los formularios se guarda únicamente en tu navegador. La página no se indexa en buscadores.</p>
 
       <h2>Fuentes</h2>
       <ul class="fuentes">

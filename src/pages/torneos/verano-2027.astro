@@ -1,6 +1,7 @@
 ---
 import Dato from "../../components/Dato.astro";
 import Base from "../../layouts/Base.astro";
+import { esProduccion } from "../../lib/contenido.js";
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
@@ -121,7 +122,7 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
       <aside>
         <div class="tarjeta" id="inscritos">
           <h2 class="h-lateral">Inscritos <span class="num" id="n-inscritos"></span></h2>
-          <p class="ayuda">Lista pública: solo nombre, categoría y club.</p>
+          <p class="ayuda">Lista pública: solo nombre, categoría y club.{!esProduccion && " Los nombres de esta demo son de ejemplo."}</p>
           <div id="lista-inscritos"></div>
         </div>
         <div class="tarjeta mis" id="mis-inscripciones" hidden>
@@ -170,6 +171,9 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
     display: grid;
     gap: 20px;
   }
+  .inscripcion-grid > * {
+    min-width: 0; /* que el formulario no ensanche la página en celulares chicos */
+  }
   @media (min-width: 980px) {
     .inscripcion-grid {
       grid-template-columns: 1.6fr 1fr;
@@ -193,7 +197,8 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
     min-width: 0;
   }
   legend {
-    font-family: var(--serif);
+    font-family: var(--titulo);
+    font-stretch: var(--angosto);
     font-size: 1.15rem;
     font-weight: 600;
     margin-bottom: 12px;
@@ -265,5 +270,11 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
   :global(.tiempo) {
     font-weight: 650;
     color: var(--ok);
+  }
+  .pago-datos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    margin: 4px 0 10px;
   }
 </style>

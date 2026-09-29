@@ -80,8 +80,10 @@ function pintarResumen() {
     ["Horarios de los niveles intermedio y avanzado", !faltan.includes("horario_intermedio") && !faltan.includes("horario_avanzado")],
     ["Logo en alta calidad y autorización para usarlo", false],
     ["Número de Yape o Plin para cobrar", !faltan.includes("yape")],
-    ["Fotos y testimonios de padres (con autorización escrita)", false],
-    ["¿Ofrecen clase de prueba? (las academias de referencia la destacan)", false],
+    ["Entrenadores: nombres y títulos", !faltan.includes("entrenadores")],
+    ["Misión y visión aprobadas por el club", !faltan.includes("mision") && !faltan.includes("vision")],
+    ["Fotos del club (con autorización escrita de los padres)", !faltan.includes("fotos")],
+    ["¿Ofrecen clase de prueba? (si la hay, el botón principal lo dice)", !faltan.includes("clase_prueba")],
   ];
   $("checklist").innerHTML = items
     .map(([t, ok]) => `<li class="${ok ? "hecho" : ""}"><span aria-hidden="true">${ok ? "✓" : "○"}</span> ${esc(t)}${ok ? '<span class="visually-hidden"> (listo)</span>' : ""}</li>`)

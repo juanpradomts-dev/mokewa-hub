@@ -79,7 +79,7 @@ test("alias que jugaron el mismo torneo no duplican torneos", () => {
   assert.equal(new Set(alex.h.map((h) => h[0])).size, alex.h.length);
 });
 
-test("nicks sensibles: fuera de destacados, dentro del Salón completo", () => {
+test("nicks sensibles: fuera de destacados y marcados como sensibles", () => {
   const { club } = calcular(datos, AHORA, configReal);
   const sensibles = privacidad.nicks_sensibles.map((u) => u.toLowerCase());
   assert.equal(club.destacados.length, 3);

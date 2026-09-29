@@ -196,4 +196,24 @@ const realizados = [...presenciales.torneos].sort((a, c) => c.fecha.localeCompar
   .nota-torneos {
     margin-top: 20px;
   }
+  /* Un solo torneo en la lista: tarjeta horizontal a todo el ancho (foto a la izquierda),
+     en vez de una tarjeta angosta con un hueco al lado. */
+  @media (min-width: 760px) {
+    :global(.rejilla:has(> .torneo:only-child)) {
+      grid-template-columns: 1fr;
+    }
+    :global(.rejilla > .torneo:only-child) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+      align-items: stretch;
+    }
+    :global(.rejilla > .torneo:only-child .foto-torneo),
+    :global(.rejilla > .torneo:only-child .foto-panel) {
+      aspect-ratio: auto;
+      min-height: 100%;
+    }
+    :global(.rejilla > .torneo:only-child .torneo-cuerpo) {
+      align-content: center;
+      padding: 28px 32px;
+    }
+  }
 </style>

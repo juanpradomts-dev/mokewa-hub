@@ -1,7 +1,7 @@
 {
   "name": "Ajedrez Club Mokewa",
   "short_name": "Mokewa",
-  "description": "Academia, torneos, resultados y Salón de la Fama del Ajedrez Club Mokewa (Moquegua).",
+  "description": "Ajedrez Club Mokewa (Moquegua): donde el ajedrez nunca descansa. Academia por niveles y torneos presenciales.",
   "lang": "es-PE",
   "start_url": "./",
   "scope": "./",

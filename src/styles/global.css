@@ -1,5 +1,6 @@
 /* Mokewa Hub — sistema visual.
-   Paleta: vino de Moquegua + madera de tablero. Mobile-first, contraste AA, texto base 17 px. */
+   Tipografía: Archivo (Omnibus-Type), una sola familia variable. Títulos angostos y gruesos,
+   como un cartel de torneo; texto en ancho normal. Mobile-first, contraste AA, texto base 17 px. */
 
 /* Paleta del club, siempre clara (la marca no cambia con el modo oscuro del sistema).
    Negro + naranja como base, con variedad: durazno, ámbar, crema y café quemado. */
@@ -27,8 +28,9 @@
   --error-fondo: #fbe7e4;
   --sombra: 0 1px 2px rgb(90 42 6 / 0.06), 0 8px 24px rgb(90 42 6 / 0.08);
   --radio: 16px;
-  --serif: "Fraunces Variable", "Georgia", serif;
-  --sans: "Inter Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --titulo: "Archivo Variable", "Arial Narrow", "Segoe UI", sans-serif;
+  --sans: "Archivo Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --angosto: 80%; /* ancho de los títulos (eje wdth de Archivo: 62–125 %) */
   --ancho: 1120px;
   color-scheme: light;
 }
@@ -48,7 +50,9 @@ body {
   color: var(--tinta);
   font-family: var(--sans);
   font-size: 17px;
-  line-height: 1.55;
+  line-height: 1.6;
+  font-stretch: 100%;
+  font-kerning: normal;
   overflow-x: hidden;
 }
 img,
@@ -70,24 +74,25 @@ a:hover {
 h1,
 h2,
 h3 {
-  font-family: var(--serif);
-  font-optical-sizing: auto;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+  font-family: var(--titulo);
+  font-stretch: var(--angosto);
+  line-height: 1.05;
+  letter-spacing: -0.005em;
   margin: 0 0 0.5em;
   text-wrap: balance;
 }
 h1 {
-  font-size: clamp(2rem, 6vw, 3.4rem);
-  font-weight: 650;
+  font-size: clamp(2.3rem, 7vw, 3.9rem);
+  font-weight: 820;
 }
 h2 {
-  font-size: clamp(1.55rem, 4vw, 2.2rem);
-  font-weight: 620;
+  font-size: clamp(1.75rem, 4.6vw, 2.55rem);
+  font-weight: 780;
 }
 h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1.22rem;
+  font-weight: 720;
+  line-height: 1.15;
 }
 p {
   margin: 0 0 1em;
@@ -116,22 +121,24 @@ p {
 }
 .antetitulo {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 0.86rem;
+  font-stretch: 88%;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  font-weight: 650;
-  color: var(--suave);
+  font-weight: 700;
+  color: var(--vino);
   margin-bottom: 0.5em;
 }
+/* Mini tablero de 2×2 casillas, alineado con la primera línea */
 .antetitulo::before {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   flex: none;
-  background: var(--oro);
-  transform: rotate(45deg);
+  margin-top: calc((1.6em - 10px) / 2);
+  background: conic-gradient(var(--tinta) 25%, var(--oro) 0 50%, var(--tinta) 0 75%, var(--oro) 0);
 }
 .bajada {
   color: var(--suave);
@@ -218,9 +225,16 @@ main:focus {
   line-height: 1.05;
 }
 .marca-texto strong {
-  font-family: var(--serif);
-  font-size: 1.15rem;
-  font-weight: 650;
+  font-family: var(--titulo);
+  font-stretch: 84%;
+  font-size: 1.22rem;
+  font-weight: 800;
+  letter-spacing: 0.005em;
+}
+@media (max-width: 359px) {
+  .marca-texto strong {
+    font-size: 1.04rem;
+  }
 }
 .marca-texto span {
   font-size: 0.72rem;
@@ -319,7 +333,17 @@ main:focus {
   border: 1.5px solid transparent;
   cursor: pointer;
   white-space: nowrap;
+  max-width: 100%;
   transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+/* En celulares chicos un botón largo parte su texto en dos líneas antes que desbordar */
+@media (max-width: 380px) {
+  .boton {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+    padding-block: 8px;
+  }
 }
 .boton-primario {
   background: var(--oro);
@@ -443,7 +467,8 @@ main:focus {
 }
 .cifra strong {
   display: block;
-  font-family: var(--serif);
+  font-family: var(--titulo);
+  font-stretch: var(--angosto);
   font-size: clamp(1.9rem, 6vw, 2.6rem);
   font-weight: 650;
   line-height: 1;
@@ -576,6 +601,7 @@ th.num {
 .campo {
   display: grid;
   gap: 6px;
+  align-content: start; /* en filas de 2, el campo más bajo no estira su control */
   margin-bottom: 16px;
 }
 .campo label,
@@ -790,7 +816,7 @@ textarea[aria-invalid="true"] {
   color: #3d2412;
 }
 .seccion-naranja .antetitulo::before {
-  background: #141211;
+  background: conic-gradient(#141211 25%, #fff4e8 0 50%, #141211 0 75%, #fff4e8 0);
 }
 .seccion-naranja a:not(.boton) {
   color: #141211;
