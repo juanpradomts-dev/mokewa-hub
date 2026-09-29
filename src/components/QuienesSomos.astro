@@ -1,0 +1,114 @@
+---
+// «Quiénes somos» con misión y visión.
+// El texto de presentación sale de datos verificados. Misión y visión: si el club no las confirmó,
+// en la demo se muestra una PROPUESTA marcada como tal; en producción no se muestran.
+import club from "../data/club.json";
+import contenido from "../data/contenido.json";
+import { valor, esProduccion } from "../lib/contenido.js";
+import { LEMA } from "../lib/club.js";
+
+const b = import.meta.env.BASE_URL.replace(/\/$/, "");
+const t = club.totales;
+const bloques = (["mision", "vision"] as const)
+  .map((campo) => {
+    const c = contenido.campos[campo] as { etiqueta: string; propuesta?: string };
+    const v = valor(campo);
+    return { campo, titulo: c.etiqueta, texto: v ?? c.propuesta ?? "", confirmado: !!v };
+  })
+  .filter((x) => x.texto && (x.confirmado || !esProduccion));
+---
+
+<div class="quienes">
+  <div class="quienes-texto">
+    <p class="antetitulo">Quiénes somos</p>
+    <h2>Ajedrez Club Mokewa, <span class="lema">{LEMA.toLowerCase()}</span></h2>
+    <p>
+      Somos un club de ajedrez de Moquegua que enseña por niveles —básico, intermedio y avanzado— y organiza torneos desde {t.desde}, entre ellos un torneo oficial válido para el rating FIDE (2024).
+    </p>
+    <a class="ver-historia" href={`${b}/el-club/#historia`}>Conoce nuestra historia →</a>
+  </div>
+  {bloques.length > 0 && (
+    <div class="mv">
+      {bloques.map((x, i) => (
+        <article class:list={["mv-tarjeta", i === 0 ? "mv-mision" : "mv-vision"]}>
+          <h3>{x.titulo}</h3>
+          <p data-campo={x.campo} data-vacio={x.texto} class:list={{ confirmado: x.confirmado }}>{x.texto}</p>
+          {!x.confirmado && <span class="chip-propuesta" data-sin-campo={x.campo}>Propuesta · por confirmar</span>}
+        </article>
+      ))}
+    </div>
+  )}
+</div>
+
+<style>
+  .quienes {
+    display: grid;
+    gap: 24px;
+  }
+  @media (min-width: 900px) {
+    .quienes {
+      grid-template-columns: 1.1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+  }
+  .quienes-texto p {
+    color: var(--suave);
+    font-size: 1.05rem;
+  }
+  .quienes h2 {
+    max-width: 20ch;
+  }
+  .lema {
+    color: #a64b08;
+  }
+  .ver-historia {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 600;
+  }
+  .mv {
+    display: grid;
+    gap: 14px;
+  }
+  .mv-tarjeta {
+    border-radius: var(--radio);
+    padding: 16px 18px;
+    display: grid;
+    gap: 4px;
+  }
+  @media (min-width: 900px) {
+    .mv-tarjeta {
+      padding: 22px 24px;
+    }
+  }
+  .mv-mision {
+    background: #fde7d1;
+  }
+  .mv-vision {
+    background: #f28a1e;
+    color: #141211;
+  }
+  .mv-tarjeta h3 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+  .mv-tarjeta p {
+    margin: 0;
+    font-size: 0.97rem;
+    line-height: 1.45;
+  }
+  .chip-propuesta {
+    justify-self: start;
+    font-size: 0.76rem;
+    font-weight: 600;
+    border: 1px dashed currentColor;
+    border-radius: 999px;
+    padding: 1px 9px;
+    opacity: 0.8;
+  }
+  .chip-propuesta[hidden] {
+    display: none;
+  }
+</style>

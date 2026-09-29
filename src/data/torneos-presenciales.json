@@ -1,0 +1,18 @@
+{
+  "_nota": "Torneos presenciales del club (la página Torneos muestra solo estos). Cada uno con foto: «foto» es un enlace https a una imagen con autorización de los padres de los menores que aparezcan. Sin foto se ve la ilustración del club. Solo torneos con fuente o confirmados por el club: nada inventado.",
+  "torneos": [
+    {
+      "id": "ii-irt-2024",
+      "nombre": "II IRT Clásico Cerrado «Ajedrez Club Mokewa»",
+      "fecha": "2024-01",
+      "fecha_texto": "enero de 2024",
+      "tipo": "Oficial · rating FIDE estándar",
+      "jugadores": 10,
+      "lugar": null,
+      "foto": null,
+      "resumen": "Torneo cerrado a ritmo clásico organizado por el club y válido para el rating FIDE.",
+      "fuente": "https://ratings.fide.com/report.phtml?event=350802",
+      "fuente_texto": "Informe en FIDE"
+    }
+  ]
+}

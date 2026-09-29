@@ -1,0 +1,23 @@
+{
+  "_nota": "Línea de tiempo «Nuestra historia»: SOLO logros en torneos PRESENCIALES. «hitos»: torneos presenciales que el club organizó o jugó, con fuente. «victorias»: resultados en torneos presenciales oficiales (regionales, nacionales, FIDE), con fuente o confirmados por el club. Nombre del jugador solo con autorización (si es menor, de sus padres); si no, la categoría. Fecha: AAAA-MM.",
+  "hitos": [
+    {
+      "fecha": "2024-01",
+      "fecha_texto": "enero de 2024",
+      "titulo": "El club organiza un torneo oficial FIDE",
+      "texto": "II IRT Clásico Cerrado «Ajedrez Club Mokewa», con 10 jugadores y válido para el rating FIDE estándar.",
+      "fuente": "https://ratings.fide.com/report.phtml?event=350802",
+      "fuente_texto": "FIDE"
+    }
+  ],
+  "victorias": [],
+  "_ejemplo_victoria": {
+    "fecha": "2025-06",
+    "fecha_texto": "junio de 2025",
+    "torneo": "Nombre del torneo oficial",
+    "resultado": "Campeón",
+    "categoria": "Sub-12",
+    "jugador": null,
+    "fuente": "https://enlace-a-la-nota-o-al-informe"
+  }
+}

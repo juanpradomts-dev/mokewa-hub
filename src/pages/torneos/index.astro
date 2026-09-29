@@ -1,121 +1,77 @@
 ---
-import Dato from "../../components/Dato.astro";
+// Torneos: solo presenciales, cada uno con su foto (o la ilustración del club mientras no haya foto).
+// Los torneos online viven en El Club › Comunidad.
 import Base from "../../layouts/Base.astro";
-import club from "../../data/club.json";
-import { fechaCorta, fechaLarga, TIPO_TORNEO, miles } from "../../lib/formato.js";
+import Dato from "../../components/Dato.astro";
+import FotoTorneo from "../../components/FotoTorneo.astro";
+import presenciales from "../../data/torneos-presenciales.json";
 
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
-const t = club.totales;
-const anios = [...new Set(club.torneos.map((x) => x.anio))].sort((a, b) => b - a);
-const proximosLichess = club.proximos.map((id) => club.torneos.find((x) => x.id === id)).filter(Boolean);
-const historial = club.torneos.filter((x) => x.terminado || new Date(x.fecha) < new Date(club.actualizado_en));
+const realizados = [...presenciales.torneos].sort((a, c) => c.fecha.localeCompare(a.fecha));
 ---
 
-<Base titulo="Torneos" seccion="torneos" descripcion="Calendario, inscripción en línea y resultados de los torneos del Ajedrez Club Mokewa.">
-  <section class="seccion">
+<Base titulo="Torneos" seccion="torneos" descripcion="Torneos presenciales del Ajedrez Club Mokewa en Moquegua: inscripción en línea, fotos y resultados.">
+  <section class="seccion cabeza">
     <div class="contenedor">
-      <p class="antetitulo">Torneos</p>
-      <h1>Calendario, inscripciones y resultados</h1>
-      <p class="bajada">Una sola fuente de verdad para todos los eventos del club: presenciales, online e híbridos. Inscríbete en línea y sigue los resultados aquí.</p>
+      <p class="antetitulo">Torneos presenciales</p>
+      <h1>Frente a frente, en el tablero</h1>
+      <p class="bajada">Inscríbete en línea a los próximos torneos y revive los que ya jugamos.</p>
+    </div>
+  </section>
 
-      <h2 class="sub">Próximos torneos</h2>
+  <section class="seccion proximos-seccion">
+    <div class="contenedor">
+      <h2 class="h-seccion">Próximos</h2>
       <div class="rejilla rejilla-2" id="proximos">
-        <article class="tarjeta torneo-tarjeta">
-          <div class="torneo-etiquetas"><span class="etiqueta etiqueta-ejemplo">Ejemplo para la demo</span><span class="etiqueta">Presencial</span></div>
-          <h3><a href={`${b}/torneos/verano-2027/`}>Torneo de Verano 2027</a></h3>
-          <div class="datos">
-            <Dato como="div" etiqueta="Fecha" campo="verano_fecha" />
-            <Dato como="div" etiqueta="Ritmo" campo="verano_ritmo" />
-            <Dato como="div" etiqueta="Inscripción" campo="verano_costo" />
-            <Dato como="div" etiqueta="Sede" campo="sede" />
-          </div>
-          <p class="cat">Categorías Sub-8 a Sub-18 y Libre · niveles básico, intermedio y avanzado</p>
-          <div class="grupo-botones">
-            <a class="boton boton-primario" href={`${b}/torneos/verano-2027/#inscripcion`}>Inscribirme</a>
-            <a class="boton boton-secundario" href={`${b}/torneos/verano-2027/#inscritos`}>Ver inscritos</a>
+        <article class="tarjeta torneo">
+          <FotoTorneo alt="Torneo de Verano 2027" tono="naranja" />
+          <div class="torneo-cuerpo">
+            <div class="etiquetas"><span class="etiqueta etiqueta-ejemplo">Ejemplo para la demo</span><span class="etiqueta">Presencial</span></div>
+            <h3><a href={`${b}/torneos/verano-2027/`}>Torneo de Verano 2027</a></h3>
+            <div class="datos">
+              <Dato como="div" etiqueta="Fecha" campo="verano_fecha" />
+              <Dato como="div" etiqueta="Ritmo" campo="verano_ritmo" />
+              <Dato como="div" etiqueta="Inscripción" campo="verano_costo" />
+              <Dato como="div" etiqueta="Sede" campo="sede" />
+            </div>
+            <p class="cat">Categorías Sub-8 a Sub-18 y Libre · niveles básico, intermedio y avanzado</p>
+            <div class="grupo-botones">
+              <a class="boton boton-primario" href={`${b}/torneos/verano-2027/#inscripcion`}>Inscribirme</a>
+              <a class="boton boton-secundario" href={`${b}/torneos/verano-2027/#inscritos`}>Ver inscritos</a>
+            </div>
           </div>
         </article>
-        {proximosLichess.map((p) => (
-          <article class="tarjeta torneo-tarjeta">
-            <div class="torneo-etiquetas"><span class="etiqueta etiqueta-vino">Online · Lichess</span><span class="etiqueta">{TIPO_TORNEO[p.tipo]}</span></div>
-            <h3><a href={p.url} rel="noopener" target="_blank">{p.nombre}</a></h3>
-            <p>{fechaLarga(p.dia)} · {p.ritmo.texto} ({p.ritmo.tipo})</p>
-            <a class="boton boton-primario" href={p.url} rel="noopener" target="_blank">Unirme en Lichess</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="contenedor">
+      <h2 class="h-seccion">Torneos realizados</h2>
+      <div class="rejilla rejilla-3">
+        {realizados.map((x) => (
+          <article class="tarjeta torneo">
+            <FotoTorneo foto={x.foto} alt={x.nombre} />
+            <div class="torneo-cuerpo">
+              <div class="etiquetas"><span class="etiqueta etiqueta-vino">{x.tipo}</span></div>
+              <h3>{x.nombre}</h3>
+              <p class="cat">{x.fecha_texto}{x.jugadores ? ` · ${x.jugadores} jugadores` : ""}{x.lugar ? ` · ${x.lugar}` : ""}</p>
+              {x.resumen && <p>{x.resumen}</p>}
+              {x.fuente && <a class="fuente" href={x.fuente} rel="noopener" target="_blank">{x.fuente_texto ?? "Fuente"}</a>}
+            </div>
           </article>
         ))}
       </div>
-      {!proximosLichess.length && (
-        <p class="nota" style="margin-top:16px">
-          No hay torneos online programados en el equipo de Lichess en este momento. Cuando el club cree uno, aparece aquí solo (la lista se actualiza cada hora).
-        </p>
-      )}
+      <p class="nota nota-torneos">
+        Los demás torneos presenciales del club se suman aquí con su foto cuando el club los entregue. ¿Buscas los torneos en línea? Están en <a href={`${b}/el-club/#comunidad`}>El Club · Comunidad</a>.
+      </p>
     </div>
   </section>
 
   <section class="seccion" id="resultados-panel" hidden>
     <div class="contenedor">
-      <h2>Resultados publicados por el club</h2>
+      <h2 class="h-seccion">Resultados publicados por el club</h2>
       <div id="resultados-lista" class="rejilla rejilla-2"></div>
-    </div>
-  </section>
-
-  <section class="seccion" id="formatos">
-    <div class="contenedor">
-      <p class="antetitulo">Formatos del club</p>
-      <h2>Los torneos que Mokewa repite</h2>
-      <ul class="formatos">
-        {club.formatos.filter((f) => f.nombre !== "Otros").map((f) => <li><span>{f.nombre}</span><b class="num">{f.n}</b></li>)}
-      </ul>
-      <p class="cat">Torneos online agrupados por familia de nombre, calculado desde Lichess.</p>
-    </div>
-  </section>
-
-  <section class="seccion" id="historial">
-    <div class="contenedor">
-      <h2>Historial: {t.torneos} torneos online</h2>
-      <p class="bajada">Todos los torneos que el club organizó en Lichess desde {t.desde}, con su campeón. Cada nombre abre la ficha del jugador.</p>
-      <div class="filtros" role="group" aria-label="Filtrar torneos">
-        <div class="campo">
-          <label for="f-anio">Año</label>
-          <select id="f-anio">
-            <option value="">Todos</option>
-            {anios.map((a) => <option value={a}>{a}</option>)}
-          </select>
-        </div>
-        <div class="campo">
-          <label for="f-tipo">Sistema</label>
-          <select id="f-tipo">
-            <option value="">Todos</option>
-            <option value="suizo">Suizo</option>
-            <option value="arena">Arena</option>
-            <option value="batalla">Batalla interclubes</option>
-          </select>
-        </div>
-        <div class="campo">
-          <label for="f-texto">Buscar torneo o campeón</label>
-          <input id="f-texto" type="search" placeholder="Ej.: Jueves de Bala" autocomplete="off" />
-        </div>
-      </div>
-      <p class="contador" id="f-contador" aria-live="polite"></p>
-      <div class="tabla-envoltura">
-        <table class="historial">
-          <thead>
-            <tr><th>Fecha</th><th>Torneo</th><th>Formato</th><th class="num">Jugadores</th><th>Campeón</th></tr>
-          </thead>
-          <tbody id="f-cuerpo">
-            {historial.map((x) => (
-              <tr data-anio={x.anio} data-tipo={x.tipo} data-texto={`${x.nombre} ${x.ganador ?? ""} ${x.formato}`.toLowerCase()}>
-                <td class="fecha">{fechaCorta(x.dia)}</td>
-                <td><a href={x.url} rel="noopener" target="_blank">{x.nombre}</a></td>
-                <td>{TIPO_TORNEO[x.tipo]} · {x.ritmo.texto}</td>
-                <td class="num">{miles(x.jugadores)}</td>
-                <td>{x.ganador ? <a href={`${b}/jugador/?u=${encodeURIComponent(x.ganador)}`}>{x.ganador}</a> : "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p><button class="boton boton-secundario" id="f-mas" type="button">Mostrar más</button></p>
     </div>
   </section>
 </Base>
@@ -125,52 +81,31 @@ const historial = club.torneos.filter((x) => x.terminado || new Date(x.fecha) < 
   import { todosLosTorneos, resultadosPublicados, alCambiar, inscripciones } from "../../lib/store.js";
 
   const base = document.body.dataset.base ?? "";
+  const fotoHtml = (url: string | undefined, alt: string) =>
+    url && /^https:\/\//.test(url)
+      ? `<figure class="foto-panel"><img src="${esc(url)}" alt="${esc(alt)}" loading="lazy" /></figure>`
+      : "";
 
-  // ---- Historial: filtros y paginación
-  const filas = [...document.querySelectorAll<HTMLTableRowElement>("#f-cuerpo tr")];
-  const anio = document.getElementById("f-anio") as HTMLSelectElement;
-  const tipo = document.getElementById("f-tipo") as HTMLSelectElement;
-  const texto = document.getElementById("f-texto") as HTMLInputElement;
-  const mas = document.getElementById("f-mas") as HTMLButtonElement;
-  const contador = document.getElementById("f-contador")!;
-  const PAGINA = 25;
-  let visibles = PAGINA;
-
-  function filtrar() {
-    const q = texto.value.trim().toLowerCase();
-    const hallados = filas.filter(
-      (f) => (!anio.value || f.dataset.anio === anio.value) && (!tipo.value || f.dataset.tipo === tipo.value) && (!q || f.dataset.texto!.includes(q)),
-    );
-    for (const f of filas) f.hidden = true;
-    hallados.slice(0, visibles).forEach((f) => (f.hidden = false));
-    contador.textContent = `${hallados.length} ${hallados.length === 1 ? "torneo" : "torneos"}${hallados.length > visibles ? ` · mostrando ${visibles}` : ""}`;
-    mas.hidden = hallados.length <= visibles;
-  }
-  for (const el of [anio, tipo, texto]) el.addEventListener("input", () => ((visibles = PAGINA), filtrar()));
-  mas.addEventListener("click", () => ((visibles += 50), filtrar()));
-  filtrar();
-
-  // ---- Torneos creados y resultados publicados desde el panel (demo)
+  // Torneos presenciales creados desde el panel (demo) y resultados publicados.
   const proximos = document.getElementById("proximos")!;
   function pintarPanel() {
     proximos.querySelectorAll("[data-del-panel]").forEach((n) => n.remove());
-    for (const t of todosLosTorneos().filter((t: any) => !t.ejemplo)) {
+    for (const t of todosLosTorneos().filter((t: any) => !t.ejemplo && t.modalidad !== "Online")) {
       const n = inscripciones(t.id).length;
       const art = document.createElement("article");
-      art.className = "tarjeta torneo-tarjeta";
+      art.className = "tarjeta torneo";
       art.dataset.delPanel = "1";
-      art.innerHTML = `<div class="torneo-etiquetas"><span class="etiqueta etiqueta-ok">Nuevo · creado en el panel</span><span class="etiqueta">${esc(t.modalidad)}</span></div>
+      art.innerHTML = `${fotoHtml(t.foto, t.nombre)}<div class="torneo-cuerpo"><div class="etiquetas"><span class="etiqueta etiqueta-ok">Nuevo</span><span class="etiqueta">${esc(t.modalidad)}</span></div>
         <h3><a href="${base}/torneos/verano-2027/?t=${encodeURIComponent(t.id)}">${esc(t.nombre)}</a></h3>
-        <p>${esc(t.fecha || "Fecha por anunciar")}${t.sede ? " · " + esc(t.sede) : ""}${t.ritmo ? " · " + esc(t.ritmo) : ""}</p>
+        <p class="cat">${esc(t.fecha || "Fecha por anunciar")}${t.sede ? " · " + esc(t.sede) : ""}${t.ritmo ? " · " + esc(t.ritmo) : ""}</p>
         <p class="cat">${esc((t.categorias || []).join(", "))}${t.cupo ? ` · cupo ${esc(t.cupo)}` : ""}${t.costo ? ` · ${esc(t.costo)}` : ""} · ${n} ${n === 1 ? "inscrito" : "inscritos"}</p>
-        <div class="grupo-botones"><a class="boton boton-primario" href="${base}/torneos/verano-2027/?t=${encodeURIComponent(t.id)}#inscripcion">Inscribirme</a></div>`;
+        <div class="grupo-botones"><a class="boton boton-primario" href="${base}/torneos/verano-2027/?t=${encodeURIComponent(t.id)}#inscripcion">Inscribirme</a></div></div>`;
       proximos.append(art);
     }
 
     const res = resultadosPublicados();
     const claves = Object.keys(res);
-    const seccion = document.getElementById("resultados-panel")!;
-    seccion.hidden = !claves.length;
+    document.getElementById("resultados-panel")!.hidden = !claves.length;
     document.getElementById("resultados-lista")!.innerHTML = claves
       .map((k) => {
         const r = res[k];
@@ -178,7 +113,7 @@ const historial = club.torneos.filter((x) => x.terminado || new Date(x.fecha) < 
           .slice(0, 10)
           .map((f: any) => `<tr><td class="num">${f.puesto}</td><td>${esc(f.nombre)}</td><td>${esc(f.categoria || "")}</td><td class="num">${f.puntos ?? "—"}</td></tr>`)
           .join("");
-        return `<article class="tarjeta"><div class="torneo-etiquetas"><span class="etiqueta etiqueta-ok">Publicado desde el panel</span><span class="etiqueta">${esc(r.origen)}</span></div>
+        return `<article class="tarjeta"><div class="etiquetas"><span class="etiqueta etiqueta-ok">Publicado por el club</span><span class="etiqueta">${esc(r.origen)}</span></div>
           <h3>${esc(r.nombre)}</h3>
           <div class="tabla-envoltura"><table><thead><tr><th class="num">Pto.</th><th>Jugador</th><th>Cat.</th><th class="num">Pts.</th></tr></thead><tbody>${filas}</tbody></table></div>
           ${r.filas.length > 10 ? `<p class="cat">y ${r.filas.length - 10} más</p>` : ""}${r.cronica ? `<p>${esc(r.cronica)}</p>` : ""}</article>`;
@@ -190,96 +125,75 @@ const historial = club.torneos.filter((x) => x.terminado || new Date(x.fecha) < 
 </script>
 
 <style>
-  .sub {
-    margin-top: 32px;
-    font-size: 1.5rem;
+  .cabeza {
+    background: linear-gradient(180deg, #fde7d1, var(--fondo));
+    padding-bottom: 24px;
   }
-  :global(.torneo-tarjeta) {
+  .h-seccion {
+    font-size: clamp(1.4rem, 4vw, 1.9rem);
+  }
+  :global(.torneo) {
     display: grid;
-    gap: 8px;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
     align-content: start;
   }
-  :global(.torneo-tarjeta h3) {
-    font-size: 1.4rem;
-    margin: 4px 0 0;
+  :global(.torneo .foto-torneo),
+  :global(.torneo .foto-panel) {
+    border-radius: 0;
+    margin: 0;
   }
-  :global(.torneo-tarjeta h3 a) {
+  :global(.foto-panel) {
+    aspect-ratio: 4 / 3;
+  }
+  :global(.foto-panel img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  :global(.torneo-cuerpo) {
+    display: grid;
+    gap: 8px;
+    padding: 20px 22px 22px;
+  }
+  :global(.torneo h3) {
+    font-size: 1.3rem;
+    margin: 2px 0 0;
+  }
+  :global(.torneo h3 a) {
     color: var(--tinta);
     text-decoration: none;
   }
-  :global(.torneo-tarjeta h3 a:hover) {
+  :global(.torneo h3 a:hover) {
     color: var(--vino);
   }
-  :global(.torneo-tarjeta p) {
+  :global(.torneo p) {
     margin: 0;
   }
-  :global(.torneo-etiquetas) {
+  :global(.etiquetas) {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
   }
   :global(.cat) {
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     color: var(--suave);
   }
   .datos {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
-    margin: 6px 0;
+    margin: 4px 0;
   }
-  .datos dt {
-    font-size: 0.8rem;
-    color: var(--suave);
-    font-weight: 600;
-  }
-  .datos dd {
-    margin: 2px 0 0;
-  }
-  .filtros {
-    display: grid;
-    gap: 0 12px;
-    margin-top: 16px;
-  }
-  @media (min-width: 720px) {
-    .filtros {
-      grid-template-columns: 140px 220px 1fr;
-    }
-  }
-  .contador {
-    font-size: 0.9rem;
-    color: var(--suave);
-  }
-  .formatos {
-    list-style: none;
-    padding: 0;
-    margin: 16px 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .formatos li {
+  .fuente {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
     min-height: 44px;
-    background: var(--papel);
-    border: 1px solid var(--linea);
-    border-radius: 999px;
-    padding: 6px 8px 6px 16px;
-    font-weight: 550;
+    font-weight: 600;
   }
-  .formatos b {
-    background: var(--casilla);
-    border-radius: 999px;
-    padding: 2px 10px;
-    font-size: 0.88rem;
-  }
-  .historial td.fecha {
-    white-space: nowrap;
-    color: var(--suave);
-  }
-  .historial td a {
-    overflow-wrap: anywhere;
+  .nota-torneos {
+    margin-top: 20px;
   }
 </style>

@@ -1,6 +1,22 @@
 {
   "_nota": "Datos que NO se pudieron verificar en fuentes públicas. valor=null → la web muestra «por confirmar». El club los completa desde el panel (sección Datos del club).",
   "campos": {
+    "mision": {
+      "etiqueta": "Misión",
+      "valor": null,
+      "tipo": "textarea",
+      "grupo": "Quiénes somos",
+      "propuesta": "Formar ajedrecistas de todas las edades en Moquegua, con clases por niveles y torneos que desarrollan concentración, disciplina y espíritu competitivo.",
+      "ayuda": "Mientras quede vacío, la demo muestra una propuesta marcada «por confirmar»; en producción no se muestra."
+    },
+    "vision": {
+      "etiqueta": "Visión",
+      "valor": null,
+      "tipo": "textarea",
+      "grupo": "Quiénes somos",
+      "propuesta": "Ser el club de ajedrez de referencia del sur del Perú, con jugadores que compitan y ganen en torneos regionales, nacionales e internacionales.",
+      "ayuda": "Mientras quede vacío, la demo muestra una propuesta marcada «por confirmar»; en producción no se muestra."
+    },
     "whatsapp": {
       "etiqueta": "WhatsApp oficial (con código 51)",
       "valor": null,

@@ -6,9 +6,9 @@ import Dato from "./Dato.astro";
 import { lista, esProduccion } from "../lib/contenido.js";
 
 interface Props {
-  oscuro?: boolean;
+  sobreNaranja?: boolean;
 }
-const { oscuro = false } = Astro.props;
+const { sobreNaranja = false } = Astro.props;
 const entrenadores = lista("entrenadores").map((e) => {
   const [nombre, titulo = ""] = e.split(/\s+[—–-]\s+/);
   return { nombre: nombre.trim(), titulo: titulo.trim() };
@@ -20,7 +20,7 @@ const iniciales = (n: string) => n.split(/\s+/).slice(0, 2).map((p) => p[0]?.toU
 ---
 
 {(mostrarEntrenadores || mostrarFotos) && (
-  <div class:list={["equipo", { oscuro }]}>
+  <div class:list={["equipo", { "sobre-naranja": sobreNaranja }]}>
     {mostrarEntrenadores && (
       <div class="bloque-equipo">
         <h3>Entrenadores</h3>
@@ -132,10 +132,16 @@ const iniciales = (n: string) => n.split(/\s+/).slice(0, 2).map((p) => p[0]?.toU
     color: var(--suave);
     margin: 10px 0 0;
   }
-  .oscuro .marco-vacio {
-    border-color: rgb(255 255 255 / 0.22);
+  @media (max-width: 859px) {
+    .fotos + .vacio {
+      display: none;
+    }
   }
-  .oscuro .avatar {
-    background: rgb(255 255 255 / 0.08);
+  .sobre-naranja .marco-vacio {
+    border-color: rgb(20 18 17 / 0.3);
+    background: rgb(255 255 255 / 0.18);
+  }
+  .sobre-naranja .avatar {
+    background: #fff;
   }
 </style>

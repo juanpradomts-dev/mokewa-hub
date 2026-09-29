@@ -1,0 +1,165 @@
+---
+// «Nuestra historia»: logros del club SOLO en torneos presenciales (pedido del club/JP).
+// Hitos y victorias vienen de src/data/historia.json, con fuente o confirmados por el club.
+import historia from "../../data/historia.json";
+import { esProduccion } from "../../lib/contenido.js";
+import { LEMA } from "../../lib/club.js";
+
+type Evento = { fecha: string; fecha_texto: string; titulo: string; texto?: string; fuente?: string; fuente_texto?: string; tipo: "hito" | "victoria" };
+
+
+const eventos: Evento[] = [
+  ...historia.hitos.map((h) => ({ ...h, tipo: "hito" as const })),
+  ...historia.victorias.map((v: any) => ({
+    fecha: v.fecha,
+    fecha_texto: v.fecha_texto,
+    titulo: `${v.resultado} · ${v.torneo}`,
+    texto: [v.categoria && `Categoría ${v.categoria}`, v.jugador].filter(Boolean).join(" · "),
+    fuente: v.fuente,
+    fuente_texto: "Fuente",
+    tipo: "victoria" as const,
+  })),
+].sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+const hayVictorias = historia.victorias.length > 0;
+---
+
+<div class="linea">
+  <div class="linea-cabeza">
+    <p class="antetitulo">Nuestra historia</p>
+    <h2>{LEMA}</h2>
+    <p class="bajada">Logros del club en torneos presenciales: los que organizamos y los que ganamos.</p>
+  </div>
+  <ol class="tiempo">
+    {eventos.map((e) => (
+      <li class:list={["evento", e.tipo]}>
+        <span class="marca" aria-hidden="true">{e.tipo === "victoria" ? "♛︎" : ""}</span>
+        <div class="evento-caja">
+          <span class="cuando">{e.fecha_texto}</span>
+          <h3>{e.titulo}</h3>
+          {e.texto && <p>{e.texto}</p>}
+          {e.fuente && <a class="fuente" href={e.fuente} rel="noopener" target="_blank">{e.fuente_texto}</a>}
+        </div>
+      </li>
+    ))}
+    {!hayVictorias && !esProduccion && (
+      <li class="evento victoria pendiente">
+        <span class="marca" aria-hidden="true">♛&#xfe0e;</span>
+        <div class="evento-caja">
+          <span class="cuando">Por confirmar con el club</span>
+          <h3>Victorias en torneos presenciales</h3>
+          <p>Campeonatos regionales, nacionales y torneos FIDE: el club entrega torneo, fecha, puesto y categoría (el nombre del jugador, solo con autorización).</p>
+        </div>
+      </li>
+    )}
+  </ol>
+</div>
+
+<style>
+  .linea-cabeza {
+    max-width: 720px;
+    margin-bottom: 28px;
+  }
+  .tiempo {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    display: grid;
+    gap: 18px;
+  }
+  .tiempo::before {
+    content: "";
+    position: absolute;
+    left: 21px;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(#fde7d1, #f28a1e);
+  }
+  .evento {
+    position: relative;
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .marca {
+    position: relative;
+    z-index: 1;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #fff;
+    border: 3px solid #f7a54a;
+    font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", serif;
+    font-size: 1.3rem;
+    color: #fff;
+  }
+  .victoria .marca {
+    background: #f28a1e;
+    border-color: #fff;
+    box-shadow: 0 0 0 3px #f28a1e;
+    color: #141211;
+  }
+  .evento-caja {
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    border-radius: var(--radio);
+    padding: 16px 20px;
+  }
+  .victoria .evento-caja {
+    background: #fff4e8;
+    border-color: #f7c08a;
+  }
+  .pendiente .evento-caja {
+    border-style: dashed;
+    background: transparent;
+  }
+  .cuando {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #a64b08;
+  }
+  h3 {
+    margin: 4px 0 4px;
+    font-size: 1.2rem;
+  }
+  .evento-caja p {
+    margin: 0;
+    color: var(--suave);
+  }
+  .fuente {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 0.86rem;
+  }
+  @media (min-width: 900px) {
+    .tiempo::before {
+      left: 50%;
+      margin-left: -1.5px;
+    }
+    .evento {
+      grid-template-columns: 1fr 44px 1fr;
+    }
+    .marca {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .evento:nth-child(odd) .evento-caja {
+      grid-column: 1;
+      grid-row: 1;
+      text-align: right;
+    }
+    .evento:nth-child(even) .evento-caja {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
+</style>

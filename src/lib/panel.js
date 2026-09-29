@@ -215,6 +215,7 @@ $("form-torneo").addEventListener("submit", (e) => {
     sede: String(f.get("sede") || "").trim(),
     categorias: f.getAll("categorias"),
     bases: String(f.get("bases") || "").trim(),
+    foto: String(f.get("foto") || "").trim(),
     descripcion: String(f.get("descripcion") || "").trim(),
   });
   const seg = Math.round((Date.now() - abiertoTorneo) / 1000);

@@ -37,7 +37,7 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
     <meta name="robots" content="noindex, nofollow" />
     <title>{tituloCompleto}</title>
     <meta name="description" content={descripcion} />
-    <meta name="theme-color" content="#141211" />
+    <meta name="theme-color" content="#f28a1e" />
     <link rel="icon" href={url("/favicon.svg")} type="image/svg+xml" />
     <link rel="manifest" href={url("/manifest.webmanifest")} />
     <meta property="og:title" content={tituloCompleto} />
@@ -51,7 +51,7 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
     <meta property="og:image:alt" content="Insignia del Ajedrez Club Mokewa: caballo negro con corona naranja" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="apple-touch-icon" href={url("/apple-touch-icon.png")} />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="light" />
     <slot name="head" />
   </head>
   <body data-base={b} data-modo={MODO}>
@@ -110,7 +110,7 @@ const actualizado = fechaCorta(club.actualizado_en.slice(0, 10));
               <li><a href={url("/privacidad/")}>Privacidad y datos de menores</a></li>
             </ul>
           </div>
-          <div>
+          <div class="pie-datos">
             <h3>De dónde salen los datos</h3>
             <p>Torneos, campeones y récords se calculan solos con la API pública de Lichess. Actualizado: {actualizado}.</p>
             {!esProduccion && <p>Lo que aún no está verificado aparece marcado <span class="pc">por confirmar</span>.</p>}

@@ -1,6 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
-import Historia from "../components/club/Historia.astro";
+import LineaTiempo from "../components/club/LineaTiempo.astro";
+import Trayectoria from "../components/club/Trayectoria.astro";
+import HistorialOnline from "../components/club/HistorialOnline.astro";
 import Comunidad from "../components/club/Comunidad.astro";
 import club from "../data/club.json";
 
@@ -11,26 +13,32 @@ const t = club.totales;
   <section class="seccion club-cabeza">
     <div class="contenedor">
       <p class="antetitulo">El Club</p>
-      <h1>Historia y comunidad</h1>
+      <h1>El club por dentro</h1>
       <nav class="subnav" aria-label="Secciones de El Club">
-        <a href="#historia">Historia</a>
+        <a href="#historia">Nuestra historia</a>
+        <a href="#trayectoria">En línea</a>
         <a href="#comunidad">Comunidad</a>
       </nav>
     </div>
   </section>
 
   <section class="seccion bloque" id="historia">
-    <div class="contenedor"><Historia /></div>
+    <div class="contenedor"><LineaTiempo /></div>
+  </section>
+
+  <section class="seccion bloque tinte" id="trayectoria">
+    <div class="contenedor"><Trayectoria /></div>
   </section>
 
   <section class="seccion bloque" id="comunidad">
-    <div class="contenedor"><Comunidad /></div>
+    <div class="contenedor"><Comunidad /><HistorialOnline /></div>
   </section>
 </Base>
 
 <style>
   .club-cabeza {
-    padding-bottom: 0;
+    padding-bottom: 24px;
+    background: linear-gradient(180deg, #fde7d1, var(--fondo));
   }
   .club-cabeza h1 {
     margin-bottom: 16px;

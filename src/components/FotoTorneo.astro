@@ -1,0 +1,82 @@
+---
+// Foto de un torneo presencial en marco 4:3. Sin foto (o mientras el club no la entregue),
+// se ve la ilustración del club: nunca una foto inventada ni de stock.
+import Caballo from "./Caballo.astro";
+import { esProduccion } from "../lib/contenido.js";
+
+interface Props {
+  foto?: string | null;
+  alt: string;
+  tono?: "durazno" | "naranja" | "crema";
+}
+const { foto, alt, tono = "durazno" } = Astro.props;
+const valida = typeof foto === "string" && /^https:\/\//.test(foto);
+---
+
+<figure class:list={["foto-torneo", `tono-${tono}`, { ilustracion: !valida }]}>
+  {valida ? (
+    <img src={foto} alt={alt} loading="lazy" decoding="async" />
+  ) : (
+    <div class="arte" aria-hidden="true">
+      <span class="medalla"><Caballo tam="100%" /></span>
+    </div>
+  )}
+  {!valida && !esProduccion && <figcaption>Foto por confirmar · solo con autorización de los padres</figcaption>}
+</figure>
+
+<style>
+  .foto-torneo {
+    position: relative;
+    margin: 0;
+    aspect-ratio: 4 / 3;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fde7d1;
+  }
+  .foto-torneo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .arte {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background-image: conic-gradient(rgb(166 75 8 / 0.1) 25%, transparent 0 50%, rgb(166 75 8 / 0.1) 0 75%, transparent 0);
+    background-size: 44px 44px;
+  }
+  .tono-naranja {
+    background: #f7a54a;
+  }
+  .tono-crema {
+    background: #f6ede2;
+  }
+  .medalla {
+    width: 38%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #fff;
+    display: grid;
+    place-items: center;
+    padding: 8%;
+    box-shadow: 0 0 0 5px #f28a1e, 0 14px 30px rgb(90 42 6 / 0.25);
+  }
+  .medalla :global(svg) {
+    width: 100%;
+    height: auto;
+  }
+  figcaption {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    right: 10px;
+    font-size: 0.78rem;
+    color: #5a2a06;
+    background: rgb(255 253 249 / 0.9);
+    border-radius: 999px;
+    padding: 3px 10px;
+    width: fit-content;
+  }
+</style>

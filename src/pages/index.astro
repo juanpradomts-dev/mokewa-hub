@@ -1,11 +1,13 @@
 ---
 // Portada: el público principal es el padre de familia. Máximo 5 secciones:
-// héroe · academia · por qué Mokewa · cierre.
+// héroe · quiénes somos · academia · por qué Mokewa · cierre.
 import Base from "../layouts/Base.astro";
 import Caballo from "../components/Caballo.astro";
 import BotonContacto from "../components/BotonContacto.astro";
 import NivelTarjeta from "../components/NivelTarjeta.astro";
 import Equipo from "../components/Equipo.astro";
+import QuienesSomos from "../components/QuienesSomos.astro";
+import { LEMA } from "../lib/club.js";
 import Dato from "../components/Dato.astro";
 import club from "../data/club.json";
 import { NIVELES } from "../lib/niveles.js";
@@ -15,13 +17,12 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 const t = club.totales;
 const anioActual = Number(club.actualizado_en.slice(0, 4));
 const anios = anioActual - t.desde; // desde el primer torneo online registrado (cota inferior)
-const hibridos = club.torneos.filter((x) => x.formato === "Torneos híbridos por nivel").length;
 const mapa = valor("mapa");
 ---
 
 <Base titulo="Inicio" seccion="inicio" descripcion="Academia de ajedrez en Moquegua: clases por niveles, torneos todo el año y una comunidad que compite desde 2020.">
   <!-- 1. HÉROE -->
-  <section class="heroe seccion-oscura">
+  <section class="heroe">
     <div class="contenedor heroe-grid">
       <div class="escena" data-viaje-desde aria-hidden="true">
         <div class="halo"></div>
@@ -39,22 +40,28 @@ const mapa = valor("mapa");
       <div class="heroe-texto">
         <p class="antetitulo">Academia de ajedrez en Moquegua</p>
         <h1>Que tu hijo gane concentración, disciplina y ganas de competir</h1>
-        <p class="heroe-bajada">Clases por niveles y torneos todo el año con el Ajedrez Club Mokewa.</p>
+        <p class="heroe-lema">«{LEMA}»</p>
+        <p class="heroe-bajada">Clases por niveles y torneos con el Ajedrez Club Mokewa, en Moquegua.</p>
         <div class="grupo-botones">
           <BotonContacto cta />
-          <a class="boton boton-claro" href={`${b}/torneos/`}>Ver torneos</a>
+          <a class="boton boton-secundario" href={`${b}/torneos/`}>Ver torneos</a>
         </div>
         <dl class="prueba-social">
           <div><dt>+{anios} años</dt><dd>organizando torneos (desde {t.desde})</dd></div>
-          <div><dt>{t.torneos}</dt><dd>torneos organizados en línea</dd></div>
+          <div><dt>3 niveles</dt><dd>básico, intermedio y avanzado</dd></div>
           <div><dt>FIDE</dt><dd><a href="https://ratings.fide.com/report.phtml?event=350802" rel="noopener" target="_blank">torneo oficial con rating</a> en 2024</dd></div>
         </dl>
       </div>
     </div>
   </section>
 
-  <!-- 2. ACADEMIA -->
-  <section class="seccion" id="academia">
+  <!-- 2. QUIÉNES SOMOS -->
+  <section class="seccion" id="quienes-somos">
+    <div class="contenedor"><QuienesSomos /></div>
+  </section>
+
+  <!-- 3. ACADEMIA -->
+  <section class="seccion seccion-durazno" id="academia">
     <div class="contenedor">
       <div class="encabezado">
         <div>
@@ -70,8 +77,8 @@ const mapa = valor("mapa");
     </div>
   </section>
 
-  <!-- 3. POR QUÉ MOKEWA -->
-  <section class="seccion seccion-oscura por-que">
+  <!-- 4. POR QUÉ MOKEWA -->
+  <section class="seccion seccion-naranja por-que">
     <div class="contenedor">
       <div class="por-que-grid">
         <div class="por-que-cabeza">
@@ -94,8 +101,8 @@ const mapa = valor("mapa");
         <li class="razon">
           <span class="razon-icono glifo" aria-hidden="true">♜&#xfe0e;</span>
           <div>
-            <h3>Compite de verdad</h3>
-            <p>{t.torneos} torneos desde {t.desde}: semanales de bala y rápidas, temáticos y {hibridos} torneos por nivel.</p>
+            <h3>Compite con rivales de su nivel</h3>
+            <p>Torneos por nivel (básico, intermedio y avanzado): cada alumno mide su progreso contra rivales de su nivel.</p>
           </div>
         </li>
         <li class="razon">
@@ -108,17 +115,17 @@ const mapa = valor("mapa");
         <li class="razon">
           <span class="razon-icono glifo" aria-hidden="true">♞&#xfe0e;</span>
           <div>
-            <h3>Comunidad todo el año</h3>
-            <p>{club.equipo.miembros} miembros en el equipo de Lichess y batallas contra otros clubes.</p>
+            <h3>Donde el ajedrez nunca descansa</h3>
+            <p>Entre clase y clase se sigue jugando: el club tiene un equipo en Lichess con {club.equipo.miembros} miembros.</p>
           </div>
         </li>
       </ul>
       </div>
-      <Equipo oscuro />
+      <Equipo sobreNaranja />
     </div>
   </section>
 
-  <!-- 4. CIERRE -->
+  <!-- 5. CIERRE -->
   <section class="seccion cierre-seccion">
     <div class="contenedor">
       <div class="cierre tarjeta">
@@ -144,6 +151,24 @@ const mapa = valor("mapa");
   /* ---------- 1. Héroe ---------- */
   .heroe {
     padding: 28px 0 44px;
+    background:
+      radial-gradient(circle at 85% 30%, rgb(242 138 30 / 0.28), transparent 45%),
+      radial-gradient(circle at 5% 100%, rgb(247 165 74 / 0.25), transparent 40%),
+      linear-gradient(180deg, #fff4e8, #fde7d1);
+    position: relative;
+    overflow: hidden;
+  }
+  .heroe::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: conic-gradient(rgb(166 75 8 / 0.06) 25%, transparent 0 50%, rgb(166 75 8 / 0.06) 0 75%, transparent 0);
+    background-size: 64px 64px;
+    mask-image: linear-gradient(90deg, transparent, #000 60%);
+    pointer-events: none;
+  }
+  .heroe > .contenedor {
+    position: relative;
   }
   .heroe-grid {
     display: grid;
@@ -163,26 +188,21 @@ const mapa = valor("mapa");
     }
   }
   .heroe h1 {
-    color: #fff;
+    color: var(--tinta);
     font-size: clamp(2rem, 6.2vw, 3.3rem);
   }
-  .heroe .antetitulo {
-    color: #c9c0b5;
+  .heroe-lema {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.2rem;
+    color: #a64b08;
+    margin: -0.2em 0 0.4em;
   }
   .heroe-bajada {
     font-size: 1.12rem;
-    color: #ddd5cb;
+    color: var(--suave);
     max-width: 52ch;
     margin-bottom: 1.4em;
-  }
-  .boton-claro {
-    background: transparent;
-    color: #fff;
-    border-color: rgb(255 255 255 / 0.4);
-  }
-  .boton-claro:hover {
-    color: #fff;
-    border-color: #fff;
   }
   .prueba-social {
     display: grid;
@@ -190,24 +210,25 @@ const mapa = valor("mapa");
     gap: 12px;
     margin: 32px 0 0;
     padding-top: 20px;
-    border-top: 1px solid rgb(255 255 255 / 0.14);
+    border-top: 1px solid rgb(166 75 8 / 0.2);
     max-width: 560px;
+  }
+  .prueba-social div {
+    border-left: 3px solid var(--oro);
+    padding-left: 10px;
   }
   .prueba-social dt {
     font-family: var(--serif);
-    font-size: clamp(1.45rem, 5vw, 2rem);
+    font-size: clamp(1.35rem, 5vw, 2rem);
     font-weight: 650;
-    color: #fff;
+    color: var(--tinta);
     line-height: 1.1;
   }
   .prueba-social dd {
     margin: 4px 0 0;
     font-size: 0.84rem;
-    color: #c9c0b5;
+    color: var(--suave);
     line-height: 1.35;
-  }
-  .prueba-social a {
-    color: #f3eee8;
   }
 
   /* ---------- Caballo viajero (moneda 3D) ----------
@@ -381,18 +402,18 @@ const mapa = valor("mapa");
   }
   .aro {
     fill: none;
-    stroke: rgb(242 138 30 / 0.35);
+    stroke: rgb(20 18 17 / 0.3);
     stroke-width: 1.2;
     transition: stroke 0.4s;
     transform-origin: 100px 100px;
   }
   .aro-2 {
-    stroke: rgb(255 255 255 / 0.14);
+    stroke: rgb(255 255 255 / 0.6);
     stroke-dasharray: 3 5;
   }
   .casilla-deco {
     fill: none;
-    stroke: #f28a1e;
+    stroke: #fff;
     stroke-width: 1.4;
     transform-box: fill-box;
     transform-origin: center;
@@ -405,14 +426,15 @@ const mapa = valor("mapa");
     animation-delay: -4s;
   }
   .punto {
-    fill: rgb(255 255 255 / 0.5);
+    fill: #141211;
+    opacity: 0.35;
   }
   @keyframes deriva {
     0%, 100% { transform: translateY(0) rotate(45deg); }
     50% { transform: translateY(-6px) rotate(90deg); }
   }
   .pista:global(.aterrizado) .aro-1 {
-    stroke: #f28a1e;
+    stroke: #141211;
     animation: aterriza 0.7s ease-out;
   }
   @keyframes aterriza {
@@ -505,9 +527,10 @@ const mapa = valor("mapa");
     width: 52px;
     height: 52px;
     border-radius: 14px;
-    background: rgb(255 255 255 / 0.08);
-    color: #fff;
+    background: #fff;
+    color: #141211;
     font-size: 1.8rem;
+    box-shadow: 0 6px 16px rgb(90 42 6 / 0.18);
   }
 
   /* ---------- 5. Cierre ---------- */
@@ -516,7 +539,9 @@ const mapa = valor("mapa");
     gap: 16px;
     align-items: center;
     padding: 22px;
-    border-top: 4px solid var(--oro);
+    background: linear-gradient(135deg, #fff4e8, #fde7d1);
+    border: 0;
+    border-left: 6px solid var(--oro);
   }
   @media (min-width: 860px) {
     .cierre {

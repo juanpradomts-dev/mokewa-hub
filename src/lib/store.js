@@ -91,6 +91,7 @@ export function pintarCampos(raiz = document) {
   // Bloques que solo se muestran cuando TODOS sus datos están confirmados (p. ej. horario + precio).
   const todos = (lista) => lista.split(/\s+/).filter(Boolean).every((c) => contenido(c));
   for (const el of raiz.querySelectorAll("[data-si-campos]")) el.hidden = !todos(el.dataset.siCampos);
+  for (const el of raiz.querySelectorAll("[data-sin-campo]")) el.hidden = !!contenido(el.dataset.sinCampo);
   for (const a of raiz.querySelectorAll("[data-segun]")) {
     a.dataset.accion = todos(a.dataset.segun) ? a.dataset.accionCon : a.dataset.accionSin;
   }

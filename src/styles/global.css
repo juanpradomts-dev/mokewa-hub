@@ -1,18 +1,23 @@
 /* Mokewa Hub — sistema visual.
    Paleta: vino de Moquegua + madera de tablero. Mobile-first, contraste AA, texto base 17 px. */
 
+/* Paleta del club, siempre clara (la marca no cambia con el modo oscuro del sistema).
+   Negro + naranja como base, con variedad: durazno, ámbar, crema y café quemado. */
 :root {
-  --vino: #a64b08;
+  --vino: #a64b08; /* naranja quemado: enlaces y acentos de texto (AA sobre crema y durazno) */
   --vino-2: #c25a0c;
-  --vino-osc: #141211;
-  --oro: #f28a1e;
+  --vino-osc: #5a2a06; /* café del pie y del aviso, en lugar de negro */
+  --oro: #f28a1e; /* naranja de marca */
   --oro-texto: #a64b08;
-  --fondo: #f7f4ef;
-  --papel: #fffdf9;
+  --durazno: #fde7d1;
+  --ambar: #f7a54a;
+  --crema: #fff4e8;
+  --fondo: #fdf8f2;
+  --papel: #ffffff;
   --tinta: #1a1714;
   --suave: #5f5850;
-  --linea: #e6ddd0;
-  --casilla: #f1ebe2;
+  --linea: #eadfd1;
+  --casilla: #f8ece0;
   --pc-fondo: #fff1c7;
   --pc-texto: #6f4400;
   --pc-borde: #d9a93d;
@@ -20,59 +25,12 @@
   --ok-fondo: #e3f3e9;
   --error: #a1261b;
   --error-fondo: #fbe7e4;
-  --sombra: 0 1px 2px rgb(40 20 10 / 0.06), 0 6px 20px rgb(40 20 10 / 0.06);
-  --radio: 14px;
+  --sombra: 0 1px 2px rgb(90 42 6 / 0.06), 0 8px 24px rgb(90 42 6 / 0.08);
+  --radio: 16px;
   --serif: "Fraunces Variable", "Georgia", serif;
   --sans: "Inter Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
   --ancho: 1120px;
   color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --vino: #f5a04a;
-    --vino-2: #f7b36b;
-    --vino-osc: #0d0c0b;
-    --oro: #f28a1e;
-    --oro-texto: #f5a04a;
-    --fondo: #121110;
-    --papel: #1c1a18;
-    --tinta: #f3eee8;
-    --suave: #b8aea3;
-    --linea: #34302c;
-    --casilla: #262320;
-    --pc-fondo: #3b2c0c;
-    --pc-texto: #f5cf73;
-    --pc-borde: #8a6a1a;
-    --ok: #7fd3a2;
-    --ok-fondo: #15301f;
-    --error: #f19a8f;
-    --error-fondo: #3a1714;
-    --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 20px rgb(0 0 0 / 0.25);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --vino: #f5a04a;
-  --vino-2: #f7b36b;
-  --vino-osc: #0d0c0b;
-  --oro: #f28a1e;
-  --oro-texto: #f5a04a;
-  --fondo: #121110;
-  --papel: #1c1a18;
-  --tinta: #f3eee8;
-  --suave: #b8aea3;
-  --linea: #34302c;
-  --casilla: #262320;
-  --pc-fondo: #3b2c0c;
-  --pc-texto: #f5cf73;
-  --pc-borde: #8a6a1a;
-  --ok: #7fd3a2;
-  --ok-fondo: #15301f;
-  --error: #f19a8f;
-  --error-fondo: #3a1714;
-  --sombra: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 20px rgb(0 0 0 / 0.25);
-  color-scheme: dark;
 }
 
 *,
@@ -214,14 +172,14 @@ main:focus {
 
 /* ---------- Aviso de demo ---------- */
 .aviso-demo {
-  background: var(--vino-osc);
-  color: #efe7dc;
+  background: #7a3606;
+  color: #fff;
   font-size: 0.82rem;
   text-align: center;
   padding: 6px 16px;
 }
 .aviso-demo a {
-  color: #f5a04a;
+  color: #fde7d1;
   display: inline-block;
   padding: 14px 4px;
   margin: -14px 0;
@@ -232,7 +190,7 @@ main:focus {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: color-mix(in srgb, var(--fondo) 92%, transparent);
+  background: rgb(255 255 255 / 0.94);
   backdrop-filter: saturate(1.4) blur(8px);
   border-bottom: 1px solid var(--linea);
 }
@@ -372,9 +330,9 @@ main:focus {
   color: #111;
 }
 .boton-secundario {
-  background: transparent;
+  background: rgb(255 255 255 / 0.55);
   color: var(--tinta);
-  border-color: var(--linea);
+  border-color: rgb(26 23 20 / 0.28);
 }
 .boton-secundario:hover {
   border-color: var(--vino);
@@ -714,18 +672,18 @@ textarea[aria-invalid="true"] {
 
 /* ---------- Pie ---------- */
 .pie {
-  --tinta: #f3eee8;
-  --suave: #c9c0b5;
+  --tinta: #fff;
+  --suave: #f7dcc2;
   --papel: rgb(255 255 255 / 0.05);
   --linea: rgb(255 255 255 / 0.14);
   margin-top: 40px;
   background: var(--vino-osc);
-  color: #e8e1d8;
+  color: #fde7d1;
   padding: 40px 0 28px;
   font-size: 0.92rem;
 }
 .pie a {
-  color: #f5a04a;
+  color: #fff;
 }
 .pie h3 {
   color: #fff;
@@ -752,11 +710,16 @@ textarea[aria-invalid="true"] {
 .pie .rejilla {
   gap: 8px 32px;
 }
+@media (max-width: 639px) {
+  .pie-datos {
+    display: none;
+  }
+}
 .pie .legal {
   margin-top: 28px;
   padding-top: 16px;
-  border-top: 1px solid rgb(255 255 255 / 0.12);
-  color: #b8aea3;
+  border-top: 1px solid rgb(255 255 255 / 0.18);
+  color: #f7c08a;
   font-size: 0.84rem;
 }
 
@@ -811,33 +774,48 @@ textarea[aria-invalid="true"] {
   filter: brightness(0.92);
 }
 
-/* ---------- Secciones oscuras (alternan con las claras) ---------- */
-.seccion-oscura {
-  --tinta: #f3eee8;
-  --suave: #c9c0b5;
-  --papel: rgb(255 255 255 / 0.05);
-  --linea: rgb(255 255 255 / 0.14);
-  --casilla: rgb(255 255 255 / 0.08);
-  --vino: #f5a04a;
-  --sombra: none;
-  color: var(--tinta);
-  background-color: #141211;
-  background-image: conic-gradient(rgb(255 255 255 / 0.03) 25%, transparent 0 50%, rgb(255 255 255 / 0.03) 0 75%, transparent 0);
+/* ---------- Secciones de color (alternan con las claras) ---------- */
+.seccion-naranja {
+  --suave: #3d2412;
+  --linea: rgb(20 18 17 / 0.18);
+  --papel: rgb(255 255 255 / 0.28);
+  --casilla: rgb(255 255 255 / 0.35);
+  --vino: #141211;
+  background-color: var(--oro);
+  background-image: conic-gradient(rgb(255 255 255 / 0.07) 25%, transparent 0 50%, rgb(255 255 255 / 0.07) 0 75%, transparent 0);
   background-size: 64px 64px;
+  color: #141211;
 }
-.seccion-oscura .antetitulo {
-  color: #c9c0b5;
+.seccion-naranja .antetitulo {
+  color: #3d2412;
 }
-.seccion-oscura a:not(.boton) {
-  color: #f5a04a;
+.seccion-naranja .antetitulo::before {
+  background: #141211;
 }
-.seccion + .seccion-oscura,
-.seccion-oscura + .seccion {
+.seccion-naranja a:not(.boton) {
+  color: #141211;
+}
+.seccion-durazno {
+  background: var(--durazno);
+}
+.tinte {
+  background: var(--crema);
+}
+.seccion + .seccion-naranja,
+.seccion-naranja + .seccion,
+.seccion + .seccion-durazno,
+.seccion-durazno + .seccion,
+.seccion + .tinte,
+.tinte + .seccion {
   padding-top: 40px;
 }
 @media (min-width: 720px) {
-  .seccion + .seccion-oscura,
-  .seccion-oscura + .seccion {
+  .seccion + .seccion-naranja,
+  .seccion-naranja + .seccion,
+  .seccion + .seccion-durazno,
+  .seccion-durazno + .seccion,
+  .seccion + .tinte,
+  .tinte + .seccion {
     padding-top: 56px;
   }
 }
