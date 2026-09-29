@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import GraficoAnual from "../components/GraficoAnual.astro";
+import Caballo from "../components/Caballo.astro";
 import club from "../data/club.json";
 import { miles, fechaLarga, mesAnio, fechaCorta } from "../lib/formato.js";
 
@@ -28,7 +29,12 @@ const hitos = [
 <Base titulo="Inicio" seccion="inicio">
   <section class="heroe tablero-fondo">
     <div class="contenedor heroe-grid">
-      <div>
+      <div class="escena" aria-hidden="true">
+        <div class="halo"></div>
+        <div class="flotante"><div class="medallon"><Caballo tam="100%" /></div></div>
+        <div class="sombra"></div>
+      </div>
+      <div class="heroe-texto">
         <p class="antetitulo heroe-ante">Moquegua · compitiendo online desde {t.desde}</p>
         <h1><span class="num">{miles(t.jugadores)}</span> ajedrecistas ya han jugado con Mokewa</h1>
         <p class="heroe-bajada">
@@ -48,7 +54,7 @@ const hitos = [
           <div><dt class="num">{club.equipo.miembros}</dt><dd>miembros en Lichess</dd></div>
         </dl>
       </div>
-      <aside class="heroe-tarjeta" aria-label="Próximo evento">
+      <aside class="heroe-tarjeta heroe-evento" aria-label="Próximo evento">
         <p class="antetitulo">Próximo evento</p>
         {
           proximosLichess.length ? (
@@ -206,6 +212,25 @@ const hitos = [
   </section>
 </Base>
 
+<script>
+  // El caballo se inclina un poco hacia el cursor (responde al usuario, no se mueve solo).
+  const heroe = document.querySelector<HTMLElement>(".heroe");
+  const caballo = document.querySelector<HTMLElement>(".flotante");
+  if (heroe && caballo && matchMedia("(pointer: fine)").matches) {
+    heroe.addEventListener("pointermove", (e) => {
+      const r = heroe.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      caballo.style.setProperty("--px", `${(x * 14).toFixed(1)}px`);
+      caballo.style.setProperty("--py", `${(y * 10).toFixed(1)}px`);
+      caballo.style.setProperty("--ry", `${(x * 16).toFixed(1)}deg`);
+    });
+    heroe.addEventListener("pointerleave", () => {
+      for (const v of ["--px", "--py", "--ry"]) caballo.style.removeProperty(v);
+    });
+  }
+</script>
+
 <style>
   .heroe-cifras {
     display: grid;
@@ -223,7 +248,7 @@ const hitos = [
     }
   }
   .heroe-cifras div {
-    border-left: 3px solid #e0bd52;
+    border-left: 3px solid #f28a1e;
     padding-left: 12px;
   }
   .heroe-cifras dt {
@@ -236,7 +261,7 @@ const hitos = [
   .heroe-cifras dd {
     margin: 0;
     font-size: 0.85rem;
-    color: #d8c7b3;
+    color: #c9c0b5;
   }
   .razones {
     margin-top: 20px;
@@ -260,13 +285,85 @@ const hitos = [
     font-size: 1.7rem;
   }
   .heroe {
-    color: #f7ecd9;
+    color: #f3eee8;
     padding: 48px 0 56px;
   }
   .heroe-grid {
     display: grid;
     gap: 28px;
     align-items: center;
+  }
+  .escena {
+    position: relative;
+    width: min(46vw, 190px);
+    aspect-ratio: 1;
+    justify-self: center;
+    display: grid;
+    place-items: center;
+    perspective: 600px;
+  }
+  .halo {
+    position: absolute;
+    inset: 6%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(242 138 30 / 0.32), rgb(242 138 30 / 0.08) 50%, transparent 68%);
+    inset: -8%;
+  }
+  .flotante {
+    position: relative;
+    width: 78%;
+    animation: flotar 5.5s ease-in-out infinite;
+    transform: translate(var(--px, 0px), var(--py, 0px)) rotateY(var(--ry, 0deg));
+    transition: transform 0.25s ease-out;
+  }
+  .medallon {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffffff, #f1ece5 70%);
+    box-shadow: 0 0 0 5px rgb(242 138 30 / 0.9), 0 0 0 12px rgb(242 138 30 / 0.18), 0 24px 40px rgb(0 0 0 / 0.5);
+    display: grid;
+    place-items: center;
+    padding: 10%;
+  }
+  .flotante :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .flotante :global(.corona) {
+    transform-origin: 119px 48px;
+    animation: corona 5.5s ease-in-out infinite;
+  }
+  .sombra {
+    position: absolute;
+    bottom: 0;
+    width: 46%;
+    height: 7%;
+    border-radius: 50%;
+    background: rgb(0 0 0 / 0.55);
+    filter: blur(6px);
+    animation: sombra 5.5s ease-in-out infinite;
+  }
+  @keyframes flotar {
+    0%, 100% { translate: 0 0; rotate: -2deg; }
+    50% { translate: 0 -16px; rotate: 1.5deg; }
+  }
+  @keyframes corona {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-4deg) translateY(-2px); }
+  }
+  @keyframes sombra {
+    0%, 100% { transform: scaleX(1); opacity: 0.55; }
+    50% { transform: scaleX(0.78); opacity: 0.3; }
+  }
+  @media (min-width: 900px) {
+    .heroe-grid {
+      grid-template-areas: "texto escena" "texto evento";
+      row-gap: 8px;
+    }
+    .heroe-texto { grid-area: texto; }
+    .escena { grid-area: escena; width: 260px; }
+    .heroe-evento { grid-area: evento; }
   }
   @media (min-width: 900px) {
     .heroe {
@@ -281,26 +378,26 @@ const hitos = [
     color: #fff;
   }
   .heroe-ante {
-    color: #e8c65a;
+    color: #f5a04a;
   }
   .heroe-bajada {
     font-size: 1.12rem;
-    color: #eadbc8;
+    color: #ddd5cb;
     max-width: 58ch;
     margin-bottom: 1.5em;
   }
   .heroe-nota {
     margin-top: 14px;
     font-size: 0.88rem;
-    color: #d8c7b3;
+    color: #c9c0b5;
   }
   .boton-oro {
-    background: #e0bd52;
-    color: #2a0c12;
+    background: #f28a1e;
+    color: #111;
   }
   .boton-oro:hover {
-    background: #edcc6a;
-    color: #2a0c12;
+    background: #f59b3d;
+    color: #111;
   }
   .boton-claro {
     background: transparent;
@@ -318,7 +415,7 @@ const hitos = [
     padding: 20px;
   }
   .heroe-tarjeta .antetitulo {
-    color: #e8c65a;
+    color: #f5a04a;
   }
   .evento {
     display: grid;
@@ -341,16 +438,16 @@ const hitos = [
     font-weight: 600;
   }
   .evento > span:last-child {
-    color: #eadbc8;
+    color: #ddd5cb;
     font-size: 0.94rem;
   }
   .heroe-tarjeta-pie {
     font-size: 0.86rem;
-    color: #d8c7b3;
+    color: #c9c0b5;
     margin: 0;
   }
   .heroe-tarjeta-pie a {
-    color: #f3d58a;
+    color: #f5a04a;
   }
   .niveles {
     margin-top: 20px;
@@ -481,7 +578,7 @@ const hitos = [
   }
   .campeon:first-child .campeon-pos {
     background: var(--oro);
-    color: #2a0c12;
+    color: #111;
   }
   .campeon a {
     color: var(--tinta);

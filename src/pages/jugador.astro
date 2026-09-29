@@ -103,6 +103,7 @@ const cuenta = club.cuenta_club;
         <div class="grupo-botones no-imprimir">
           <button class="boton boton-primario" type="button" id="pdf">Descargar constancia en PDF</button>
           <a class="boton boton-secundario" href="https://lichess.org/@/${encodeURIComponent(j.u)}" rel="noopener" target="_blank">Perfil en Lichess</a>
+          <a class="boton boton-whatsapp" id="compartir" rel="noopener" target="_blank" href="#">Compartir por WhatsApp</a>
         </div>
       </header>
       <div class="cifras ficha-cifras">
@@ -150,6 +151,9 @@ const cuenta = club.cuenta_club;
       <p class="pie-dato">Fuente: resultados públicos de Lichess, datos al ${ACT.texto}. Emitido el ${fechaLarga(hoy)}. Verificable en ${esc(location.origin + base)}/jugador/?u=${esc(encodeURIComponent(j.u))}</p>`;
 
     document.getElementById("pdf")?.addEventListener("click", () => window.print());
+    const enlace = `${location.origin}${base}/jugador/?u=${encodeURIComponent(j.u)}`;
+    const texto = `${j.u} jugó ${j.t} ${j.t === 1 ? "torneo" : "torneos"} con el Ajedrez Club Mokewa${titulos.length ? ` y ganó ${titulos.length} ${titulos.length === 1 ? "título" : "títulos"}` : ""}. Mira su trayectoria: ${enlace}`;
+    (document.getElementById("compartir") as HTMLAnchorElement).href = `https://wa.me/?text=${encodeURIComponent(texto)}`;
   }
 
   const u = new URLSearchParams(location.search).get("u") || CUENTA?.usuario || "Ajedrez_Club_Mokewa";
@@ -260,7 +264,7 @@ const cuenta = club.cuenta_club;
     #ficha :global(.solo-imprimir) {
       display: grid;
       gap: 2px;
-      border-bottom: 2px solid #6e1e2b;
+      border-bottom: 2px solid #a64b08;
       padding-bottom: 10px;
       margin-bottom: 16px;
     }
@@ -271,7 +275,7 @@ const cuenta = club.cuenta_club;
     }
     #ficha :global(.cifra strong),
     #ficha :global(.rating strong) {
-      color: #6e1e2b;
+      color: #a64b08;
     }
     #ficha :global(table) {
       font-size: 9pt;

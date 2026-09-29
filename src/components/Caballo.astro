@@ -1,0 +1,29 @@
+---
+// Caballo del Ajedrez Club Mokewa, redibujado en vector a partir de su logo público
+// (caballo geométrico negro, ojo blanco, corona y franjas naranjas).
+// Reemplazar por el archivo oficial cuando el club lo entregue y autorice su uso.
+interface Props {
+  tam?: number | string;
+  clase?: string;
+  titulo?: string;
+}
+const { tam = 200, clase = "", titulo } = Astro.props;
+---
+
+<svg
+  class={`caballo ${clase}`}
+  width={tam}
+  height={tam}
+  viewBox="30 14 142 164"
+  role={titulo ? "img" : undefined}
+  aria-label={titulo}
+  aria-hidden={titulo ? undefined : "true"}
+>
+  <path class="franja" d="M74 44 L44 110 L72 162" fill="none" stroke="#f28a1e" stroke-width="11"></path>
+  <path class="franja" d="M86 70 L66 112 L84 146" fill="none" stroke="#f28a1e" stroke-width="6"></path>
+  <path d="M84 172 L78 124 L82 84 L98 56 L118 46 L136 54 L154 80 L162 104 L154 114 L132 108 L122 116 L134 142 L140 172 Z" fill="#111"></path>
+  <path d="M84 172 L78 124 L82 84 L98 56 L104 112 Z" fill="#2b2b2b"></path>
+  <path d="M118 46 L136 54 L154 80 L130 70 Z" fill="#1d1d1d"></path>
+  <path d="M124 70 Q132 64 140 72 Q132 76 124 70 Z" fill="#fff"></path>
+  <path class="corona" d="M104 48 L101 26 L112 36 L119 22 L126 36 L137 28 L134 50 Z" fill="#f28a1e"></path>
+</svg>

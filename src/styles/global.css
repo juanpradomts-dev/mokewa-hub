@@ -2,17 +2,17 @@
    Paleta: vino de Moquegua + madera de tablero. Mobile-first, contraste AA, texto base 17 px. */
 
 :root {
-  --vino: #6e1e2b;
-  --vino-2: #8a2a3a;
-  --vino-osc: #3f0f18;
-  --oro: #c9a227;
-  --oro-texto: #7d5f0c;
-  --fondo: #f7f2e9;
-  --papel: #fffdf8;
-  --tinta: #1d1a17;
+  --vino: #a64b08;
+  --vino-2: #c25a0c;
+  --vino-osc: #141211;
+  --oro: #f28a1e;
+  --oro-texto: #a64b08;
+  --fondo: #f7f4ef;
+  --papel: #fffdf9;
+  --tinta: #1a1714;
   --suave: #5f5850;
-  --linea: #e4dbcb;
-  --casilla: #efe6d6;
+  --linea: #e6ddd0;
+  --casilla: #f1ebe2;
   --pc-fondo: #fff1c7;
   --pc-texto: #6f4400;
   --pc-borde: #d9a93d;
@@ -30,17 +30,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --vino: #e28a98;
-    --vino-2: #f0a3af;
-    --vino-osc: #2a0c12;
-    --oro: #e0bd52;
-    --oro-texto: #e7c865;
-    --fondo: #16110f;
-    --papel: #201917;
-    --tinta: #f3ece3;
-    --suave: #b9ada1;
-    --linea: #3a2f2a;
-    --casilla: #2a211e;
+    --vino: #f5a04a;
+    --vino-2: #f7b36b;
+    --vino-osc: #0d0c0b;
+    --oro: #f28a1e;
+    --oro-texto: #f5a04a;
+    --fondo: #121110;
+    --papel: #1c1a18;
+    --tinta: #f3eee8;
+    --suave: #b8aea3;
+    --linea: #34302c;
+    --casilla: #262320;
     --pc-fondo: #3b2c0c;
     --pc-texto: #f5cf73;
     --pc-borde: #8a6a1a;
@@ -53,17 +53,17 @@
   }
 }
 :root[data-theme="dark"] {
-  --vino: #e28a98;
-  --vino-2: #f0a3af;
-  --vino-osc: #2a0c12;
-  --oro: #e0bd52;
-  --oro-texto: #e7c865;
-  --fondo: #16110f;
-  --papel: #201917;
-  --tinta: #f3ece3;
-  --suave: #b9ada1;
-  --linea: #3a2f2a;
-  --casilla: #2a211e;
+  --vino: #f5a04a;
+  --vino-2: #f7b36b;
+  --vino-osc: #0d0c0b;
+  --oro: #f28a1e;
+  --oro-texto: #f5a04a;
+  --fondo: #121110;
+  --papel: #1c1a18;
+  --tinta: #f3eee8;
+  --suave: #b8aea3;
+  --linea: #34302c;
+  --casilla: #262320;
   --pc-fondo: #3b2c0c;
   --pc-texto: #f5cf73;
   --pc-borde: #8a6a1a;
@@ -176,16 +176,36 @@ p {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- Saltar al contenido (teclado y lectores de pantalla) ---------- */
+.saltar {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 50;
+  background: var(--oro);
+  color: #111;
+  padding: 10px 16px;
+  border-radius: 0 0 10px 10px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.saltar:focus {
+  top: 0;
+}
+main:focus {
+  outline: none;
+}
+
 /* ---------- Aviso de demo ---------- */
 .aviso-demo {
   background: var(--vino-osc);
-  color: #f6e8d6;
+  color: #efe7dc;
   font-size: 0.82rem;
   text-align: center;
   padding: 6px 16px;
 }
 .aviso-demo a {
-  color: #f3d58a;
+  color: #f5a04a;
 }
 
 /* ---------- Cabecera ---------- */
@@ -313,22 +333,12 @@ p {
   transition: background-color 0.15s, color 0.15s, border-color 0.15s;
 }
 .boton-primario {
-  background: var(--vino);
-  color: #fff;
+  background: var(--oro);
+  color: #111;
 }
 .boton-primario:hover {
-  background: var(--vino-2);
-  color: #fff;
-}
-:root[data-theme="dark"] .boton-primario,
-:root[data-theme="dark"] .boton-primario:hover {
-  color: #1d0a0e;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .boton-primario,
-  :root:not([data-theme="light"]) .boton-primario:hover {
-    color: #1d0a0e;
-  }
+  background: #f59b3d;
+  color: #111;
 }
 .boton-secundario {
   background: transparent;
@@ -628,12 +638,12 @@ textarea[aria-invalid="true"] {
 .pie {
   margin-top: 64px;
   background: var(--vino-osc);
-  color: #eadfd2;
+  color: #e8e1d8;
   padding: 40px 0 28px;
   font-size: 0.92rem;
 }
 .pie a {
-  color: #f3d58a;
+  color: #f5a04a;
 }
 .pie h3 {
   color: #fff;
@@ -650,7 +660,7 @@ textarea[aria-invalid="true"] {
   margin-top: 28px;
   padding-top: 16px;
   border-top: 1px solid rgb(255 255 255 / 0.12);
-  color: #c9b9a8;
+  color: #b8aea3;
   font-size: 0.84rem;
 }
 
@@ -677,17 +687,15 @@ textarea[aria-invalid="true"] {
 /* ---------- Tablero decorativo ---------- */
 .tablero-fondo {
   background-color: var(--vino-osc);
-  background-image: conic-gradient(rgb(255 255 255 / 0.045) 25%, transparent 0 50%, rgb(255 255 255 / 0.045) 0 75%, transparent 0);
+  background-image: conic-gradient(rgb(255 255 255 / 0.035) 25%, transparent 0 50%, rgb(255 255 255 / 0.045) 0 75%, transparent 0);
   background-size: 64px 64px;
 }
 
+/* Con «reducir movimiento» solo se quita el desplazamiento suave: los fundidos y el caballo
+   flotante (suave, de poca amplitud) se mantienen para todos. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition: none !important;
-    animation: none !important;
-    scroll-behavior: auto !important;
+  html {
+    scroll-behavior: auto;
   }
 }
 
