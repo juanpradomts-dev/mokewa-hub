@@ -23,9 +23,17 @@ const mapa = valor("mapa");
   <!-- 1. HÉROE -->
   <section class="heroe seccion-oscura">
     <div class="contenedor heroe-grid">
-      <div class="escena" aria-hidden="true">
+      <div class="escena" data-viaje-desde aria-hidden="true">
         <div class="halo"></div>
-        <div class="flotante"><div class="medallon"><Caballo tam="100%" /></div></div>
+        <div class="viajero">
+          <div class="flotante">
+            <div class="moneda">
+              <div class="cara"><Caballo tam="100%" /></div>
+              {Array.from({ length: 9 }, (_, i) => <div class="canto" style={`--i:${i + 1}`}></div>)}
+              <div class="dorso"><Caballo tam="100%" /></div>
+            </div>
+          </div>
+        </div>
         <div class="sombra"></div>
       </div>
       <div class="heroe-texto">
@@ -63,10 +71,25 @@ const mapa = valor("mapa");
   </section>
 
   <!-- 3. POR QUÉ MOKEWA -->
-  <section class="seccion seccion-oscura">
+  <section class="seccion seccion-oscura por-que">
     <div class="contenedor">
-      <p class="antetitulo">Por qué Mokewa</p>
-      <h2>Un club que compite, no solo una clase</h2>
+      <div class="por-que-grid">
+        <div class="por-que-cabeza">
+          <p class="antetitulo">Por qué Mokewa</p>
+          <h2>Un club que compite, no solo una clase</h2>
+        </div>
+        <div class="pista" data-viaje-hasta aria-hidden="true">
+          <svg class="adornos" viewBox="0 0 200 200">
+            <circle class="aro aro-1" cx="100" cy="100" r="92"></circle>
+            <circle class="aro aro-2" cx="100" cy="100" r="74"></circle>
+            <rect class="casilla-deco c1" x="14" y="30" width="12" height="12"></rect>
+            <rect class="casilla-deco c2" x="172" y="56" width="9" height="9"></rect>
+            <rect class="casilla-deco c3" x="160" y="160" width="12" height="12"></rect>
+            <circle class="punto" cx="36" cy="164" r="4"></circle>
+            <circle class="punto" cx="182" cy="120" r="3"></circle>
+            <circle class="punto" cx="120" cy="10" r="3"></circle>
+          </svg>
+        </div>
       <ul class="razones">
         <li class="razon">
           <span class="razon-icono glifo" aria-hidden="true">♜&#xfe0e;</span>
@@ -90,6 +113,7 @@ const mapa = valor("mapa");
           </div>
         </li>
       </ul>
+      </div>
       <Equipo oscuro />
     </div>
   </section>
@@ -150,22 +174,9 @@ const mapa = valor("mapa");
     location.href = `${f.action}${q ? `?q=${encodeURIComponent(q)}` : ""}#salon`;
   });
 
-  // El caballo se inclina un poco hacia el cursor (responde al usuario, no se mueve solo).
-  const heroe = document.querySelector<HTMLElement>(".heroe");
-  const caballo = document.querySelector<HTMLElement>(".flotante");
-  if (heroe && caballo && matchMedia("(pointer: fine)").matches) {
-    heroe.addEventListener("pointermove", (e) => {
-      const r = heroe.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5;
-      const y = (e.clientY - r.top) / r.height - 0.5;
-      caballo.style.setProperty("--px", `${(x * 14).toFixed(1)}px`);
-      caballo.style.setProperty("--py", `${(y * 10).toFixed(1)}px`);
-      caballo.style.setProperty("--ry", `${(x * 16).toFixed(1)}deg`);
-    });
-    heroe.addEventListener("pointerleave", () => {
-      for (const v of ["--px", "--py", "--ry"]) caballo.style.removeProperty(v);
-    });
-  }
+  // Caballo viajero: del héroe a «Por qué Mokewa», girando con el scroll.
+  import { iniciarViaje } from "../lib/viajero.js";
+  iniciarViaje();
 </script>
 
 <style>
@@ -238,15 +249,14 @@ const mapa = valor("mapa");
     color: #f3eee8;
   }
 
-  /* caballo flotante (se anima para todos: es suave y de poca amplitud) */
+  /* ---------- Caballo viajero (moneda 3D) ----------
+     Nace en el héroe y aterriza en «Por qué Mokewa» (src/lib/viajero.js).
+     El balanceo en bucle es suave y de poca amplitud: se ve para todos. */
   .escena {
     position: relative;
     width: min(32vw, 124px);
     aspect-ratio: 1;
     justify-self: center;
-    display: grid;
-    place-items: center;
-    perspective: 600px;
   }
   @media (min-width: 900px) {
     .escena {
@@ -255,56 +265,198 @@ const mapa = valor("mapa");
   }
   .halo {
     position: absolute;
-    inset: -8%;
+    inset: -10%;
     border-radius: 50%;
     background: radial-gradient(circle, rgb(242 138 30 / 0.3), rgb(242 138 30 / 0.07) 50%, transparent 68%);
-  }
-  .flotante {
-    position: relative;
-    width: 78%;
-    animation: flotar 5.5s ease-in-out infinite;
-    transform: translate(var(--px, 0px), var(--py, 0px)) rotateY(var(--ry, 0deg));
-    transition: transform 0.25s ease-out;
-  }
-  .medallon {
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #ffffff, #f1ece5 70%);
-    box-shadow: 0 0 0 5px rgb(242 138 30 / 0.9), 0 0 0 12px rgb(242 138 30 / 0.16), 0 24px 40px rgb(0 0 0 / 0.5);
-    display: grid;
-    place-items: center;
-    padding: 10%;
-  }
-  .flotante :global(svg) {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-  .flotante :global(.corona) {
-    transform-origin: 119px 48px;
-    animation: corona 5.5s ease-in-out infinite;
+    opacity: var(--salida, 1);
   }
   .sombra {
     position: absolute;
-    bottom: -4%;
+    left: 27%;
+    bottom: -6%;
     width: 46%;
     height: 7%;
     border-radius: 50%;
     background: rgb(0 0 0 / 0.55);
     filter: blur(6px);
     animation: sombra 5.5s ease-in-out infinite;
+    opacity: var(--salida, 1);
+  }
+  .viajero {
+    position: absolute;
+    inset: 0;
+  }
+  :global(.viajero.en-viaje) {
+    position: absolute;
+    inset: auto;
+    left: 0;
+    top: 0;
+    z-index: 15;
+    pointer-events: none;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+  .flotante {
+    width: 100%;
+    height: 100%;
+    perspective: 900px;
+    animation: flotar 5.5s ease-in-out infinite;
+  }
+  .moneda {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx, 0deg)) rotateY(calc(var(--giro, 0deg) + var(--ry, 0deg))) rotateZ(var(--inclina, 0deg));
+    transition: transform 0.2s ease-out;
+  }
+  .cara,
+  .dorso,
+  .canto {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+  }
+  .cara,
+  .dorso {
+    display: grid;
+    place-items: center;
+    padding: 12%;
+    backface-visibility: hidden;
+  }
+  .cara {
+    background: radial-gradient(circle at 35% 30%, #ffffff, #efe9e1 72%);
+    box-shadow: inset 0 0 0 5px #f28a1e, 0 26px 40px rgb(0 0 0 / 0.45);
+  }
+  .canto {
+    background: #d9700f;
+    transform: translateZ(calc(var(--i) * -1.6px));
+  }
+  .dorso {
+    background: #141211;
+    box-shadow: inset 0 0 0 5px #f28a1e;
+    transform: translateZ(-16px) rotateY(180deg);
+  }
+  .dorso :global(.silueta) {
+    fill: #f7941d;
+  }
+  .dorso :global(.banda),
+  .dorso :global(.corona) {
+    fill: #fff;
+  }
+  .dorso :global(.ojo) {
+    fill: #141211;
+  }
+  .cara :global(svg),
+  .dorso :global(svg) {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .cara :global(.corona) {
+    transform-box: view-box;
+    transform-origin: 360px 70px;
+    animation: corona 5.5s ease-in-out infinite;
   }
   @keyframes flotar {
     0%, 100% { translate: 0 0; rotate: -2deg; }
-    50% { translate: 0 -14px; rotate: 1.5deg; }
+    50% { translate: 0 -12px; rotate: 1.5deg; }
   }
   @keyframes corona {
     0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(-4deg) translateY(-2px); }
+    50% { transform: rotate(-4deg) translateY(-6px); }
   }
   @keyframes sombra {
     0%, 100% { transform: scaleX(1); opacity: 0.55; }
     50% { transform: scaleX(0.78); opacity: 0.3; }
+  }
+
+  /* ---------- «Por qué Mokewa» con la pista de aterrizaje ---------- */
+  .por-que-grid {
+    display: grid;
+    grid-template-columns: 1fr 104px;
+    gap: 0 16px;
+    align-items: start;
+  }
+  .por-que-cabeza h2 {
+    margin: 0;
+  }
+  .pista {
+    position: relative;
+    width: 104px;
+    aspect-ratio: 1;
+    justify-self: end;
+  }
+  .por-que-grid .razones {
+    grid-column: 1 / -1;
+  }
+  @media (min-width: 900px) {
+    .por-que-grid {
+      grid-template-columns: 1.2fr 1fr;
+      grid-template-areas: "cabeza pista" "razones pista";
+      gap: 0 56px;
+    }
+    .por-que-cabeza {
+      grid-area: cabeza;
+    }
+    .pista {
+      grid-area: pista;
+      width: 300px;
+      justify-self: center;
+      align-self: center;
+    }
+    .por-que-grid .razones {
+      grid-area: razones;
+      grid-column: auto;
+      grid-template-columns: 1fr;
+    }
+  }
+  .adornos {
+    position: absolute;
+    inset: -18%;
+    width: 136%;
+    height: 136%;
+    overflow: visible;
+  }
+  .aro {
+    fill: none;
+    stroke: rgb(242 138 30 / 0.35);
+    stroke-width: 1.2;
+    transition: stroke 0.4s;
+    transform-origin: 100px 100px;
+  }
+  .aro-2 {
+    stroke: rgb(255 255 255 / 0.14);
+    stroke-dasharray: 3 5;
+  }
+  .casilla-deco {
+    fill: none;
+    stroke: #f28a1e;
+    stroke-width: 1.4;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: deriva 7s ease-in-out infinite;
+  }
+  .c2 {
+    animation-delay: -2s;
+  }
+  .c3 {
+    animation-delay: -4s;
+  }
+  .punto {
+    fill: rgb(255 255 255 / 0.5);
+  }
+  @keyframes deriva {
+    0%, 100% { transform: translateY(0) rotate(45deg); }
+    50% { transform: translateY(-6px) rotate(90deg); }
+  }
+  .pista:global(.aterrizado) .aro-1 {
+    stroke: #f28a1e;
+    animation: aterriza 0.7s ease-out;
+  }
+  @keyframes aterriza {
+    from { transform: scale(0.8); opacity: 0.2; }
+    to { transform: scale(1); opacity: 1; }
   }
 
   /* ---------- encabezados de sección ---------- */
