@@ -19,21 +19,36 @@ const interno = { ...club.interno, meses_sin_online: mesesSinOnline, miembros: c
 if (esProduccionPanel && !hayBaseDeDatos) return Astro.redirect(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/`);
 ---
 
-<Base titulo="Panel del organizador" sinWhatsapp privada descripcion="Panel privado del Ajedrez Club Mokewa (demo).">
+<Base titulo="Panel del organizador" sinWhatsapp privada descripcion={hayBaseDeDatos ? "Panel privado del Ajedrez Club Mokewa." : "Panel privado del Ajedrez Club Mokewa (demo)."}>
   <section class="seccion">
     <div class="contenedor">
       <div id="puerta" class="tarjeta puerta">
         <p class="antetitulo">Panel del organizador</p>
         <h1>Todo lo operativo, sin programar</h1>
-        <p class="bajada">Crear torneos, validar pagos, publicar resultados y noticias, y completar los datos del club. En la versión oficial se entra con correo y contraseña (roles: administrador y entrenador).</p>
-        <button class="boton boton-primario" type="button" id="entrar">Entrar como organizador (demo)</button>
+        <p class="bajada">Crear torneos, validar pagos, publicar resultados y noticias, y completar los datos del club. {hayBaseDeDatos ? "Solo para el personal del club." : "En la versión oficial se entra con correo y contraseña (roles: administrador y entrenador)."}</p>
+        {hayBaseDeDatos ? (
+          <form id="acceso" class="acceso" novalidate>
+            <div class="campo">
+              <label for="acceso-correo">Correo</label>
+              <input id="acceso-correo" name="correo" type="email" autocomplete="username" required />
+            </div>
+            <div class="campo">
+              <label for="acceso-clave">Contraseña</label>
+              <input id="acceso-clave" name="clave" type="password" autocomplete="current-password" required />
+            </div>
+            <button class="boton boton-primario" type="submit">Entrar</button>
+            <p class="suave" id="acceso-aviso" role="alert"></p>
+          </form>
+        ) : (
+          <button class="boton boton-primario" type="button" id="entrar">Entrar como organizador (demo)</button>
+        )}
       </div>
 
       <div id="panel" hidden>
         <div class="panel-cabeza">
           <div>
-            <p class="antetitulo">Panel del organizador · demo</p>
-            <h1>Hola, organizador</h1>
+            <p class="antetitulo">{hayBaseDeDatos ? "Panel del organizador" : "Panel del organizador · demo"}</p>
+            <h1 id="saludo">Hola, organizador</h1>
           </div>
           <div class="grupo-botones">
             <a class="boton boton-secundario boton-chico" href={`${b}/`} target="_blank">Ver la web ↗</a>
@@ -191,11 +206,13 @@ if (esProduccionPanel && !hayBaseDeDatos) return Astro.redirect(`${import.meta.e
             <p class="suave">Para que queden en la web oficial: descarga el archivo y reemplaza <code>src/data/contenido.json</code> del repositorio.</p>
             <p class="suave" id="datos-aviso" aria-live="polite"></p>
           </form>
-          <div class="tarjeta zona-demo">
-            <h2 class="h-bloque">Demo</h2>
-            <p class="suave">Borra todo lo creado en este navegador (inscripciones, torneos, noticias, datos) y vuelve a los datos de prueba.</p>
-            <button class="boton boton-secundario" type="button" id="reiniciar">Reiniciar demo</button>
-          </div>
+          {!hayBaseDeDatos && (
+            <div class="tarjeta zona-demo">
+              <h2 class="h-bloque">Demo</h2>
+              <p class="suave">Borra todo lo creado en este navegador (inscripciones, torneos, noticias, datos) y vuelve a los datos de prueba.</p>
+              <button class="boton boton-secundario" type="button" id="reiniciar">Reiniciar demo</button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -431,6 +448,12 @@ if (esProduccionPanel && !hayBaseDeDatos) return Astro.redirect(`${import.meta.e
   }
   #r-publicar {
     margin-top: 12px;
+  }
+  .acceso {
+    display: grid;
+    gap: 4px;
+    max-width: 360px;
+    margin-top: 8px;
   }
   .zona-demo {
     margin-top: 20px;

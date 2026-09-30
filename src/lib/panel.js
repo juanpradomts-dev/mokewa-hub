@@ -1,9 +1,10 @@
-// Panel del organizador (demo). Todo pasa por store.js; en producción, por Supabase con RLS.
+// Panel del organizador. Todo pasa por store.js: en la demo, el navegador; en la web oficial,
+// Supabase con acceso por correo y contraseña y reglas de acceso por fila (RLS).
 import {
   CAMPOS, contenido, guardarContenido, pendientesDeConfirmar, todosLosTorneos, torneosCreados, crearTorneo, borrarTorneo,
   inscripciones, cambiarEstadoPago, suprimirInscripcion, leerVoucher, csvInscritos, noticias, crearNoticia, borrarNoticia,
   resultadosPublicados, publicarResultados, borrarResultados, leerCsvResultados, sembrarDemo, reiniciarDemo, alCambiar,
-  TORNEO_VERANO,
+  TORNEO_VERANO, hayNube, listo, sesionPanel, entrarPanel, salirPanel, cargarPanel,
 } from "./store.js";
 import { esc } from "./html.js";
 import contenidoBaseCompleto from "../data/contenido.json";
@@ -12,21 +13,52 @@ const $ = (id) => document.getElementById(id);
 const base = document.body.dataset.base ?? "";
 const SESION = "mokewa-panel";
 
-// ------------------------------------------------------------------ entrada
-function entrar() {
+// Una acción que va a la base de datos puede fallar (sin internet, sesión vencida): se avisa, no se calla.
+async function conAviso(accion) {
   try {
-    sessionStorage.setItem(SESION, "1");
-  } catch {}
+    return await accion();
+  } catch (err) {
+    alert(err?.message || "No se pudo completar la acción. Revisa tu conexión e intenta de nuevo.");
+    throw err;
+  }
+}
+
+// ------------------------------------------------------------------ entrada
+async function entrar(perfil) {
+  if (!hayNube) {
+    try {
+      sessionStorage.setItem(SESION, "1");
+    } catch {}
+  }
   $("puerta").hidden = true;
   $("panel").hidden = false;
-  sembrarDemo().then(pintarTodo);
+  if (perfil?.nombre) $("saludo").textContent = `Hola, ${perfil.nombre}`;
+  pintarTodo();
+  if (hayNube) {
+    await listo();
+    await conAviso(cargarPanel).catch(() => {});
+  } else await sembrarDemo();
   pintarTodo();
 }
-$("entrar").addEventListener("click", entrar);
-$("salir").addEventListener("click", () => {
+$("entrar")?.addEventListener("click", () => entrar());
+$("acceso")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const aviso = $("acceso-aviso");
+  aviso.textContent = "Entrando…";
+  try {
+    const perfil = await entrarPanel(String(f.get("correo") ?? "").trim(), String(f.get("clave") ?? ""));
+    aviso.textContent = "";
+    entrar(perfil);
+  } catch (err) {
+    aviso.textContent = err.message;
+  }
+});
+$("salir").addEventListener("click", async () => {
   try {
     sessionStorage.removeItem(SESION);
   } catch {}
+  await salirPanel();
   location.reload();
 });
 
@@ -160,12 +192,12 @@ $("i-lista").addEventListener("click", async (e) => {
   const tarjeta = boton.closest("[data-id]");
   const id = tarjeta.dataset.id;
   const accion = boton.dataset.accion;
-  if (accion === "validar") cambiarEstadoPago(id, "validado");
-  if (accion === "pendiente") cambiarEstadoPago(id, "pendiente");
-  if (accion === "rechazar") cambiarEstadoPago(id, "rechazado", tarjeta.querySelector(".motivo").value);
+  if (accion === "validar") await conAviso(() => cambiarEstadoPago(id, "validado")).catch(() => {});
+  if (accion === "pendiente") await conAviso(() => cambiarEstadoPago(id, "pendiente")).catch(() => {});
+  if (accion === "rechazar") await conAviso(() => cambiarEstadoPago(id, "rechazado", tarjeta.querySelector(".motivo").value)).catch(() => {});
   if (accion === "suprimir") {
     if (!confirm("¿Borrar todos los datos de esta inscripción y su comprobante? (derecho de supresión, Ley 29733)")) return;
-    await suprimirInscripcion(id);
+    await conAviso(() => suprimirInscripcion(id)).catch(() => {});
   }
   if (accion === "ver") verVoucher(id);
 });
@@ -197,13 +229,13 @@ $("visor").addEventListener("click", (e) => e.target === $("visor") && $("visor"
 
 // ------------------------------------------------------------------ torneos
 const abiertoTorneo = Date.now();
-$("form-torneo").addEventListener("submit", (e) => {
+$("form-torneo").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = new FormData(e.target);
   const nombre = String(f.get("nombre") ?? "").trim();
   if (!nombre) return;
   const fecha = String(f.get("fecha") || "");
-  const t = crearTorneo({
+  const t = await conAviso(() => crearTorneo({
     nombre,
     modalidad: f.get("modalidad"),
     fecha,
@@ -216,7 +248,8 @@ $("form-torneo").addEventListener("submit", (e) => {
     bases: String(f.get("bases") || "").trim(),
     foto: String(f.get("foto") || "").trim(),
     descripcion: String(f.get("descripcion") || "").trim(),
-  });
+  })).catch(() => null);
+  if (!t) return;
   const seg = Math.round((Date.now() - abiertoTorneo) / 1000);
   e.target.reset();
   $("tr-aviso").innerHTML = `Publicado «${esc(t.nombre)}» en ${seg >= 60 ? `${Math.floor(seg / 60)} min ${seg % 60} s` : `${seg} s`}. <a href="${base}/torneos/" target="_blank">Verlo en la web ↗</a>`;
@@ -226,14 +259,14 @@ function pintarTorneos() {
   const filas = [TORNEO_VERANO, ...lista].map((t) => {
     const n = inscripciones(t.id).length;
     return `<div class="tarjeta fila-simple"><div><strong>${esc(t.nombre)}</strong>${t.ejemplo ? ' <span class="etiqueta etiqueta-ejemplo">ejemplo</span>' : ""}<br><span class="suave">${esc(t.modalidad)}${t.fecha ? " · " + esc(t.fecha) : ""} · ${n} ${n === 1 ? "inscrito" : "inscritos"}</span></div>
-      <div class="grupo-botones"><a class="boton boton-secundario boton-chico" href="${base}/torneos/verano-2027/${t.ejemplo ? "" : `?t=${encodeURIComponent(t.id)}`}" target="_blank">Ver ↗</a>
+      <div class="grupo-botones"><a class="boton boton-secundario boton-chico" href="${base}/torneos/${t.ejemplo ? "verano-2027/" : `torneo/?t=${encodeURIComponent(t.id)}`}" target="_blank">Ver ↗</a>
       ${t.ejemplo ? "" : `<button class="boton boton-secundario boton-chico peligro" type="button" data-borrar-torneo="${esc(t.id)}">Borrar</button>`}</div></div>`;
   });
   $("tr-lista").innerHTML = filas.join("");
 }
 $("tr-lista").addEventListener("click", (e) => {
   const id = e.target.closest("[data-borrar-torneo]")?.dataset.borrarTorneo;
-  if (id && confirm("¿Borrar este torneo y sus inscripciones de prueba?")) borrarTorneo(id);
+  if (id && confirm("¿Borrar este torneo y sus inscripciones?")) conAviso(() => borrarTorneo(id)).catch(() => {});
 });
 
 // ------------------------------------------------------------------ resultados
@@ -296,7 +329,7 @@ $("r-leer").addEventListener("click", () => {
     : "No encontré una columna de nombres. La primera fila debe tener encabezados (Puesto, Nombre, Puntos…).";
   vistaPrevia();
 });
-$("r-publicar").addEventListener("click", () => {
+$("r-publicar").addEventListener("click", async () => {
   const nombre = $("r-nombre").value.trim();
   if (!nombre) {
     $("r-estado").textContent = "Escribe el nombre del torneo antes de publicar.";
@@ -304,7 +337,8 @@ $("r-publicar").addEventListener("click", () => {
     return;
   }
   const clave = nombre.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-");
-  publicarResultados(clave, { nombre, origen: origenResultados, filas: filasResultados, cronica: $("r-cronica").value.trim() });
+  const ok = await conAviso(() => publicarResultados(clave, { nombre, origen: origenResultados, filas: filasResultados, cronica: $("r-cronica").value.trim() })).then(() => true, () => false);
+  if (!ok) return;
   filasResultados = [];
   vistaPrevia();
   $("r-estado").innerHTML = `Publicado. <a href="${base}/torneos/" target="_blank">Verlo en Torneos ↗</a>`;
@@ -320,17 +354,18 @@ function pintarResultados() {
 }
 $("r-lista").addEventListener("click", (e) => {
   const k = e.target.closest("[data-borrar-res]")?.dataset.borrarRes;
-  if (k) borrarResultados(k);
+  if (k) conAviso(() => borrarResultados(k)).catch(() => {});
 });
 
 // ------------------------------------------------------------------ noticias
-$("form-noticia").addEventListener("submit", (e) => {
+$("form-noticia").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = new FormData(e.target);
   const titulo = String(f.get("titulo") || "").trim();
   const cuerpo = String(f.get("cuerpo") || "").trim();
   if (!titulo || !cuerpo) return;
-  crearNoticia({ titulo, cuerpo });
+  const ok = await conAviso(() => crearNoticia({ titulo, cuerpo })).then(() => true, () => false);
+  if (!ok) return;
   e.target.reset();
 });
 function pintarNoticias() {
@@ -343,7 +378,7 @@ function pintarNoticias() {
 }
 $("n-lista").addEventListener("click", (e) => {
   const id = e.target.closest("[data-borrar-noticia]")?.dataset.borrarNoticia;
-  if (id && confirm("¿Borrar esta noticia?")) borrarNoticia(id);
+  if (id && confirm("¿Borrar esta noticia?")) conAviso(() => borrarNoticia(id)).catch(() => {});
 });
 
 // ------------------------------------------------------------------ datos del club
@@ -367,7 +402,7 @@ function pintarDatos() {
     )
     .join("");
 }
-$("form-datos").addEventListener("submit", (e) => {
+$("form-datos").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = new FormData(e.target);
   const valores = {};
@@ -384,7 +419,9 @@ $("form-datos").addEventListener("submit", (e) => {
     const n = valores.whatsapp.replace(/\D/g, "");
     valores.whatsapp = n.length === 9 ? `51${n}` : n;
   }
-  guardarContenido(valores);
+  $("datos-aviso").textContent = "Guardando…";
+  const ok = await conAviso(() => guardarContenido(valores)).then(() => true, () => false);
+  if (!ok) return void ($("datos-aviso").textContent = "No se guardó. Revisa tu conexión e intenta de nuevo.");
   $("datos-aviso").innerHTML = `Guardado. Toda la web ya muestra estos datos. <a href="${base}/academia/" target="_blank">Revisar la Academia ↗</a>`;
 });
 $("datos-campos").addEventListener("click", (e) => {
@@ -406,7 +443,7 @@ $("datos-descargar").addEventListener("click", () => {
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 });
-$("reiniciar").addEventListener("click", async () => {
+$("reiniciar")?.addEventListener("click", async () => {
   if (!confirm("¿Reiniciar la demo? Se borra todo lo creado en este navegador.")) return;
   for (const v of urlsVoucher.values()) v && URL.revokeObjectURL(v.url);
   urlsVoucher.clear();
@@ -430,8 +467,14 @@ alCambiar(() => {
 });
 
 // Al recargar con la sesión abierta se entra directo. Va al final: todo lo de arriba ya está definido.
-let dentro = false;
-try {
-  dentro = sessionStorage.getItem(SESION) === "1";
-} catch {}
-if (dentro) entrar();
+if (hayNube) {
+  sesionPanel()
+    .then((perfil) => perfil && entrar(perfil))
+    .catch(() => {});
+} else {
+  let dentro = false;
+  try {
+    dentro = sessionStorage.getItem(SESION) === "1";
+  } catch {}
+  if (dentro) entrar();
+}

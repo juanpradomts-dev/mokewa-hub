@@ -1,21 +1,35 @@
-// Lógica de la página de inscripción (torneos/verano-2027 y torneos creados en el panel con ?t=).
+// Lógica de la ficha de torneo: /torneos/verano-2027/ (fijo) y /torneos/torneo/?t=<id> (creados en el panel).
 import {
-  TORNEO_VERANO, torneo, categoriaPara, esMenor, inscribir, guardarVoucher, listaPublica, inscripciones,
-  alCambiar, sembrarDemo, TIPOS_VOUCHER, MAX_VOUCHER, pintarCampos,
+  TORNEO_VERANO, torneo, categoriaPara, esMenor, inscribir, guardarVoucher, listaPublica, misInscripciones,
+  alCambiar, sembrarDemo, TIPOS_VOUCHER, MAX_VOUCHER, pintarCampos, listo, hayNube,
 } from "./store.js";
 import { esc } from "./html.js";
 
 const $ = (id) => document.getElementById(id);
 
 // ---- ¿Qué torneo? El de ejemplo o uno creado en el panel (?t=)
+const fijo = document.querySelector("[data-torneo]")?.dataset.torneo === "verano-2027";
 const idT = new URLSearchParams(location.search).get("t");
-const T = (idT && torneo(idT)) || TORNEO_VERANO;
-if (T !== TORNEO_VERANO) {
+// Enlaces antiguos de la demo (verano-2027/?t=…) pasan a la página de los torneos del panel.
+if (fijo && idT) location.replace(`${document.body.dataset.base}/torneos/torneo/?t=${encodeURIComponent(idT)}`);
+if (!fijo) await listo(); // en la web oficial los torneos del panel llegan de la base de datos
+const encontrado = fijo ? TORNEO_VERANO : idT ? torneo(idT) : null;
+if (!encontrado) {
+  $("t-no-encontrado").hidden = false;
+  $("inscripcion").hidden = true;
+  document.querySelector(".cat").hidden = true;
+}
+// Sin torneo, un marcador vacío deja que el resto del script corra sin efectos.
+const T = encontrado ?? { id: "", nombre: "", modalidad: "", categorias: [] };
+if (encontrado && !fijo) {
   document.title = `${T.nombre} · Ajedrez Club Mokewa`;
   $("t-miga").textContent = T.nombre;
   $("t-nombre").textContent = T.nombre;
-  $("t-etiquetas").innerHTML = `<span class="etiqueta etiqueta-ok">Creado en el panel</span><span class="etiqueta">${esc(T.modalidad)}</span>`;
-  $("t-bajada").textContent = T.descripcion || "Torneo publicado por el organizador desde el panel.";
+  const demo = document.body.dataset.modo !== "produccion";
+  $("t-etiquetas").innerHTML = `${demo ? '<span class="etiqueta etiqueta-ok">Creado en el panel</span>' : ""}<span class="etiqueta">${esc(T.modalidad)}</span>`;
+  $("t-bajada").textContent = T.descripcion || "";
+  $("t-bajada").hidden = !T.descripcion;
+  $("t-sede").textContent = T.sede ? `Sede: ${T.sede}` : "";
   const dato = (k, v) => `<div class="tarjeta"><span class="dt">${k}</span><span>${esc(v || "—")}</span></div>`;
   $("t-datos").innerHTML = dato("Fecha", T.fecha) + dato("Ritmo de juego", T.ritmo) + dato("Inscripción", T.costo) + dato("Cupo", T.cupo);
   $("t-cats-lista").textContent = (T.categorias || []).join(", ");
@@ -94,23 +108,36 @@ form.addEventListener("submit", async (e) => {
   marcarErrores(errores);
   if (errores.length) return;
 
-  const ins = inscribir({
-    torneo_id: T.id,
-    nombres: d.nombres.trim(),
-    apellidos: d.apellidos.trim(),
-    fecha_nacimiento: d.fecha_nacimiento,
-    categoria: cat,
-    nivel: d.nivel,
-    club: d.club.trim(),
-    lichess: d.lichess.trim(),
-    tutor_nombre: menor ? d.tutor_nombre.trim() : `${d.nombres} ${d.apellidos}`.trim(),
-    tutor_telefono: d.tutor_telefono.replace(/\s/g, ""),
-    tutor_correo: d.tutor_correo.trim(),
-    consentimiento: true,
-    consentimiento_fecha: new Date().toISOString(),
-    voucher_nombre: f.name,
-  });
-  await guardarVoucher(ins.id, f);
+  const enviar = form.querySelector(".enviar");
+  enviar.disabled = true;
+  enviar.textContent = "Enviando…";
+  let ins;
+  try {
+    ins = await inscribir({
+      torneo_id: T.id,
+      nombres: d.nombres.trim(),
+      apellidos: d.apellidos.trim(),
+      fecha_nacimiento: d.fecha_nacimiento,
+      categoria: cat,
+      nivel: d.nivel,
+      club: d.club.trim(),
+      lichess: d.lichess.trim(),
+      tutor_nombre: menor ? d.tutor_nombre.trim() : `${d.nombres} ${d.apellidos}`.trim(),
+      tutor_telefono: d.tutor_telefono.replace(/\s/g, ""),
+      tutor_correo: d.tutor_correo.trim(),
+      consentimiento: true,
+      consentimiento_fecha: new Date().toISOString(),
+      voucher_nombre: f.name,
+    });
+  } catch (err) {
+    $("errores").hidden = false;
+    $("errores").textContent = err.message;
+    enviar.disabled = false;
+    enviar.textContent = "Enviar inscripción";
+    return;
+  }
+  // Si la inscripción entró pero el comprobante no subió, se dice claramente qué hacer.
+  const sinVoucher = await guardarVoucher(ins.id, f).then(() => false, () => true);
   const seg = Math.round((Date.now() - inicio) / 1000);
   const tiempo = seg >= 60 ? `${Math.floor(seg / 60)} min ${seg % 60} s` : `${seg} s`;
   form.hidden = true;
@@ -121,7 +148,12 @@ form.addEventListener("submit", async (e) => {
     <h2>¡Listo, ${esc(ins.nombres)}!</h2>
     <p>Quedó registrada en <strong>${esc(T.nombre)}</strong>, categoría <strong>${esc(cat)}</strong>, nivel ${esc(ins.nivel)}.</p>
     <p>Estado del pago: <span class="etiqueta etiqueta-ejemplo">Pendiente de validación</span></p>
-    <p class="ayuda">Código: <code>${ins.id.slice(0, 8).toUpperCase()}</code>. En la versión oficial llega un correo a ${esc(ins.tutor_correo)} con esta confirmación y otro cuando se valide el pago.</p>
+    ${sinVoucher ? `<p class="alerta alerta-error">La inscripción quedó registrada, pero el comprobante no se pudo subir. Envíalo al club por WhatsApp o Facebook indicando el código.</p>` : ""}
+    <p class="ayuda">Código: <code>${ins.id.slice(0, 8).toUpperCase()}</code>. ${
+      hayNube
+        ? "Guárdalo. En esta misma página, desde este celular o computadora, verás cuando el club valide tu pago."
+        : `En la versión oficial llega un correo a ${esc(ins.tutor_correo)} con esta confirmación y otro cuando se valide el pago.`
+    }</p>
     <p class="tiempo">Te tomó ${tiempo} inscribirte.</p>
     <div class="grupo-botones">
       ${document.body.dataset.modo === "produccion" ? "" : `<a class="boton boton-secundario" href="${document.body.dataset.base}/panel/">Demo: ver cómo lo valida el organizador →</a>`}
@@ -145,7 +177,7 @@ function pintarListas() {
         .map((i) => `<tr><td>${esc(i.nombre)}${i.validado ? ' <span class="ok" title="Pago validado" aria-label="Pago validado">✓</span>' : ""}</td><td>${esc(i.categoria)}</td><td>${esc(i.club)}</td></tr>`)
         .join("")}</tbody></table></div>`
     : `<p>Aún no hay inscritos. ¡Sé el primero!</p>`;
-  const mias = inscripciones(T.id).filter((i) => !i.prueba);
+  const mias = misInscripciones(T.id);
   $("mis-inscripciones").hidden = !mias.length;
   $("lista-mias").innerHTML = mias
     .map((i) => {

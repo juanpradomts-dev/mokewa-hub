@@ -93,7 +93,7 @@ const realizados = [...presenciales.torneos].sort((a, c) => c.fecha.localeCompar
 
 <script>
   import { esc } from "../../lib/html.js";
-  import { todosLosTorneos, resultadosPublicados, alCambiar, inscripciones } from "../../lib/store.js";
+  import { todosLosTorneos, resultadosPublicados, alCambiar, listaPublica } from "../../lib/store.js";
 
   const base = document.body.dataset.base ?? "";
   const fotoHtml = (url: string | undefined, alt: string) =>
@@ -106,15 +106,15 @@ const realizados = [...presenciales.torneos].sort((a, c) => c.fecha.localeCompar
   function pintarPanel() {
     proximos.querySelectorAll("[data-del-panel]").forEach((n) => n.remove());
     for (const t of todosLosTorneos().filter((t: any) => !t.ejemplo && t.modalidad !== "Online")) {
-      const n = inscripciones(t.id).length;
+      const n = listaPublica(t.id).length;
       const art = document.createElement("article");
       art.className = "tarjeta torneo";
       art.dataset.delPanel = "1";
       art.innerHTML = `${fotoHtml(t.foto, t.nombre)}<div class="torneo-cuerpo"><div class="etiquetas"><span class="etiqueta etiqueta-ok">Nuevo</span><span class="etiqueta">${esc(t.modalidad)}</span></div>
-        <h3><a href="${base}/torneos/verano-2027/?t=${encodeURIComponent(t.id)}">${esc(t.nombre)}</a></h3>
+        <h3><a href="${base}/torneos/torneo/?t=${encodeURIComponent(t.id)}">${esc(t.nombre)}</a></h3>
         <p class="cat">${esc(t.fecha || "Fecha por anunciar")}${t.sede ? " · " + esc(t.sede) : ""}${t.ritmo ? " · " + esc(t.ritmo) : ""}</p>
         <p class="cat">${esc((t.categorias || []).join(", "))}${t.cupo ? ` · cupo ${esc(t.cupo)}` : ""}${t.costo ? ` · ${esc(t.costo)}` : ""} · ${n} ${n === 1 ? "inscrito" : "inscritos"}</p>
-        <div class="grupo-botones"><a class="boton boton-primario" href="${base}/torneos/verano-2027/?t=${encodeURIComponent(t.id)}#inscripcion">Inscribirme</a></div></div>`;
+        <div class="grupo-botones"><a class="boton boton-primario" href="${base}/torneos/torneo/?t=${encodeURIComponent(t.id)}#inscripcion">Inscribirme</a></div></div>`;
       proximos.append(art);
     }
 

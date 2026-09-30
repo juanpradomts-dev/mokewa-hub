@@ -1,13 +1,16 @@
-// Capa de datos del navegador para la DEMO.
+// Capa de datos de la web, con dos motores y la misma interfaz:
 //
-// En la demo todo vive en este navegador (localStorage + IndexedDB para los vouchers),
-// así el club puede probar inscripciones y validaciones sin tocar datos reales.
-// En producción esta misma interfaz se implementa sobre Supabase (ver supabase/schema.sql):
-// cada función de aquí corresponde a una consulta a una tabla con Row Level Security.
+// - DEMO (sin base de datos): todo vive en este navegador (localStorage + IndexedDB para los
+//   vouchers), así el club prueba inscripciones y validaciones sin tocar datos reales.
+// - WEB OFICIAL (con PUBLIC_SUPABASE_URL): los datos vienen de Supabase (nube.js, que solo se
+//   descarga en ese caso) y se guardan en el mismo estado en memoria. Las lecturas siguen siendo
+//   inmediatas; las escrituras devuelven una promesa (las páginas hacen «await», que en la demo
+//   no cambia nada).
 
 import contenidoBase from "../data/contenido.json";
 import { CATEGORIAS } from "./categorias.js";
 import { enlaceContacto } from "./contacto.js";
+import { hayBaseDeDatos } from "./backend.js";
 
 const CLAVE = "mokewa-demo-v1";
 const EVENTO = "mokewa:cambio";
@@ -27,8 +30,31 @@ export const TORNEO_VERANO = {
 // ---------------------------------------------------------------- estado
 const vacio = () => ({ version: 1, contenido: {}, torneos: [], inscripciones: [], noticias: [], resultados: {}, sembrado: false });
 
+// ---------------------------------------------------------------- motor «nube» (web oficial)
+const NUBE = hayBaseDeDatos;
+const estadoNube = { ...vacio(), sembrado: true, publicos: [], mias: [] };
+let moduloNube = null;
+const nube = () => (moduloNube ??= import("./nube.js"));
+const avisar = () => window.dispatchEvent(new CustomEvent(EVENTO));
+// Aplica un cambio al estado en memoria y avisa a la página para que se vuelva a pintar.
+const cambiar = (fn) => {
+  fn(estadoNube);
+  avisar();
+};
+let publicoListo = Promise.resolve();
+if (NUBE && typeof window !== "undefined") {
+  publicoListo = nube()
+    .then((n) => n.cargarPublico())
+    .then((d) => cambiar((e) => Object.assign(e, d)))
+    .catch((e) => console.warn("No se pudo leer la base de datos del club:", e));
+}
+// Espera a que lleguen los datos públicos (en la demo ya están).
+export const listo = () => publicoListo;
+export const hayNube = NUBE;
+
 let cache = null;
 function leer() {
+  if (NUBE) return estadoNube;
   if (cache) return cache;
   try {
     cache = { ...vacio(), ...JSON.parse(localStorage.getItem(CLAVE) ?? "null") };
@@ -66,6 +92,9 @@ export function contenido(campo) {
   return v != null && String(v).trim() !== "" ? String(v).trim() : CAMPOS[campo]?.valor ?? null;
 }
 export function guardarContenido(valores) {
+  if (NUBE) return nube().then((n) => n.guardarContenido(valores)).then(() => cambiar((e) => {
+    for (const [k, v] of Object.entries(valores)) v == null ? delete e.contenido[k] : (e.contenido[k] = v);
+  }));
   const e = leer();
   guardar({ ...e, contenido: { ...e.contenido, ...valores } });
 }
@@ -132,12 +161,17 @@ export function torneo(id) {
   return todosLosTorneos().find((t) => t.id === id) ?? null;
 }
 export function crearTorneo(datos) {
+  if (NUBE) return nube().then((n) => n.crearTorneo(datos)).then((t) => (cambiar((e) => e.torneos.push(t)), t));
   const e = leer();
   const t = { id: nuevoId().slice(0, 8), estado: "publicado", creado_en: ahora(), ...datos };
   guardar({ ...e, torneos: [...e.torneos, t] });
   return t;
 }
 export function borrarTorneo(id) {
+  if (NUBE) return nube().then((n) => n.borrarTorneo(id)).then(() => cambiar((e) => {
+    e.torneos = e.torneos.filter((t) => t.id !== id);
+    e.inscripciones = e.inscripciones.filter((i) => i.torneo_id !== id);
+  }));
   const e = leer();
   guardar({
     ...e,
@@ -151,12 +185,22 @@ export const inscripciones = (torneoId) =>
   leer().inscripciones.filter((i) => !torneoId || i.torneo_id === torneoId);
 
 export function inscribir(datos) {
+  if (NUBE) return nube().then((n) => n.inscribir(datos)).then((ins) => {
+    cambiar((e) => {
+      e.mias.push({ id: ins.id, torneo_id: ins.torneo_id, nombres: ins.nombres, apellidos: ins.apellidos, estado_pago: "pendiente", motivo: "" });
+      e.publicos.push({ torneo_id: ins.torneo_id, nombre: `${ins.nombres} ${ins.apellidos}`, categoria: ins.categoria, club: ins.club || "—", validado: false });
+    });
+    return ins;
+  });
   const e = leer();
   const ins = { id: nuevoId(), estado_pago: "pendiente", creado_en: ahora(), ...datos };
   guardar({ ...e, inscripciones: [...e.inscripciones, ins] });
   return ins;
 }
 export function cambiarEstadoPago(id, estado, motivo = "") {
+  if (NUBE) return nube().then((n) => n.cambiarEstadoPago(id, estado, motivo)).then(() => cambiar((e) => {
+    e.inscripciones = e.inscripciones.map((i) => (i.id === id ? { ...i, estado_pago: estado, motivo } : i));
+  }));
   const e = leer();
   guardar({
     ...e,
@@ -167,15 +211,23 @@ export function cambiarEstadoPago(id, estado, motivo = "") {
 }
 // Derecho de supresión (Ley 29733): borra la inscripción y su voucher.
 export async function suprimirInscripcion(id) {
+  if (NUBE) {
+    await (await nube()).suprimirInscripcion(id);
+    return cambiar((e) => (e.inscripciones = e.inscripciones.filter((i) => i.id !== id)));
+  }
   const e = leer();
   guardar({ ...e, inscripciones: e.inscripciones.filter((i) => i.id !== id) });
   await borrarVoucher(id);
 }
 // Lista pública: solo nombre, categoría y club (sección 9.2 de la guía).
 export const listaPublica = (torneoId) =>
-  inscripciones(torneoId)
+  NUBE ? estadoNube.publicos.filter((i) => i.torneo_id === torneoId) : inscripciones(torneoId)
     .filter((i) => i.estado_pago !== "rechazado")
     .map((i) => ({ nombre: `${i.nombres} ${i.apellidos}`, categoria: i.categoria, club: i.club || "—", validado: i.estado_pago === "validado" }));
+
+// Las inscripciones hechas desde este navegador (para que el padre vea el estado de su pago).
+export const misInscripciones = (torneoId) =>
+  NUBE ? estadoNube.mias.filter((i) => i.torneo_id === torneoId) : inscripciones(torneoId).filter((i) => !i.prueba);
 
 export function csvInscritos(torneoId) {
   const filas = [["Apellidos", "Nombres", "Fecha de nacimiento", "Categoría", "Nivel", "Club", "FIDE ID", "Usuario Lichess", "Estado de pago"]];
@@ -204,9 +256,9 @@ async function tx(modo, fn) {
     t.onerror = () => mal(t.error);
   });
 }
-export const guardarVoucher = (id, blob) => tx("readwrite", (s) => s.put(blob, id));
-export const leerVoucher = (id) => tx("readonly", (s) => s.get(id));
-export const borrarVoucher = (id) => tx("readwrite", (s) => s.delete(id)).catch(() => {});
+export const guardarVoucher = (id, blob) => (NUBE ? nube().then((n) => n.subirVoucher(id, blob)) : tx("readwrite", (s) => s.put(blob, id)));
+export const leerVoucher = (id) => (NUBE ? nube().then((n) => n.leerVoucher(id)) : tx("readonly", (s) => s.get(id)));
+export const borrarVoucher = (id) => (NUBE ? Promise.resolve() : tx("readwrite", (s) => s.delete(id)).catch(() => {}));
 
 export const TIPOS_VOUCHER = ["image/jpeg", "image/png", "application/pdf"];
 export const MAX_VOUCHER = 5 * 1024 * 1024;
@@ -214,19 +266,27 @@ export const MAX_VOUCHER = 5 * 1024 * 1024;
 // ---------------------------------------------------------------- noticias y resultados
 export const noticias = () => [...leer().noticias].sort((a, b) => b.fecha.localeCompare(a.fecha));
 export function crearNoticia(n) {
+  if (NUBE) return nube().then((m) => m.crearNoticia(n)).then((x) => cambiar((e) => e.noticias.unshift(x)));
   const e = leer();
   guardar({ ...e, noticias: [...e.noticias, { id: nuevoId(), fecha: ahora().slice(0, 10), ...n }] });
 }
 export function borrarNoticia(id) {
+  if (NUBE) return nube().then((m) => m.borrarNoticia(id)).then(() => cambiar((e) => (e.noticias = e.noticias.filter((x) => x.id !== id))));
   const e = leer();
   guardar({ ...e, noticias: e.noticias.filter((n) => n.id !== id) });
 }
 export const resultadosPublicados = () => leer().resultados;
 export function publicarResultados(clave, datos) {
+  if (NUBE) return nube().then((n) => n.publicarResultados(clave, datos)).then(() => cambiar((e) => (e.resultados = { ...e.resultados, [clave]: { ...datos, publicado_en: ahora() } })));
   const e = leer();
   guardar({ ...e, resultados: { ...e.resultados, [clave]: { ...datos, publicado_en: ahora() } } });
 }
 export function borrarResultados(clave) {
+  if (NUBE) return nube().then((n) => n.borrarResultados(clave)).then(() => cambiar((e) => {
+    const r = { ...e.resultados };
+    delete r[clave];
+    e.resultados = r;
+  }));
   const e = leer();
   const r = { ...e.resultados };
   delete r[clave];
@@ -275,6 +335,7 @@ function voucherDePrueba(n) {
 }
 
 export async function sembrarDemo({ forzar = false } = {}) {
+  if (NUBE) return; // la web oficial nunca siembra datos de prueba
   const e = leer();
   if (e.sembrado && !forzar) return;
   const base = [
@@ -314,10 +375,29 @@ export async function sembrarDemo({ forzar = false } = {}) {
 }
 
 export async function reiniciarDemo() {
+  if (NUBE) return;
   for (const i of leer().inscripciones) await borrarVoucher(i.id);
   cache = null;
   try {
     localStorage.removeItem(CLAVE);
   } catch {}
   window.dispatchEvent(new CustomEvent(EVENTO));
+}
+
+// ---------------------------------------------------------------- acceso al panel
+// Demo: se entra con un botón. Web oficial: correo y contraseña (Supabase Auth) y un rol en «perfiles».
+export async function sesionPanel() {
+  return NUBE ? (await nube()).sesion() : null;
+}
+export async function entrarPanel(correo, clave) {
+  return (await nube()).entrar(correo, clave);
+}
+export async function salirPanel() {
+  if (NUBE) await (await nube()).salir();
+}
+// Carga las inscripciones con los datos de contacto (solo el personal; en la demo ya están).
+export async function cargarPanel() {
+  if (!NUBE) return;
+  const lista = await (await nube()).cargarPanel();
+  cambiar((e) => (e.inscripciones = lista));
 }
