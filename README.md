@@ -37,13 +37,24 @@ Qué se quitó a propósito (no generaba valor para el club): Salón de la Fama,
 
 | | Demo (ahora) | Producción (tras la aprobación del club) |
 |---|---|---|
-| Inscripciones, vouchers y panel | En el navegador (`src/lib/store.js`: localStorage + IndexedDB) | Supabase: `supabase/schema.sql` (RLS, bucket privado, roles admin/entrenador) |
+| Inscripciones, vouchers y panel | En el navegador (`src/lib/store.js`: localStorage + IndexedDB) | Supabase (`src/lib/nube.js`, esquema en `supabase/migrations/`): RLS, bucket privado, roles admin/entrenador |
 | Acceso al panel | Botón de demo | Supabase Auth (correo y contraseña) |
 | Correo de confirmación | Se muestra en pantalla | Resend o Brevo (plan gratuito) |
 | Datos de Lichess | Caché en `data/lichess/` | La misma caché, actualizada cada hora por `.github/workflows/publicar.yml` |
 | Hosting | Local | GitHub Pages o Cloudflare Pages (S/ 0) |
 
-Para migrar: cambiar la implementación de las funciones de `store.js` por llamadas a Supabase; las páginas no cambian.
+`store.js` tiene los dos motores con la misma interfaz: sin base de datos usa el navegador; con `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY`, Supabase. Las páginas no cambian.
+
+### Conectar la base de datos (cuando el club apruebe)
+
+1. Con la cuenta del club, crear un proyecto gratuito en supabase.com (región São Paulo, la más cercana).
+2. SQL Editor: pegar y ejecutar `supabase/migrations/20260930000000_mokewa.sql` (o `npx supabase link` y `npx supabase db push`).
+3. Authentication → Sign In / Providers: desactivar el registro de usuarios nuevos. Las cuentas del panel las crea el administrador.
+4. Authentication → Users → Add user (correo y contraseña del administrador). Luego, en el SQL Editor: `insert into perfiles (id, nombre, rol) values ('<id del usuario>', 'Nombre', 'admin');` (o `'entrenador'`).
+5. GitHub → Settings → Secrets and variables → Actions → Variables: `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY` (Project Settings → API; la clave «anon» es pública por diseño) y, para lanzar, `PUBLIC_MODO` = `produccion`. El workflow ya las usa, y también mantiene activa la base de datos (el plan gratuito se pausa tras una semana sin uso).
+6. Respaldo: la guía pide una copia semanal. No se automatiza en GitHub porque el repositorio es público y la copia tendría datos de menores: el administrador exporta cada semana desde el panel («Exportar a Excel») y lo guarda en un lugar privado del club.
+
+Probar en local: `npx supabase start` (Docker) y `npm run prueba:nube`, que comprueba las reglas de privacidad contra la base de datos real: el público no lee datos privados, la lista pública muestra solo nombre, categoría y club, cada comprobante va en su ruta con tipo y tamaño permitidos, nadie se registra solo, el entrenador no ve contactos y el admin puede borrarlo todo.
 
 ### Qué cambia solo al construir con `PUBLIC_MODO=produccion`
 
