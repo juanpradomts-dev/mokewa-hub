@@ -1,5 +1,6 @@
-// Enlaces de contacto honestos: solo se habla de WhatsApp cuando el club cargó su número.
-// Mientras tanto, los botones dicen «Escríbenos» y abren la página de Facebook (el único canal verificado).
+// Enlaces de contacto honestos. El canal principal es el correo del club (Gmail): cuando está cargado,
+// todos los botones «Escríbenos» abren Gmail con el mensaje escrito. Si falta, WhatsApp (solo con número
+// cargado) y, si tampoco, la página de Facebook, el único canal verificado hoy.
 
 export const FACEBOOK = "https://www.facebook.com/ACMokewa/";
 
@@ -10,12 +11,34 @@ export function numeroWhatsapp(valor) {
   return n.length === 9 ? `51${n}` : n;
 }
 
+export function correoValido(valor) {
+  const c = String(valor ?? "").trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c) ? c : null;
+}
+
+// Redacción de Gmail en el navegador (en el celular abre la app o la web de Gmail).
+export const enlaceGmail = (correo, asunto, mensaje) =>
+  `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(correo)}&su=${encodeURIComponent(asunto)}&body=${encodeURIComponent(mensaje)}`;
+
 /**
- * @param {string|null} whatsapp  número tal como está en contenido.json (o null)
- * @param {string} mensaje        texto prellenado para WhatsApp
- * @param {string} [accion]       texto fijo del botón («Consultar horario»); sin él se usa «Escríbenos»
+ * @param {string|null|{correo?: string|null, whatsapp?: string|null}} canales  WhatsApp (texto) o {correo, whatsapp}
+ * @param {string} mensaje   texto prellenado
+ * @param {string} [accion]  texto fijo del botón («Consultar horario»); sin él se usa «Escríbenos»
  */
-export function enlaceContacto(whatsapp, mensaje = "", accion = "") {
+export function enlaceContacto(canales, mensaje = "", accion = "") {
+  const { correo, whatsapp } = typeof canales === "object" && canales !== null ? canales : { whatsapp: canales };
+  const email = correoValido(correo);
+  if (email) {
+    const gmail = email.endsWith("@gmail.com");
+    const texto = accion || (gmail ? "Escríbenos por Gmail" : "Escríbenos por correo");
+    const asunto = `${accion || "Consulta"} · Ajedrez Club Mokewa`;
+    return {
+      tipo: "correo",
+      href: enlaceGmail(email, asunto, mensaje),
+      texto,
+      aria: `${texto} (abre ${gmail ? "Gmail" : "el correo"} con el mensaje escrito)`,
+    };
+  }
   const numero = numeroWhatsapp(whatsapp);
   if (numero) {
     const texto = accion || "Escríbenos por WhatsApp";

@@ -12,12 +12,17 @@ import Dato from "../components/Dato.astro";
 import club from "../data/club.json";
 import { NIVELES } from "../lib/niveles.js";
 import { valor } from "../lib/contenido.js";
+import historia from "../data/historia.json";
 
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 const t = club.totales;
 const anioActual = Number(club.actualizado_en.slice(0, 4));
 const anios = anioActual - t.desde; // desde el primer torneo online registrado (cota inferior)
 const mapa = valor("mapa");
+// Cifras de la historia presencial (Chess-Results), redondeadas: la web habla en general.
+const torneosPresenciales = historia.torneos.reduce((n, e) => n + e.fuentes.length, 0);
+const campeones = new Set(historia.torneos.flatMap((e) => e.campeones.map((c) => c.nombre)).filter((n) => !n.startsWith("Equipo"))).size;
+const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : String(n));
 ---
 
 <Base titulo="Inicio" seccion="inicio" descripcion="Ajedrez Club Mokewa, donde el ajedrez nunca descansa: academia en Moquegua con clases por niveles y torneos presenciales para niños, jóvenes y adultos.">
@@ -50,15 +55,16 @@ const mapa = valor("mapa");
           <span class="titulo-nombre entra" style="--d:2">Mokewa</span>
         </h1>
         <p class="heroe-lema entra" style="--d:3"><span>{LEMA}</span></p>
-        <p class="heroe-bajada entra" style="--d:4">Clases por niveles y torneos presenciales para niños, jóvenes y adultos.</p>
+        <p class="heroe-bajada entra" style="--d:4">Aprende a tu nivel y compite en torneos presenciales todo el año.</p>
         <div class="grupo-botones entra" style="--d:5">
           <BotonContacto cta />
-          <a class="boton boton-secundario" href={`${b}/torneos/`}>Ver torneos</a>
+          <a class="boton boton-secundario" href={`${b}/el-club/#historia`}>Nuestros campeones</a>
         </div>
-        <dl class="prueba-social entra" style="--d:6">
-          <div><dt>+{anios} años</dt><dd>organizando torneos</dd></div>
-          <div><dt>3 niveles</dt><dd>básico, intermedio y avanzado</dd></div>
-          <div><dt>FIDE</dt><dd>torneos oficiales con rating</dd></div>
+        <!-- Marcador con forma de reloj de ajedrez -->
+        <dl class="marcador entra" style="--d:6">
+          <div><dt>{redondeo(torneosPresenciales)}</dt><dd>torneos presenciales</dd></div>
+          <div><dt>{campeones}</dt><dd>campeones</dd></div>
+          <div><dt>+{anios}</dt><dd>años de torneos</dd></div>
         </dl>
       </div>
     </div>
@@ -92,7 +98,8 @@ const mapa = valor("mapa");
       <div class="por-que-grid">
         <div class="por-que-cabeza">
           <p class="antetitulo">Por qué Mokewa</p>
-          <h2>Un club que compite, no solo una clase</h2>
+          <h2>Del peón a la corona</h2>
+          <p class="por-que-bajada">En ajedrez, el peón que cruza el tablero corona. Así avanza cada alumno en el club.</p>
         </div>
         <div class="pista" data-viaje-hasta aria-hidden="true">
           <svg class="adornos" viewBox="0 0 200 200">
@@ -106,29 +113,32 @@ const mapa = valor("mapa");
             <circle class="punto" cx="120" cy="10" r="3"></circle>
           </svg>
         </div>
-      <ul class="razones">
-        <li class="razon">
-          <span class="razon-icono glifo" aria-hidden="true">♜&#xfe0e;</span>
+      <ol class="camino">
+        <li class="paso">
+          <span class="paso-pieza glifo" aria-hidden="true">♙&#xfe0e;</span>
           <div>
-            <h3>Compite con rivales de su nivel</h3>
-            <p>Torneos por nivel para que cada alumno mida su progreso.</p>
+            <span class="paso-n">Paso 1</span>
+            <h3>Aprende a tu nivel</h3>
+            <p>Clases por niveles, desde la primera jugada.</p>
           </div>
         </li>
-        <li class="razon">
-          <span class="razon-icono glifo" aria-hidden="true">♚&#xfe0e;</span>
+        <li class="paso">
+          <span class="paso-pieza glifo" aria-hidden="true">♘&#xfe0e;</span>
           <div>
-            <h3>Torneos oficiales</h3>
-            <p>El club organiza torneos válidos para el rating FIDE.</p>
+            <span class="paso-n">Paso 2</span>
+            <h3>Compite de verdad</h3>
+            <p>Torneos presenciales todo el año, también con rating FIDE.</p>
           </div>
         </li>
-        <li class="razon">
-          <span class="razon-icono glifo" aria-hidden="true">♞&#xfe0e;</span>
+        <li class="paso paso-final">
+          <span class="paso-pieza glifo" aria-hidden="true">♛&#xfe0e;</span>
           <div>
-            <h3>Donde el ajedrez nunca descansa</h3>
-            <p>Entre clase y clase se sigue jugando en línea, en el equipo del club.</p>
+            <span class="paso-n">Paso 3</span>
+            <h3>Llega al podio</h3>
+            <p>{campeones} campeones ya están en la historia del club. <a href={`${b}/el-club/#historia`}>Conócelos</a></p>
           </div>
         </li>
-      </ul>
+      </ol>
       </div>
       <Equipo sobreNaranja />
     </div>
@@ -137,14 +147,15 @@ const mapa = valor("mapa");
   <!-- 5. CIERRE -->
   <section class="seccion cierre-seccion">
     <div class="contenedor">
-      <div class="cierre tarjeta">
-        <div>
+      <div class="cierre">
+        <span class="jugada" aria-hidden="true">1.e4</span>
+        <div class="cierre-texto">
           <h2>La primera jugada: escríbenos</h2>
           <p>Te contamos horarios, niveles y cómo empezar.</p>
           <Dato como="p" etiqueta="Sede" campo="sede" />
           {mapa && <a class="mapa" href={mapa} rel="noopener" target="_blank">Ver en Google Maps</a>}
         </div>
-        <BotonContacto cta />
+        <BotonContacto cta clase="cierre-boton" />
       </div>
     </div>
   </section>
@@ -205,33 +216,56 @@ const mapa = valor("mapa");
     max-width: 52ch;
     margin-bottom: 1.4em;
   }
-  .prueba-social {
+  /* Marcador: un reloj de ajedrez oscuro con tres esferas */
+  .marcador {
+    position: relative;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    margin: 32px 0 0;
-    padding-top: 20px;
-    border-top: 1px solid rgb(166 75 8 / 0.2);
-    max-width: 560px;
+    margin: 34px 0 0;
+    max-width: 480px;
+    background: #1a1714;
+    border-radius: 16px;
+    box-shadow: 0 10px 24px rgb(26 23 20 / 0.22);
   }
-  .prueba-social div {
-    border-left: 3px solid var(--oro);
-    padding-left: 10px;
+  /* Los dos pulsadores del reloj */
+  .marcador::before,
+  .marcador::after {
+    content: "";
+    position: absolute;
+    top: -9px;
+    width: 46px;
+    height: 9px;
+    border-radius: 6px 6px 0 0;
+    background: #f28a1e;
   }
-  .prueba-social dt {
+  .marcador::before {
+    left: 16%;
+  }
+  .marcador::after {
+    right: 16%;
+    background: #5a2a06;
+  }
+  .marcador div {
+    padding: 14px 10px 12px;
+    text-align: center;
+  }
+  .marcador div + div {
+    border-left: 1px solid rgb(255 255 255 / 0.12);
+  }
+  .marcador dt {
     font-family: var(--titulo);
     font-stretch: 72%;
-    font-size: clamp(1.6rem, 6vw, 2.4rem);
-    font-weight: 850;
-    letter-spacing: 0.005em;
-    color: var(--tinta);
-    line-height: 1.1;
+    font-size: clamp(1.9rem, 7vw, 2.6rem);
+    font-weight: 900;
+    line-height: 1;
+    color: #f7a54a;
+    font-variant-numeric: tabular-nums;
   }
-  .prueba-social dd {
-    margin: 4px 0 0;
-    font-size: 0.84rem;
-    color: var(--suave);
-    line-height: 1.35;
+  .marcador dd {
+    margin: 6px 0 0;
+    font-size: 0.8rem;
+    line-height: 1.25;
+    color: #eadfd1;
   }
 
   /* ---------- Caballo viajero (moneda 3D) ----------
@@ -371,7 +405,7 @@ const mapa = valor("mapa");
     aspect-ratio: 1;
     justify-self: end;
   }
-  .por-que-grid .razones {
+  .por-que-grid .camino {
     grid-column: 1 / -1;
   }
   @media (min-width: 900px) {
@@ -389,7 +423,7 @@ const mapa = valor("mapa");
       justify-self: center;
       align-self: center;
     }
-    .por-que-grid .razones {
+    .por-que-grid .camino {
       grid-area: razones;
       grid-column: auto;
       grid-template-columns: 1fr;
@@ -494,69 +528,131 @@ const mapa = valor("mapa");
     }
   }
 
-  /* ---------- 3. Por qué Mokewa ---------- */
-  .razones {
+  /* ---------- Por qué Mokewa: el camino del peón a la corona ---------- */
+  .por-que-bajada {
+    margin: 10px 0 0;
+    max-width: 44ch;
+    color: var(--suave);
+    font-size: 1.05rem;
+  }
+  .camino {
     list-style: none;
-    margin: 20px 0 0;
+    margin: 26px 0 0;
     padding: 0;
     display: grid;
-    gap: 18px;
+    gap: 22px;
   }
-  @media (min-width: 860px) {
-    .razones {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 28px;
-    }
-  }
-  .razon {
+  .paso {
+    position: relative;
     display: grid;
-    grid-template-columns: 52px 1fr;
-    gap: 14px;
+    grid-template-columns: 56px 1fr;
+    gap: 16px;
     align-items: start;
   }
-  .razon h3 {
-    margin: 4px 0 4px;
-    font-size: 1.15rem;
+  /* El recorrido: una línea punteada entre pieza y pieza, como el avance del peón */
+  .paso:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 27px;
+    top: 60px;
+    bottom: -20px;
+    border-left: 2px dashed rgb(20 18 17 / 0.45);
   }
-  .razon p {
-    margin: 0;
-    color: var(--suave);
-    font-size: 0.97rem;
-  }
-  .razon-icono {
+  .paso-pieza {
     display: grid;
     place-items: center;
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
     background: #fff;
     color: #141211;
-    font-size: 1.8rem;
+    font-size: 1.9rem;
     box-shadow: 0 6px 16px rgb(90 42 6 / 0.18);
   }
-
-  /* ---------- 5. Cierre ---------- */
-  .cierre {
-    display: grid;
-    gap: 16px;
+  .paso-final .paso-pieza {
+    background: #141211;
+    color: #f7a54a;
+  }
+  .paso-n {
+    font-size: 0.74rem;
+    font-weight: 700;
+    font-stretch: 88%;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #3d2412;
+  }
+  .paso h3 {
+    margin: 2px 0 4px;
+    font-size: 1.25rem;
+  }
+  .paso p {
+    margin: 0;
+    color: var(--suave);
+    font-size: 0.98rem;
+  }
+  .paso a {
+    display: inline-flex;
     align-items: center;
-    padding: 22px;
-    background: linear-gradient(135deg, #fff4e8, #fde7d1);
-    border: 0;
-    border-left: 6px solid var(--oro);
+    min-height: 44px;
+    font-weight: 650;
+  }
+
+  /* ---------- 5. Cierre: una banda oscura con la primera jugada de fondo ---------- */
+  .cierre {
+    --suave: #d9ccbc;
+    --tinta: #fff;
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    gap: 18px;
+    align-items: center;
+    padding: 28px 24px;
+    border-radius: 22px;
+    color: #fff;
+    background:
+      conic-gradient(rgb(255 255 255 / 0.035) 25%, transparent 0 50%, rgb(255 255 255 / 0.035) 0 75%, transparent 0) 0 0 / 56px 56px,
+      #1a1714;
   }
   @media (min-width: 860px) {
     .cierre {
       grid-template-columns: 1fr auto;
-      padding: 36px 40px;
+      padding: 44px 48px;
     }
+  }
+  /* «1.e4»: la jugada de apertura más común, de marca de agua */
+  .jugada {
+    position: absolute;
+    right: -0.06em;
+    bottom: -0.28em;
+    font-family: var(--titulo);
+    font-stretch: 70%;
+    font-weight: 900;
+    font-size: clamp(7rem, 22vw, 13rem);
+    line-height: 1;
+    color: rgb(242 138 30 / 0.16);
+    pointer-events: none;
+    user-select: none;
+  }
+  .cierre-texto,
+  .cierre :global(.cierre-boton) {
+    position: relative;
   }
   .cierre h2 {
     margin-bottom: 6px;
+    color: #fff;
   }
   .cierre p {
     margin: 0 0 8px;
     color: var(--suave);
+  }
+  .cierre :global(.cierre-boton) {
+    justify-self: start;
+    min-height: 54px;
+    padding: 0 28px;
+    font-size: 1.05rem;
+  }
+  .cierre .mapa {
+    color: #f7a54a;
   }
   .mapa {
     display: inline-flex;

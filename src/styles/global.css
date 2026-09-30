@@ -722,48 +722,58 @@ textarea[aria-invalid="true"] {
   margin-top: 40px;
   background: var(--vino-osc);
   color: #fde7d1;
-  padding: 40px 0 28px;
-  font-size: 0.92rem;
+  padding: 22px 0 18px;
+  font-size: 0.9rem;
 }
 .pie a {
   color: #fff;
 }
-.pie h3 {
-  color: #fff;
-  font-size: 1rem;
+/* Pie compacto: marca a la izquierda, enlaces en una fila que se parte si no cabe */
+.pie-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 28px;
 }
-.pie ul {
+.pie-marca {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+}
+.pie-marca strong {
+  font-family: var(--titulo);
+  font-stretch: 84%;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #fff;
+}
+.pie-marca span {
+  color: var(--suave);
+  font-size: 0.84rem;
+}
+.pie-nav {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
 }
-.pie ul a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-}
-@media (min-width: 640px) {
-  .pie ul {
-    grid-template-columns: 1fr;
-  }
-}
-.pie .rejilla {
-  gap: 8px 32px;
-}
-@media (max-width: 639px) {
-  .pie-datos {
-    display: none;
-  }
+.pie-nav a {
+  display: inline;
+  padding: 6px 0;
+  text-underline-offset: 4px;
 }
 .pie .legal {
-  margin-top: 28px;
-  padding-top: 16px;
-  border-top: 1px solid rgb(255 255 255 / 0.18);
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgb(255 255 255 / 0.16);
   color: #f7c08a;
-  font-size: 0.84rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 /* ---------- Cargador: mini tablero 2×2 que alterna casillas (solo CSS) ---------- */
@@ -788,9 +798,19 @@ textarea[aria-invalid="true"] {
   }
 }
 
-/* ---------- Botones de contacto (WhatsApp solo con número cargado; si no, Facebook) ---------- */
-.boton-contacto[data-tipo="facebook"] .ico-wa,
-.boton-contacto[data-tipo="whatsapp"] .ico-fb {
+/* ---------- Botones de contacto: Gmail del club; si falta, WhatsApp; si falta, Facebook ---------- */
+.boton-contacto:not([data-tipo="correo"]) .ico-correo,
+.boton-contacto:not([data-tipo="whatsapp"]) .ico-wa,
+.boton-contacto:not([data-tipo="facebook"]) .ico-fb {
+  display: none;
+}
+/* Enlace de contacto en texto (temas secundarios): sin ícono, con área táctil de 44 px */
+.enlace-contacto {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.enlace-contacto .ico {
   display: none;
 }
 .contacto-flotante {
@@ -811,6 +831,9 @@ textarea[aria-invalid="true"] {
 }
 .contacto-flotante[data-tipo="facebook"] {
   background: #1877f2;
+}
+.contacto-flotante[data-tipo="correo"] {
+  background: #a64b08;
 }
 .contacto-flotante:hover {
   color: #fff;

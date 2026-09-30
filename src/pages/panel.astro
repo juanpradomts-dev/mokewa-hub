@@ -242,7 +242,7 @@ if (esProduccionPanel && !hayBaseDeDatos) return Astro.redirect(`${import.meta.e
         <div role="tabpanel" id="p-personal" aria-labelledby="t-personal" class="pestana" hidden>
           <div class="tarjeta">
             <h2 class="h-bloque">Qué puede hacer cada rol</h2>
-            <div class="tabla-envoltura">
+            <div class="tabla-envoltura" tabindex="0" role="region" aria-label="Permisos por rol">
               <table class="permisos">
                 <thead><tr><th>Permiso</th><th>Administrador</th><th>Entrenador</th></tr></thead>
                 <tbody>

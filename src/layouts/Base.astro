@@ -117,36 +117,21 @@ const tituloCompleto = seccion === "inicio" ? `Ajedrez Club Mokewa · ${LEMA}` :
 
     <footer class="pie">
       <div class="contenedor">
-        <div class:list={["rejilla", esProduccion ? "rejilla-2" : "rejilla-3"]}>
-          <div>
-            <h3>Ajedrez Club Mokewa</h3>
-            <p>Academia por niveles, torneos presenciales y una comunidad que sigue jugando en línea.</p>
-            <p>
-              <a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook</a> ·{" "}
-              <a href={club.equipo.url} rel="noopener" target="_blank">Equipo en Lichess</a>
-            </p>
-          </div>
-          <div>
-            <h3>Explorar</h3>
-            <ul>
-              <li><a href={url("/academia/")}>Academia</a></li>
-              <li><a href={url("/torneos/")}>Torneos y resultados</a></li>
-              <li><a href={url("/el-club/")}>Historia del club</a></li>
-              <li><a href={url("/el-club/#comunidad")}>Comunidad en Lichess</a></li>
-              <li><a href={url("/contacto/")}>Contacto</a></li>
-              <li><a href={url("/privacidad/")}>Privacidad y datos de menores</a></li>
-              {(!esProduccion || hayBaseDeDatos) && <li><a href={url("/panel/")}>Iniciar sesión (personal del club)</a></li>}
-            </ul>
-          </div>
-          {!esProduccion && (
-            <div class="pie-datos">
-              <h3>Esta demo</h3>
-              <p>Lo que el club aún no confirmó aparece marcado <span class="pc">por confirmar</span> y se completa desde el panel.</p>
-            </div>
-          )}
+        <div class="pie-fila">
+          <p class="pie-marca"><strong>Ajedrez Club Mokewa</strong> <span>{LEMA}</span></p>
+          <ul class="pie-nav" aria-label="Enlaces del pie">
+            <li><a href={url("/academia/")}>Academia</a></li>
+            <li><a href={url("/torneos/")}>Torneos</a></li>
+            <li><a href={url("/el-club/#historia")}>Campeones</a></li>
+            <li><a href={url("/contacto/")}>Contacto</a></li>
+            <li><a href={url("/privacidad/")}>Privacidad</a></li>
+            <li><a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook</a></li>
+            <li><a href={club.equipo.url} rel="noopener" target="_blank">Lichess</a></li>
+            {(!esProduccion || hayBaseDeDatos) && <li><a href={url("/panel/")}>Iniciar sesión</a></li>}
+          </ul>
         </div>
         {!esProduccion && <p class="legal">
-          Demostración privada, no indexada, preparada sin costo para el club. No se difunde ni se presenta como web oficial hasta que el Ajedrez Club Mokewa la apruebe. De los campeones solo muestra el nombre y la inicial del apellido; ninguna foto de alumnos.
+          Demo privada, no indexada, sin costo para el club; no es la web oficial hasta que el club la apruebe. Lo marcado <span class="pc">por confirmar</span> se completa desde el panel. De los campeones solo se muestra el nombre y la inicial del apellido.
         </p>}
       </div>
     </footer>

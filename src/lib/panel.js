@@ -287,7 +287,7 @@ let origenResultados = "";
 function vistaPrevia() {
   $("r-publicar").disabled = !filasResultados.length;
   $("r-vista").innerHTML = filasResultados.length
-    ? `<div class="tabla-envoltura"><table><thead><tr><th class="num">Puesto</th><th>Jugador</th><th>Cat.</th><th class="num">Puntos</th></tr></thead><tbody>${filasResultados
+    ? `<div class="tabla-envoltura" tabindex="0" role="region" aria-label="Vista previa de resultados"><table><thead><tr><th class="num">Puesto</th><th>Jugador</th><th>Cat.</th><th class="num">Puntos</th></tr></thead><tbody>${filasResultados
         .slice(0, 50)
         .map((f) => `<tr><td class="num">${f.puesto}</td><td>${esc(f.nombre)}</td><td>${esc(f.categoria || "")}</td><td class="num">${f.puntos ?? "—"}</td></tr>`)
         .join("")}</tbody></table></div><p class="suave">${filasResultados.length} jugadores · origen: ${esc(origenResultados)}</p>`
@@ -473,7 +473,7 @@ async function pintarPersonal() {
     $("personal-aviso").textContent = err.message;
   }
   $("personal-lista").innerHTML = lista.length
-    ? `<div class="tabla-envoltura"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th><span class="visually-hidden">Acciones</span></th></tr></thead><tbody>${lista
+    ? `<div class="tabla-envoltura" tabindex="0" role="region" aria-label="Personal con acceso"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th><span class="visually-hidden">Acciones</span></th></tr></thead><tbody>${lista
         .map((c) => {
           const yo = c.correo === perfilActual?.correo;
           return `<tr data-correo="${esc(c.correo)}" data-nombre="${esc(c.nombre)}"><td>${esc(c.nombre)}${yo ? " (tú)" : ""}</td><td>${esc(c.correo)}</td>

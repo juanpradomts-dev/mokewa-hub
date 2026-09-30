@@ -1,4 +1,5 @@
 ---
+// Contacto: el canal principal es el Gmail del club. Lo demás (WhatsApp, redes, sede) va en pequeño.
 import Dato from "../components/Dato.astro";
 import Base from "../layouts/Base.astro";
 import BotonContacto from "../components/BotonContacto.astro";
@@ -9,39 +10,28 @@ import { valor } from "../lib/contenido.js";
 <Base titulo="Contacto" seccion="contacto" descripcion="Contacto del Ajedrez Club Mokewa en Moquegua: clases, torneos, sede y redes.">
   <section class="seccion cabeza">
     <div class="contenedor">
-      <p class="antetitulo">Contacto</p>
-      <h1>Hablemos</h1>
-      <p class="bajada">Escríbenos y te contamos horarios, niveles y cómo empezar.</p>
-
-      <div class="rejilla rejilla-2 contacto">
-        <div class="tarjeta">
-          <h2 class="h-bloque">Escríbenos</h2>
-          <Dato como="p" etiqueta="WhatsApp" campo="whatsapp" />
-          <div class="grupo-botones">
-            <BotonContacto variante="primario" accion="Preguntar por clases" mensaje="Hola, quisiera información sobre las clases de ajedrez." />
-            <BotonContacto variante="secundario" accion="Preguntar por torneos" mensaje="Hola, tengo una consulta sobre un torneo del club." />
-          </div>
-        </div>
-        <div class="tarjeta">
-          <h2 class="h-bloque">Sede</h2>
-          <Dato como="p" etiqueta="Dirección" campo="sede" />
-          <Dato como="p" etiqueta="Horario de atención" campo="atencion" />
-          <a class="boton boton-secundario" id="mapa" data-si-campos="mapa" hidden={!valor("mapa")} href={valor("mapa") ?? "#"} rel="noopener" target="_blank">Ver en Google Maps</a>
-        </div>
-        <div class="tarjeta">
-          <h2 class="h-bloque">Redes</h2>
-          <ul class="redes">
-            <li><a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook · ACMokewa</a></li>
-            <li><a href={club.equipo.url} rel="noopener" target="_blank">Lichess · equipo {club.equipo.nombre}</a></li>
-            <Dato como="li" etiqueta="Correo" campo="correo" />
-          </ul>
-        </div>
-        <div class="tarjeta">
-          <h2 class="h-bloque">Colegios y empresas</h2>
-          <p>Talleres escolares, torneos intercolegiales, delegaciones y patrocinio.</p>
-          <BotonContacto variante="secundario" accion="Escribir al club" mensaje="Hola, escribo de un colegio/empresa y quisiera información sobre talleres o patrocinio." />
-        </div>
+      <div class="principal">
+        <svg class="sobre" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M3 5.5h18v13H3z M3.5 6l8.5 7 8.5-7"></path></svg>
+        <p class="antetitulo">Contacto</p>
+        <h1>Escríbenos</h1>
+        <p class="bajada">Te respondemos por correo con horarios, niveles y cómo empezar.</p>
+        <Dato como="p" clase="correo-club" etiqueta="Gmail del club" campo="correo" />
+        <BotonContacto variante="primario" clase="boton-grande" mensaje="Hola, quisiera información sobre las clases de ajedrez." />
+        <p class="temas">
+          ¿Otra consulta?
+          <BotonContacto variante="texto" accion="Torneos" mensaje="Hola, tengo una consulta sobre un torneo del club." />
+          <BotonContacto variante="texto" accion="Colegios y empresas" mensaje="Hola, escribo de un colegio o empresa y quisiera información sobre talleres, torneos o patrocinio." />
+        </p>
       </div>
+
+      <ul class="otros">
+        <li><Dato etiqueta="WhatsApp" campo="whatsapp" /></li>
+        <li><a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook</a></li>
+        <li><a href={club.equipo.url} rel="noopener" target="_blank">Equipo en Lichess</a></li>
+        <li><Dato etiqueta="Sede" campo="sede" /></li>
+        <li><Dato etiqueta="Atención" campo="atencion" /></li>
+        <li><a id="mapa" data-si-campos="mapa" hidden={!valor("mapa")} href={valor("mapa") ?? "#"} rel="noopener" target="_blank">Ver en Google Maps</a></li>
+      </ul>
     </div>
   </section>
 </Base>
@@ -60,27 +50,93 @@ import { valor } from "../lib/contenido.js";
 
 <style>
   .cabeza {
-    background: linear-gradient(180deg, #fde7d1, var(--fondo) 60%);
+    background: linear-gradient(180deg, #fde7d1, var(--fondo) 70%);
   }
-  #mapa[hidden] {
-    display: none;
-  }
-  .contacto {
-    margin-top: 24px;
-  }
-  .h-bloque {
-    font-size: 1.3rem;
-  }
-  .suave {
-    color: var(--suave);
-    font-size: 0.9rem;
-    margin: 12px 0 0;
-  }
-  .redes {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  .principal {
+    position: relative;
+    max-width: 680px;
+    margin: 8px auto 0;
+    padding: clamp(28px, 6vw, 48px);
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    border-radius: 22px;
+    box-shadow: var(--sombra);
+    text-align: center;
     display: grid;
-    gap: 10px;
+    justify-items: center;
+    gap: 6px;
+    overflow: hidden;
+  }
+  /* Borde superior de tablero */
+  .principal::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 10px;
+    background: conic-gradient(#f28a1e 25%, #1a1714 0 50%, #f28a1e 0 75%, #1a1714 0) 0 0 / 20px 20px;
+  }
+  .sobre {
+    width: 54px;
+    height: 54px;
+    padding: 12px;
+    border-radius: 50%;
+    background: #fde7d1;
+    color: #a64b08;
+    margin: 6px 0 4px;
+  }
+  .principal :global(.antetitulo) {
+    justify-content: center;
+  }
+  .principal h1 {
+    margin: 0;
+  }
+  .principal .bajada {
+    margin: 0 auto 8px;
+  }
+  .principal :global(.correo-club) {
+    justify-items: center;
+    margin: 0 0 14px;
+    font-size: 1.15rem;
+    font-weight: 650;
+  }
+  .principal :global(.boton-grande) {
+    min-height: 54px;
+    padding: 0 28px;
+    font-size: 1.08rem;
+  }
+  .temas {
+    margin: 14px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 4px 8px;
+    font-size: 0.92rem;
+    color: var(--suave);
+  }
+  /* El resto de canales, en pequeño */
+  .otros {
+    list-style: none;
+    max-width: 680px;
+    margin: 18px auto 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 18px;
+    font-size: 0.88rem;
+    color: var(--suave);
+  }
+  .otros :global(.dato) {
+    display: inline-flex;
+    gap: 6px;
+    align-items: baseline;
+  }
+  .otros :global(.dt) {
+    font-size: 0.72rem;
+  }
+  #mapa[hidden],
+  .otros li:has(> #mapa[hidden]) {
+    display: none;
   }
 </style>

@@ -113,6 +113,17 @@ test("contacto: sin número dice «Escríbenos» y abre Facebook; con número, W
   assert.equal(numeroWhatsapp("+51 987-654-321"), "51987654321");
 });
 
+test("contacto: el Gmail del club es el canal principal cuando está cargado", () => {
+  const g = enlaceContacto({ correo: "Club.Mokewa@Gmail.com", whatsapp: "987654321" }, "Hola, ¿horarios?", "Consultar horario");
+  assert.equal(g.tipo, "correo");
+  assert.match(g.href, /^https:\/\/mail\.google\.com\/mail\/\?view=cm&fs=1&to=club\.mokewa%40gmail\.com&su=Consultar%20horario/);
+  assert.match(g.href, /body=Hola%2C%20%C2%BFhorarios%3F$/);
+  assert.equal(g.texto, "Consultar horario");
+  assert.equal(enlaceContacto({ correo: "club@gmail.com" }, "x").texto, "Escríbenos por Gmail");
+  assert.equal(enlaceContacto({ correo: "no-es-correo", whatsapp: "987654321" }, "x").tipo, "whatsapp");
+  assert.equal(enlaceContacto({ correo: null, whatsapp: null }, "x").tipo, "facebook");
+});
+
 test("nuestra historia: de cada campeón solo el nombre y la inicial del apellido (o el equipo)", async () => {
   const { readFile } = await import("node:fs/promises");
   const historia = JSON.parse(await readFile(new URL("../src/data/historia.json", import.meta.url), "utf8"));

@@ -173,7 +173,7 @@ function pintarListas() {
   const lista = listaPublica(T.id);
   $("n-inscritos").textContent = `(${lista.length})`;
   $("lista-inscritos").innerHTML = lista.length
-    ? `<div class="tabla-envoltura"><table><thead><tr><th>Jugador</th><th>Cat.</th><th>Club</th></tr></thead><tbody>${lista
+    ? `<div class="tabla-envoltura" tabindex="0" role="region" aria-label="Lista de inscritos"><table><thead><tr><th>Jugador</th><th>Cat.</th><th>Club</th></tr></thead><tbody>${lista
         .map((i) => `<tr><td>${esc(i.nombre)}${i.validado ? ' <span class="ok" title="Pago validado" aria-label="Pago validado">✓</span>' : ""}</td><td>${esc(i.categoria)}</td><td>${esc(i.club)}</td></tr>`)
         .join("")}</tbody></table></div>`
     : `<p>Aún no hay inscritos. ¡Sé el primero!</p>`;

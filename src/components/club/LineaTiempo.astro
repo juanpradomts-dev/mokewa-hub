@@ -17,16 +17,28 @@ const mes = (e: Evento) => e.fecha_texto.replace(/ de \d{4}$/, "");
 const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
 ---
 
-<div class="linea">
+<div class="linea" data-linea>
   <div class="linea-cabeza">
     <p class="antetitulo">Nuestra historia</p>
     <h2>{LEMA}</h2>
     <p class="bajada">Desde {primero}, los campeones de los torneos presenciales del club.</p>
   </div>
 
+  <!-- Controles (solo con JavaScript; sin él se ve la historia completa) -->
+  <div class="controles" data-controles hidden>
+    <div class="filtro" role="group" aria-label="Filtrar por año">
+      <button type="button" class="chip-anio" data-filtro="" aria-pressed="true">Todos</button>
+      {anios.map((a) => (
+        <button type="button" class="chip-anio" data-filtro={a} aria-pressed="false">{a} <span class="n">{delAnio(a).length}</span></button>
+      ))}
+    </div>
+    <p class="ayuda-linea">Toca un año para filtrar, o un campeón para ver todos sus títulos.</p>
+    <p class="estado" data-estado aria-live="polite"></p>
+  </div>
+
   <ol class="anios">
     {anios.map((a) => (
-      <li class="anio">
+      <li class="anio" data-anio={a}>
         <h3 class="anio-marca"><span>{a}</span></h3>
         <ol class="eventos">
           {delAnio(a).map((e) => (
@@ -37,9 +49,11 @@ const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
                 <ul class="campeones">
                   {e.campeones.map((c) => (
                     <li>
-                      <span class="corona" aria-hidden="true">♛&#xfe0e;</span>
-                      {c.categoria && <span class="categoria">{c.categoria}</span>}
-                      <span class="nombre">{ocultos.has(c.nombre) ? "Campeón" : c.nombre}</span>
+                      <button type="button" class="campeon" data-nombre={ocultos.has(c.nombre) ? "" : c.nombre} aria-pressed="false" disabled={ocultos.has(c.nombre)}>
+                        <span class="corona" aria-hidden="true">♛&#xfe0e;</span>
+                        {c.categoria && <span class="categoria">{c.categoria}</span>}
+                        <span class="nombre">{ocultos.has(c.nombre) ? "Campeón" : c.nombre}</span>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -67,10 +81,140 @@ const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
   </p>
 </div>
 
+<script>
+  // Interacción: filtro por año y resaltado de todos los títulos de un campeón.
+  const raiz = document.querySelector<HTMLElement>("[data-linea]");
+  if (raiz) {
+    const controles = raiz.querySelector<HTMLElement>("[data-controles]")!;
+    const estado = raiz.querySelector<HTMLElement>("[data-estado]")!;
+    controles.hidden = false;
+    let anio = "";
+    let nombre = "";
+    const aplicar = () => {
+      for (const li of raiz.querySelectorAll<HTMLElement>(".anio")) li.hidden = !!anio && li.dataset.anio !== anio;
+      for (const b of raiz.querySelectorAll<HTMLElement>("[data-filtro]")) b.setAttribute("aria-pressed", String(b.dataset.filtro === anio));
+      let titulos = 0;
+      for (const c of raiz.querySelectorAll<HTMLElement>(".campeon")) {
+        const si = !!nombre && c.dataset.nombre === nombre;
+        c.setAttribute("aria-pressed", String(si));
+        if (si) titulos++;
+      }
+      for (const ev of raiz.querySelectorAll<HTMLElement>(".evento")) {
+        ev.classList.toggle("atenuado", !!nombre && !ev.querySelector('.campeon[aria-pressed="true"]'));
+      }
+      estado.replaceChildren();
+      if (nombre) {
+        const quitar = Object.assign(document.createElement("button"), { type: "button", className: "quitar", textContent: "Ver a todos" });
+        quitar.addEventListener("click", () => ((nombre = ""), aplicar()));
+        estado.append(`${nombre}: ${titulos} ${titulos === 1 ? "título" : "títulos"} en los torneos del club. `, quitar);
+      }
+    };
+    raiz.addEventListener("click", (e) => {
+      const t = e.target as HTMLElement;
+      const filtro = t.closest<HTMLElement>("[data-filtro]");
+      if (filtro) {
+        anio = filtro.dataset.filtro ?? "";
+        return aplicar();
+      }
+      const c = t.closest<HTMLElement>(".campeon");
+      if (c?.dataset.nombre) {
+        nombre = nombre === c.dataset.nombre ? "" : c.dataset.nombre;
+        if (nombre) anio = ""; // para ver todos sus títulos, en todos los años
+        aplicar();
+      }
+    });
+  }
+</script>
+
 <style>
   .linea-cabeza {
     max-width: 720px;
-    margin-bottom: 24px;
+    margin-bottom: 18px;
+  }
+  .controles {
+    margin-bottom: 22px;
+  }
+  .filtro {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip-anio {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--linea);
+    background: var(--papel);
+    font: inherit;
+    font-weight: 650;
+    color: var(--tinta);
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .chip-anio:hover {
+    border-color: #f28a1e;
+  }
+  .chip-anio[aria-pressed="true"] {
+    background: #f28a1e;
+    border-color: #f28a1e;
+    color: #141211;
+  }
+  .chip-anio .n {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: rgb(26 23 20 / 0.08);
+  }
+  .ayuda-linea {
+    margin: 10px 0 0;
+    font-size: 0.86rem;
+    color: var(--suave);
+  }
+  .estado:empty {
+    display: none;
+  }
+  .estado {
+    margin: 10px 0 0;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: #1a1714;
+    color: #fff;
+    font-weight: 600;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+  }
+  .estado :global(.quitar) {
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid rgb(255 255 255 / 0.4);
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-size: 0.86rem;
+    cursor: pointer;
+  }
+  /* Al filtrar, el año aparece con un fundido corto; al resaltar, lo demás se atenúa. */
+  .anio:not([hidden]) {
+    animation: aparece-anio 0.35s ease-out;
+  }
+  @keyframes aparece-anio {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  .evento {
+    transition: opacity 0.25s;
+  }
+  .evento.atenuado {
+    opacity: 0.55;
   }
   .anios {
     list-style: none;
@@ -155,15 +299,36 @@ const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
     flex-wrap: wrap;
     gap: 6px;
   }
-  .campeones li {
+  .campeon {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 3px 10px 3px 8px;
-    border-radius: 999px;
+    min-height: 44px;
+    padding: 4px 12px 4px 10px;
+    border-radius: 12px;
     background: #fff4e8;
     border: 1px solid #f7c08a;
+    font: inherit;
     font-size: 0.92rem;
+    color: var(--tinta);
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+  }
+  .campeon:hover {
+    border-color: #f28a1e;
+  }
+  .campeon[aria-pressed="true"] {
+    background: #1a1714;
+    border-color: #1a1714;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  .campeon[aria-pressed="true"] .corona,
+  .campeon[aria-pressed="true"] .categoria {
+    color: #f7a54a;
+  }
+  .campeon:disabled {
+    cursor: default;
   }
   .corona {
     font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", serif;

@@ -25,10 +25,11 @@
       "ayuda": "Solo números, p. ej. 51987654321. Activa los botones de WhatsApp de toda la web."
     },
     "correo": {
-      "etiqueta": "Correo del club",
+      "etiqueta": "Gmail del club (canal principal)",
       "valor": null,
       "tipo": "email",
-      "grupo": "Contacto"
+      "grupo": "Contacto",
+      "ayuda": "Con este correo, todos los botones «Escríbenos» de la web abren Gmail con el mensaje escrito. Si queda vacío, usan WhatsApp (si hay número) o Facebook."
     },
     "sede": {
       "etiqueta": "Sede (dirección)",

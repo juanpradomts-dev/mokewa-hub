@@ -134,14 +134,14 @@ export function pintarCampos(raiz = document) {
   }
   const conClase = !!contenido("clase_prueba");
   for (const a of raiz.querySelectorAll("[data-cta]")) {
-    a.dataset.accion = conClase ? "Clase de prueba" : "Pedir informes";
+    a.dataset.accion = conClase ? "Clase de prueba" : "Escríbenos";
     a.dataset.mensaje = conClase
       ? "Hola, quisiera agendar una clase de prueba de ajedrez."
       : "Hola, quisiera información sobre las clases de ajedrez.";
   }
   const wa = contenido("whatsapp");
   for (const a of raiz.querySelectorAll("[data-contacto]")) {
-    const e = enlaceContacto(wa, a.dataset.mensaje, a.dataset.accion);
+    const e = enlaceContacto({ correo: contenido("correo"), whatsapp: wa }, a.dataset.mensaje, a.dataset.accion);
     a.href = e.href;
     a.dataset.tipo = e.tipo;
     a.setAttribute("aria-label", e.aria);
