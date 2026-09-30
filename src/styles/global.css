@@ -301,10 +301,32 @@ main:focus {
   border-bottom: 0;
   color: #111;
 }
-.cabecera .cta-cabecera {
+.cabecera .cta-cabecera,
+.acceso-cabecera {
   display: none;
 }
+/* Iniciar sesión: enlace discreto en la cabecera, junto al botón de contacto */
+.acceso-cabecera {
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--tinta);
+  text-decoration: none;
+  font-weight: 540;
+  font-size: 0.97rem;
+  white-space: nowrap;
+}
+.acceso-cabecera:hover,
+.acceso-cabecera[aria-current="page"] {
+  color: var(--vino);
+  background: var(--casilla);
+}
 @media (min-width: 980px) {
+  .acceso-cabecera {
+    display: inline-flex;
+  }
   .nav {
     display: flex;
     gap: 2px;

@@ -16,15 +16,15 @@ const preguntas = [
   { p: "¿Dónde son las clases?", antes: "En la sede del club: ", campo: "sede", despues: "." },
   { p: "¿Cómo sé en qué nivel inscribir a mi hijo o hija?", r: "Si nunca ha jugado, en básico. Si ya juega o compite, escríbenos y el club te recomienda el nivel." },
   { p: "¿Pueden practicar en casa?", r: "Sí: el club tiene un equipo gratuito en Lichess donde se juegan torneos en línea desde el celular." },
-  { p: "¿Hay torneos para alumnos?", r: "Sí: torneos por nivel a lo largo del año y torneos oficiales con rating FIDE." },
+  { p: "¿Hay torneos para alumnos?", r: "Sí: torneos presenciales a lo largo del año, también oficiales con rating FIDE." },
 ].filter((q) => !q.campo || valor(q.campo) || !esProduccion);
 ---
 
-<Base titulo="Academia" seccion="academia" descripcion="Clases de ajedrez en Moquegua por niveles: básico, intermedio y avanzado. Horarios, precios e inscripción.">
+<Base titulo="Academia" seccion="academia" descripcion="Clases de ajedrez en Moquegua: básico, intermedio y avanzado. Horarios, precios e inscripción.">
   <section class="seccion cabeza">
     <div class="contenedor">
       <p class="antetitulo">Academia</p>
-      <h1>Clases de ajedrez por niveles</h1>
+      <h1>Aprende ajedrez en Mokewa</h1>
       <p class="bajada">
         Básico, intermedio y avanzado: cada alumno aprende y compite a su ritmo.
       </p>

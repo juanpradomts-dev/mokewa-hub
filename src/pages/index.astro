@@ -25,7 +25,7 @@ const campeones = new Set(historia.torneos.flatMap((e) => e.campeones.map((c) =>
 const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : String(n));
 ---
 
-<Base titulo="Inicio" seccion="inicio" descripcion="Ajedrez Club Mokewa, donde el ajedrez nunca descansa: academia en Moquegua con clases por niveles y torneos presenciales para niños, jóvenes y adultos.">
+<Base titulo="Inicio" seccion="inicio" descripcion="Ajedrez Club Mokewa, donde el ajedrez nunca descansa: academia en Moquegua con clases y torneos presenciales para niños, jóvenes y adultos.">
   <!-- 1. HÉROE -->
   <section class="heroe">
     <div class="piezas-fondo" aria-hidden="true">
@@ -55,7 +55,7 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
           <span class="titulo-nombre entra" style="--d:2">Mokewa</span>
         </h1>
         <p class="heroe-lema entra" style="--d:3"><span>{LEMA}</span></p>
-        <p class="heroe-bajada entra" style="--d:4">Aprende a tu nivel y compite en torneos presenciales todo el año.</p>
+        <p class="heroe-bajada entra" style="--d:4">Aprende, entrena y compite en torneos presenciales todo el año.</p>
         <div class="grupo-botones entra" style="--d:5">
           <BotonContacto cta />
           <a class="boton boton-secundario" href={`${b}/el-club/#historia`}>Nuestros campeones</a>
@@ -81,7 +81,7 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
       <div class="encabezado">
         <div>
           <p class="antetitulo">Academia</p>
-          <h2>Clases por niveles</h2>
+          <h2>Clases para empezar y para competir</h2>
         </div>
         <a class="ver-mas" href={`${b}/academia/`}>Ver la academia →</a>
       </div>
@@ -118,8 +118,8 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
           <span class="paso-pieza glifo" aria-hidden="true">♙&#xfe0e;</span>
           <div>
             <span class="paso-n">Paso 1</span>
-            <h3>Aprende a tu nivel</h3>
-            <p>Clases por niveles, desde la primera jugada.</p>
+            <h3>Aprende a tu ritmo</h3>
+            <p>Desde la primera jugada, sin apuros.</p>
           </div>
         </li>
         <li class="paso">

@@ -2,6 +2,7 @@
 // «Nuestra historia»: los campeones de los torneos PRESENCIALES del club, año por año.
 // Datos en src/data/historia.json (clasificaciones públicas de Chess-Results, con su enlace).
 // De cada campeón solo el nombre y la inicial del apellido; si una familia lo pide, va a «ocultar».
+// El eje es una columna de casillas de tablero; los torneos se alternan a cada lado.
 import historia from "../../data/historia.json";
 import { esProduccion } from "../../lib/contenido.js";
 import { LEMA } from "../../lib/club.js";
@@ -15,6 +16,9 @@ const anios = [...new Set(eventos.map((e) => e.fecha.slice(0, 4)))].sort().rever
 const delAnio = (a: string) => eventos.filter((e) => e.fecha.startsWith(a)).sort((x, y) => y.fecha.localeCompare(x.fecha));
 const mes = (e: Evento) => e.fecha_texto.replace(/ de \d{4}$/, "");
 const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
+// IRT = torneo válido para el rating FIDE.
+const conRating = (e: Evento) => /\bIRT\b|FIDE/.test(e.torneo);
+const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
 ---
 
 <div class="linea" data-linea>
@@ -27,9 +31,9 @@ const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
   <!-- Controles (solo con JavaScript; sin él se ve la historia completa) -->
   <div class="controles" data-controles hidden>
     <div class="filtro" role="group" aria-label="Filtrar por año">
-      <button type="button" class="chip-anio" data-filtro="" aria-pressed="true">Todos</button>
+      <button type="button" data-filtro="" aria-pressed="true">Todos</button>
       {anios.map((a) => (
-        <button type="button" class="chip-anio" data-filtro={a} aria-pressed="false">{a} <span class="n">{delAnio(a).length}</span></button>
+        <button type="button" data-filtro={a} aria-pressed="false">{a}</button>
       ))}
     </div>
     <p class="ayuda-linea">Toca un año para filtrar, o un campeón para ver todos sus títulos.</p>
@@ -37,38 +41,50 @@ const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
   </div>
 
   <ol class="anios">
-    {anios.map((a) => (
-      <li class="anio" data-anio={a}>
-        <h3 class="anio-marca"><span>{a}</span></h3>
-        <ol class="eventos">
-          {delAnio(a).map((e) => (
-            <li class="evento">
-              <span class="cuando">{mes(e)}</span>
-              <h4>{e.torneo}</h4>
-              {e.campeones.length > 0 && (
-                <ul class="campeones">
-                  {e.campeones.map((c) => (
-                    <li>
-                      <button type="button" class="campeon" data-nombre={ocultos.has(c.nombre) ? "" : c.nombre} aria-pressed="false" disabled={ocultos.has(c.nombre)}>
-                        <span class="corona" aria-hidden="true">♛&#xfe0e;</span>
-                        {c.categoria && <span class="categoria">{c.categoria}</span>}
-                        <span class="nombre">{ocultos.has(c.nombre) ? "Campeón" : c.nombre}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {e.fuentes[0] && (
-                <a class="fuente" href={e.fuentes[0]} rel="noopener" target="_blank">
-                  {e.fuentes[0].includes("fide.com") ? "Informe FIDE" : "Ver resultados"}
-                  <span class="visually-hidden"> de {e.torneo}</span>
-                </a>
-              )}
-            </li>
-          ))}
-        </ol>
-      </li>
-    ))}
+    {anios.map((a) => {
+      const lista = delAnio(a);
+      const titulos = lista.reduce((n, e) => n + e.campeones.length, 0);
+      return (
+        <li class="anio" data-anio={a}>
+          <h3 class="anio-marca">
+            <span class="anio-num">{a}</span>
+            <span class="anio-resumen">{plural(lista.length, "torneo", "torneos")}{titulos > 0 && ` · ${plural(titulos, "título", "títulos")}`}</span>
+          </h3>
+          <ol class="eventos">
+            {lista.map((e) => (
+              <li class:list={["evento", { hito: e.campeones.length === 0 }]}>
+                <div class="evento-cabeza">
+                  <span class="cuando">{mes(e)}</span>
+                  {conRating(e) && <span class="sello">Rating FIDE</span>}
+                </div>
+                <h4>{e.torneo}</h4>
+                {e.campeones.length > 0 && (
+                  <ul class:list={["campeones", { muchos: e.campeones.length > 2 }]}>
+                    {e.campeones.map((c) => (
+                      <li>
+                        <button type="button" class="campeon" data-nombre={ocultos.has(c.nombre) ? "" : c.nombre} aria-pressed="false" disabled={ocultos.has(c.nombre)}>
+                          <span class="medalla" aria-hidden="true">♛&#xfe0e;</span>
+                          <span class="campeon-texto">
+                            <span class="nombre">{ocultos.has(c.nombre) ? "Campeón" : c.nombre}</span>
+                            {c.categoria && <span class="categoria">{c.categoria}</span>}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {e.fuentes[0] && (
+                  <a class="fuente" href={e.fuentes[0]} rel="noopener" target="_blank">
+                    {e.fuentes[0].includes("fide.com") ? "Informe FIDE" : "Ver resultados"} <span aria-hidden="true">→</span>
+                    <span class="visually-hidden"> de {e.torneo}</span>
+                  </a>
+                )}
+              </li>
+            ))}
+          </ol>
+        </li>
+      );
+    })}
   </ol>
 
   {!esProduccion && (
@@ -82,7 +98,7 @@ const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
 </div>
 
 <script>
-  // Interacción: filtro por año y resaltado de todos los títulos de un campeón.
+  // Interacción: filtro por año, resaltado de todos los títulos de un campeón y aparición al hacer scroll.
   const raiz = document.querySelector<HTMLElement>("[data-linea]");
   if (raiz) {
     const controles = raiz.querySelector<HTMLElement>("[data-controles]")!;
@@ -123,51 +139,70 @@ const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
         aplicar();
       }
     });
+    // Cada tarjeta entra con un fundido al aparecer en pantalla (movimiento corto; se ve para todos).
+    if ("IntersectionObserver" in window) {
+      raiz.classList.add("con-entrada");
+      const obs = new IntersectionObserver(
+        (entradas) => {
+          for (const en of entradas) {
+            if (en.isIntersecting) {
+              en.target.classList.add("visto");
+              obs.unobserve(en.target);
+            }
+          }
+        },
+        { rootMargin: "0px 0px -8% 0px" },
+      );
+      raiz.querySelectorAll(".evento, .anio-marca").forEach((el) => obs.observe(el));
+    }
   }
 </script>
 
 <style>
+  .linea {
+    --casilla-a: #1a1714;
+    --casilla-b: #f28a1e;
+  }
   .linea-cabeza {
     max-width: 720px;
     margin-bottom: 18px;
   }
+
+  /* ---------- Selector de años: un marcador oscuro ---------- */
   .controles {
-    margin-bottom: 22px;
+    margin-bottom: 30px;
   }
   .filtro {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .chip-anio {
     display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 5px;
+    border-radius: 14px;
+    background: var(--casilla-a);
+    box-shadow: 0 8px 20px rgb(26 23 20 / 0.18);
+  }
+  .filtro button {
     min-height: 44px;
+    min-width: 64px;
     padding: 0 16px;
-    border-radius: 999px;
-    border: 1.5px solid var(--linea);
-    background: var(--papel);
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #eadfd1;
     font: inherit;
-    font-weight: 650;
-    color: var(--tinta);
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-  }
-  .chip-anio:hover {
-    border-color: #f28a1e;
-  }
-  .chip-anio[aria-pressed="true"] {
-    background: #f28a1e;
-    border-color: #f28a1e;
-    color: #141211;
-  }
-  .chip-anio .n {
-    font-size: 0.78rem;
     font-weight: 700;
-    padding: 1px 7px;
-    border-radius: 999px;
-    background: rgb(26 23 20 / 0.08);
+    font-stretch: 88%;
+    font-size: 1.02rem;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+  }
+  .filtro button:hover {
+    background: rgb(255 255 255 / 0.08);
+    color: #fff;
+  }
+  .filtro button[aria-pressed="true"] {
+    background: var(--casilla-b);
+    color: #141211;
   }
   .ayuda-linea {
     margin: 10px 0 0;
@@ -179,178 +214,309 @@ const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
   }
   .estado {
     margin: 10px 0 0;
-    padding: 8px 14px;
+    padding: 8px 8px 8px 14px;
     border-radius: 12px;
-    background: #1a1714;
-    color: #fff;
-    font-weight: 600;
+    background: #fff4e8;
+    border: 1px solid #f7c08a;
+    font-weight: 650;
     display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 4px 10px;
   }
   .estado :global(.quitar) {
-    min-height: 32px;
-    padding: 0 12px;
+    min-height: 36px;
+    padding: 0 14px;
     border-radius: 999px;
-    border: 1px solid rgb(255 255 255 / 0.4);
-    background: transparent;
+    border: 0;
+    background: var(--casilla-a);
     color: #fff;
     font: inherit;
     font-size: 0.86rem;
     cursor: pointer;
   }
-  /* Al filtrar, el año aparece con un fundido corto; al resaltar, lo demás se atenúa. */
+
+  /* ---------- Eje: una columna de casillas de tablero ---------- */
+  .anios {
+    --eje: 14px;
+    --x-eje: 7px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    display: grid;
+    gap: 34px;
+  }
+  .anios::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--x-eje);
+    width: var(--eje);
+    margin-left: calc(var(--eje) / -2);
+    border-radius: 3px;
+    background: repeating-linear-gradient(var(--casilla-a) 0 var(--eje), var(--casilla-b) var(--eje) calc(var(--eje) * 2));
+    opacity: 0.9;
+  }
+  .anio {
+    position: relative;
+  }
+
+  /* Ficha del año, sobre el eje */
+  .anio-marca {
+    position: relative;
+    z-index: 1;
+    display: inline-grid;
+    margin: 0 0 16px;
+    padding: 8px 16px 8px 14px;
+    border-radius: 12px;
+    background: var(--casilla-a);
+    box-shadow: 0 0 0 5px var(--fondo), 0 10px 22px rgb(26 23 20 / 0.2);
+    line-height: 1;
+  }
+  .anio-num {
+    font-size: clamp(1.7rem, 4.4vw, 2.3rem);
+    font-weight: 900;
+    font-stretch: 72%;
+    color: var(--casilla-b);
+  }
+  .anio-resumen {
+    margin-top: 4px;
+    font-family: var(--sans);
+    font-stretch: 90%;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #eadfd1;
+  }
+
+  /* Tarjetas */
+  .eventos {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 34px;
+    display: grid;
+    gap: 16px;
+  }
+  .evento {
+    position: relative;
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    border-top: 4px solid var(--casilla-b);
+    border-radius: 16px;
+    padding: 16px 18px 8px;
+    box-shadow: 0 6px 18px rgb(90 42 6 / 0.08);
+    transition:
+      opacity 0.3s,
+      transform 0.3s,
+      box-shadow 0.2s;
+  }
+  .evento:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px rgb(90 42 6 / 0.14);
+  }
+  /* Conector de la tarjeta al eje */
+  .evento::before {
+    content: "";
+    position: absolute;
+    top: 26px;
+    left: -27px;
+    width: 27px;
+    border-top: 2px dashed rgb(26 23 20 / 0.35);
+  }
+  .evento.hito {
+    background: var(--casilla-a);
+    border-color: var(--casilla-a);
+    border-top-color: var(--casilla-b);
+    color: #fff;
+  }
+  .evento.hito .cuando {
+    color: #eadfd1;
+  }
+  .evento.hito h4 {
+    color: #fff;
+  }
+  .evento.hito .fuente {
+    color: #f7a54a;
+  }
+  .evento-cabeza {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .cuando {
+    font-size: 0.76rem;
+    font-weight: 700;
+    font-stretch: 88%;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--suave);
+  }
+  .sello {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #fde7d1;
+    color: #7a3606;
+  }
+  h4 {
+    font-family: var(--titulo);
+    font-stretch: var(--angosto);
+    font-weight: 800;
+    font-size: 1.3rem;
+    line-height: 1.1;
+    margin: 4px 0 12px;
+  }
+
+  /* Campeones: medallas con corona */
+  .campeones {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .campeones.muchos {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  .campeon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 48px;
+    padding: 6px 12px 6px 6px;
+    border-radius: 12px;
+    border: 1px solid #f7c08a;
+    background: #fff4e8;
+    font: inherit;
+    color: var(--tinta);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .campeon:hover {
+    border-color: var(--casilla-b);
+  }
+  .medalla {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffc27a, var(--casilla-b) 60%, #c9660d);
+    box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.15);
+    font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", serif;
+    font-size: 1.05rem;
+    color: var(--casilla-a);
+  }
+  .campeon-texto {
+    display: grid;
+    line-height: 1.15;
+  }
+  .nombre {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .categoria {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--suave);
+  }
+  .campeon[aria-pressed="true"] {
+    background: var(--casilla-a);
+    border-color: var(--casilla-a);
+    color: #fff;
+  }
+  .campeon[aria-pressed="true"] .categoria {
+    color: #f7c08a;
+  }
+  .campeon:disabled {
+    cursor: default;
+  }
+  .fuente {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  .evento.atenuado {
+    opacity: 0.5;
+  }
+
+  /* Entrada al hacer scroll (solo con JavaScript) */
+  .con-entrada .evento:not(.visto),
+  .con-entrada .anio-marca:not(.visto) {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  .con-entrada .anio-marca {
+    transition:
+      opacity 0.4s,
+      transform 0.4s;
+  }
   .anio:not([hidden]) {
     animation: aparece-anio 0.35s ease-out;
   }
   @keyframes aparece-anio {
     from {
       opacity: 0;
-      transform: translateY(6px);
     }
   }
-  .evento {
-    transition: opacity 0.25s;
-  }
-  .evento.atenuado {
-    opacity: 0.55;
-  }
-  .anios {
-    list-style: none;
-    margin: 0;
-    padding: 0 0 0 26px;
-    position: relative;
-    display: grid;
-    gap: 28px;
-  }
-  /* Riel de la línea de tiempo */
-  .anios::before {
-    content: "";
-    position: absolute;
-    left: 7px;
-    top: 10px;
-    bottom: 10px;
-    width: 3px;
-    border-radius: 3px;
-    background: linear-gradient(#f28a1e, #fde7d1);
-  }
-  .anio-marca {
-    position: relative;
-    margin: 0 0 12px;
-    font-size: clamp(1.6rem, 4vw, 2.1rem);
-    line-height: 1;
-    color: #a64b08;
-  }
-  .anio-marca::before {
-    content: "";
-    position: absolute;
-    left: -26px;
-    top: 50%;
-    width: 17px;
-    height: 17px;
-    margin-top: -8.5px;
-    border-radius: 50%;
-    background: #f28a1e;
-    box-shadow: 0 0 0 4px var(--fondo);
-  }
-  .eventos {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 12px;
-  }
-  @media (min-width: 760px) {
+
+  /* ---------- Escritorio: eje al centro y tarjetas alternadas ---------- */
+  @media (min-width: 900px) {
+    .anios {
+      --x-eje: 50%;
+      gap: 40px;
+    }
+    .anio {
+      display: grid;
+      justify-items: center;
+    }
+    .anio-marca {
+      justify-items: center;
+      text-align: center;
+    }
     .eventos {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      width: 100%;
+      padding: 0;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 72px;
+      row-gap: 18px;
+      align-items: start;
+    }
+    .evento:nth-child(odd)::before {
+      left: auto;
+      right: -37px;
+      width: 37px;
+    }
+    .evento:nth-child(even)::before {
+      left: -37px;
+      width: 37px;
+    }
+    /* Las tarjetas de la derecha bajan un poco: el recorrido zigzaguea como en un tablero */
+    .evento:nth-child(even) {
+      margin-top: 36px;
+    }
+    .con-entrada .evento:nth-child(odd):not(.visto) {
+      transform: translateX(-18px);
+    }
+    .con-entrada .evento:nth-child(even):not(.visto) {
+      transform: translateX(18px);
     }
   }
-  .evento {
-    background: var(--papel);
-    border: 1px solid var(--linea);
-    border-radius: var(--radio);
-    padding: 14px 18px 6px;
-    display: grid;
-    align-content: start;
-    gap: 2px;
-  }
-  .cuando {
-    font-size: 0.78rem;
-    font-weight: 700;
-    font-stretch: 88%;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--suave);
-  }
-  h4 {
-    font-family: var(--titulo);
-    font-stretch: var(--angosto);
-    font-weight: 750;
-    font-size: 1.15rem;
-    line-height: 1.15;
-    margin: 0 0 6px;
-  }
-  .campeones {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .campeon {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 44px;
-    padding: 4px 12px 4px 10px;
-    border-radius: 12px;
-    background: #fff4e8;
-    border: 1px solid #f7c08a;
-    font: inherit;
-    font-size: 0.92rem;
-    color: var(--tinta);
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
-  }
-  .campeon:hover {
-    border-color: #f28a1e;
-  }
-  .campeon[aria-pressed="true"] {
-    background: #1a1714;
-    border-color: #1a1714;
-    color: #fff;
-    transform: translateY(-1px);
-  }
-  .campeon[aria-pressed="true"] .corona,
-  .campeon[aria-pressed="true"] .categoria {
-    color: #f7a54a;
-  }
-  .campeon:disabled {
-    cursor: default;
-  }
-  .corona {
-    font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", serif;
-    color: #a64b08;
-  }
-  .categoria {
-    font-size: 0.78rem;
-    font-weight: 650;
-    color: var(--suave);
-  }
-  .nombre {
-    font-weight: 650;
-  }
-  .fuente {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    font-size: 0.86rem;
-    width: fit-content;
-  }
+
   .pendiente {
-    margin: 24px 0 0;
+    margin: 30px 0 0;
     padding: 12px 16px;
     border: 1px dashed #f7c08a;
     border-radius: 12px;

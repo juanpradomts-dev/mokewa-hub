@@ -6,7 +6,7 @@
       "valor": null,
       "tipo": "textarea",
       "grupo": "Quiénes somos",
-      "propuesta": "Que cada niño y joven gane concentración, disciplina y ganas de competir, con clases por niveles y torneos presenciales para todas las edades.",
+      "propuesta": "Formar personas a través del ajedrez: que cada niño y joven aprenda a pensar con calma, a respetar al rival y a confiar en sí mismo, en una comunidad donde ganar y perder también enseñan.",
       "ayuda": "Mientras quede vacío, la demo muestra una propuesta marcada «por confirmar»; en producción no se muestra."
     },
     "vision": {
