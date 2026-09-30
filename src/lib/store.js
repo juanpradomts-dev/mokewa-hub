@@ -261,12 +261,12 @@ export function leerCsvResultados(texto) {
 }
 
 // ---------------------------------------------------------------- datos de prueba
-function voucherDePrueba(n, monto) {
+function voucherDePrueba(n) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="560" viewBox="0 0 360 560">
-<rect width="360" height="560" fill="#742284"/><rect x="20" y="90" width="320" height="400" rx="18" fill="#fff"/>
+<rect width="360" height="560" fill="#5a2a06"/><rect x="20" y="90" width="320" height="400" rx="18" fill="#fff"/>
 <text x="180" y="60" fill="#fff" font-family="Arial" font-size="28" font-weight="700" text-anchor="middle">VOUCHER DE PRUEBA</text>
-<text x="180" y="170" fill="#742284" font-family="Arial" font-size="20" text-anchor="middle">¡Pago realizado!</text>
-<text x="180" y="240" fill="#222" font-family="Arial" font-size="46" font-weight="700" text-anchor="middle">S/ ${monto}</text>
+<text x="180" y="170" fill="#5a2a06" font-family="Arial" font-size="20" text-anchor="middle">Comprobante de prueba</text>
+<text x="180" y="240" fill="#222" font-family="Arial" font-size="34" font-weight="700" text-anchor="middle">Monto de prueba</text>
 <text x="180" y="300" fill="#555" font-family="Arial" font-size="16" text-anchor="middle">Operación de ejemplo n.º ${100000 + n * 7919}</text>
 <text x="180" y="340" fill="#555" font-family="Arial" font-size="16" text-anchor="middle">Destino: Ajedrez Club Mokewa (demo)</text>
 <text x="180" y="440" fill="#a00" font-family="Arial" font-size="15" text-anchor="middle">Imagen generada para la demostración</text>
@@ -307,7 +307,7 @@ export async function sembrarDemo({ forzar = false } = {}) {
   }));
   // Primero los comprobantes y después el estado: así ninguna inscripción queda sin imagen
   // si el usuario cambia de página a mitad del guardado.
-  for (const [k, i] of nuevas.entries()) await guardarVoucher(i.id, voucherDePrueba(k + 1, 20)).catch(() => {});
+  for (const [k, i] of nuevas.entries()) await guardarVoucher(i.id, voucherDePrueba(k + 1)).catch(() => {});
   const actual = leer();
   if (actual.sembrado && !forzar) return;
   guardar({ ...actual, inscripciones: [...actual.inscripciones.filter((i) => !i.prueba), ...nuevas], sembrado: true });
