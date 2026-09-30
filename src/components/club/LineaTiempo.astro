@@ -1,7 +1,9 @@
 ---
-// «Nuestra historia» como MAPA MENTAL: el club al centro, los años orbitando y, al tocar un año,
-// sus torneos brotan como ramas con los campeones en medallas. En celular, un árbol vertical.
-// Datos en src/data/historia.json (clasificaciones públicas de Chess-Results, con su enlace).
+// «Nuestra historia»: LÍNEA DE TIEMPO horizontal (2022 → hoy) de los torneos PRESENCIALES del club.
+// Un eje de casillas de tablero; cada torneo es un punto del que sale una rama curva hacia su
+// tarjeta con los campeones. Se desliza en horizontal (dedo, arrastre o flechas); un caballo recorre
+// el eje hasta el torneo del centro y «Recorrer la historia» hace el viaje completo.
+// Datos: src/data/historia.json (clasificaciones públicas de Chess-Results, con su enlace).
 // De cada campeón solo el nombre y la inicial del apellido; si una familia lo pide, va a «ocultar».
 // Sin JavaScript se ve la lista simple de abajo.
 import historia from "../../data/historia.json";
@@ -13,25 +15,18 @@ type Campeon = { categoria: string | null; nombre: string };
 type Evento = { fecha: string; fecha_texto: string; torneo: string; campeones: Campeon[]; fuentes: string[] };
 
 const ocultos = new Set<string>(historia.ocultar ?? []);
-const eventos: Evento[] = [...historia.torneos, ...historia.hitos];
-const anios = [...new Set(eventos.map((e) => e.fecha.slice(0, 4)))].sort().reverse();
-const delAnio = (a: string) => eventos.filter((e) => e.fecha.startsWith(a)).sort((x, y) => y.fecha.localeCompare(x.fecha));
-const mes = (e: Evento) => e.fecha_texto.replace(/ de \d{4}$/, "");
-const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
+// Orden cronológico: de lo más antiguo (izquierda) a lo más reciente (derecha).
+const eventos: Evento[] = [...historia.torneos, ...historia.hitos].sort((a, b) => a.fecha.localeCompare(b.fecha) || a.torneo.localeCompare(b.torneo));
+const anios = [...new Set(eventos.map((e) => e.fecha.slice(0, 4)))].sort();
 const conRating = (e: Evento) => /\bIRT\b|FIDE/.test(e.torneo); // IRT = válido para el rating FIDE
-const titulos = historia.torneos.reduce((n, e) => n + e.campeones.length, 0);
-
-// Datos para el mapa (el navegador los dibuja).
-const datos = anios.map((a) => ({
-  anio: a,
-  eventos: delAnio(a).map((e) => ({
-    mes: mes(e),
-    torneo: e.torneo,
-    rating: conRating(e),
-    fuente: e.fuentes[0] ?? null,
-    fide: (e.fuentes[0] ?? "").includes("fide.com"),
-    campeones: e.campeones.map((c) => ({ nombre: ocultos.has(c.nombre) ? null : c.nombre, categoria: c.categoria })),
-  })),
+const datos = eventos.map((e) => ({
+  anio: e.fecha.slice(0, 4),
+  mes: e.fecha_texto.replace(/ de \d{4}$/, ""),
+  torneo: e.torneo,
+  rating: conRating(e),
+  fuente: e.fuentes[0] ?? null,
+  fide: (e.fuentes[0] ?? "").includes("fide.com"),
+  campeones: e.campeones.map((c) => ({ nombre: ocultos.has(c.nombre) ? null : c.nombre, categoria: c.categoria })),
 }));
 const json = JSON.stringify(datos).replace(/</g, "\\u003c");
 ---
@@ -40,35 +35,39 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
   <div class="historia-cabeza">
     <p class="antetitulo">Nuestra historia</p>
     <h2>{LEMA}</h2>
-    <p class="bajada">Desde {primero}, los campeones de los torneos presenciales del club.</p>
-    <p class="ayuda-mapa" data-solo-mapa hidden>Toca un año para abrir su rama. Toca un campeón para seguir todos sus títulos.</p>
-    <p class="estado" data-estado aria-live="polite"></p>
+    <p class="bajada">Desde {anios[0]}, los campeones de los torneos presenciales del club.</p>
   </div>
 
-  <!-- Mapa mental (lo arma el navegador) -->
-  <div class="mapa" data-mapa role="region" aria-label="Mapa de campeones por año" hidden>
-    <svg class="lineas" aria-hidden="true"></svg>
-    <div class="nodo raiz">
-      <span class="raiz-medalla"><Caballo tam="100%" /></span>
-      <span class="raiz-texto"><strong>Mokewa</strong><span>{titulos} títulos</span></span>
+  <!-- Controles de la línea de tiempo (solo con JavaScript) -->
+  <div class="tl-controles" data-controles hidden>
+    <div class="tl-anios" role="group" aria-label="Ir a un año">
+      {anios.map((a) => <button type="button" data-ir={a} aria-pressed="false">{a}</button>)}
+    </div>
+    <div class="tl-navegar">
+      <button type="button" class="tl-flecha" data-paso="-1" aria-label="Torneo anterior">←</button>
+      <button type="button" class="tl-flecha" data-paso="1" aria-label="Torneo siguiente">→</button>
+      <button type="button" class="tl-play" data-play aria-pressed="false"><span aria-hidden="true">▶</span> Recorrer la historia</button>
     </div>
   </div>
+  <p class="estado" data-estado aria-live="polite"></p>
+
+  <div class="tl-pista" data-pista tabindex="0" role="region" aria-label="Línea de tiempo de los campeones, de 2022 a hoy. Se desliza en horizontal." hidden>
+    <div class="tl-lienzo" data-lienzo>
+      <svg class="tl-ramas" aria-hidden="true"></svg>
+      <div class="tl-eje" aria-hidden="true"></div>
+      <div class="tl-caballo" data-caballo aria-hidden="true"><Caballo tam="100%" /></div>
+    </div>
+  </div>
+  <p class="tl-pista-ayuda" data-solo-js hidden>Desliza a los lados para viajar en el tiempo. Toca un campeón para seguir todos sus títulos.</p>
   <script type="application/json" data-datos-historia set:html={json} />
 
   <!-- Sin JavaScript: la misma historia en lista -->
   <ol class="lista-historia" data-lista>
-    {datos.map((a) => (
+    {datos.map((e) => (
       <li>
-        <h3>{a.anio}</h3>
-        <ul>
-          {a.eventos.map((e) => (
-            <li>
-              <strong>{e.torneo}</strong> <span class="suave">({e.mes})</span>
-              {e.campeones.length > 0 && <>: {e.campeones.map((c) => `${c.categoria ? c.categoria + " " : ""}${c.nombre ?? "Campeón"}`).join(" · ")}</>}
-              {e.fuente && <> · <a href={e.fuente} rel="noopener" target="_blank">{e.fide ? "Informe FIDE" : "Resultados"}</a></>}
-            </li>
-          ))}
-        </ul>
+        <strong>{e.mes} de {e.anio} · {e.torneo}</strong>
+        {e.campeones.length > 0 && <>: {e.campeones.map((c) => `${c.categoria ? c.categoria + " " : ""}${c.nombre ?? "Campeón"}`).join(" · ")}</>}
+        {e.fuente && <> · <a href={e.fuente} rel="noopener" target="_blank">{e.fide ? "Informe FIDE" : "Resultados"}</a></>}
       </li>
     ))}
   </ol>
@@ -85,23 +84,26 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
 
 <script>
   type Campeon = { nombre: string | null; categoria: string | null };
-  type Ev = { mes: string; torneo: string; rating: boolean; fuente: string | null; fide: boolean; campeones: Campeon[] };
-  type Anio = { anio: string; eventos: Ev[] };
+  type Ev = { anio: string; mes: string; torneo: string; rating: boolean; fuente: string | null; fide: boolean; campeones: Campeon[] };
 
   const raiz = document.querySelector<HTMLElement>("[data-historia]");
   if (raiz) iniciar(raiz);
 
   function iniciar(raiz: HTMLElement) {
-    const datos: Anio[] = JSON.parse(raiz.querySelector("[data-datos-historia]")!.textContent || "[]");
-    const mapa = raiz.querySelector<HTMLElement>("[data-mapa]")!;
-    const svg = mapa.querySelector<SVGSVGElement>(".lineas")!;
-    const nodoRaiz = mapa.querySelector<HTMLElement>(".raiz")!;
+    const datos: Ev[] = JSON.parse(raiz.querySelector("[data-datos-historia]")!.textContent || "[]");
+    const pista = raiz.querySelector<HTMLElement>("[data-pista]")!;
+    const lienzo = raiz.querySelector<HTMLElement>("[data-lienzo]")!;
+    const svg = lienzo.querySelector<SVGSVGElement>(".tl-ramas")!;
+    const eje = lienzo.querySelector<HTMLElement>(".tl-eje")!;
+    const caballo = lienzo.querySelector<HTMLElement>("[data-caballo]")!;
     const estado = raiz.querySelector<HTMLElement>("[data-estado]")!;
-    mapa.hidden = false;
-    raiz.querySelector<HTMLElement>("[data-solo-mapa]")!.hidden = false;
-    raiz.classList.add("con-mapa");
+    const botonesAnio = [...raiz.querySelectorAll<HTMLButtonElement>("[data-ir]")];
+    const play = raiz.querySelector<HTMLButtonElement>("[data-play]")!;
+    raiz.querySelector<HTMLElement>("[data-controles]")!.hidden = false;
+    raiz.querySelector<HTMLElement>("[data-solo-js]")!.hidden = false;
+    pista.hidden = false;
+    raiz.classList.add("con-linea");
 
-    const NS = "http://www.w3.org/2000/svg";
     const el = <K extends keyof HTMLElementTagNameMap>(tag: K, clase = "", texto = "") => {
       const e = document.createElement(tag);
       if (clase) e.className = clase;
@@ -110,272 +112,257 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     };
     const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
 
-    // ---- Nodos de año
-    const nodosAnio = datos.map((a, i) => {
-      const b = el("button", "nodo anio");
-      b.type = "button";
-      b.setAttribute("aria-pressed", "false");
-      b.append(el("span", "anio-num", a.anio), el("span", "anio-sub", plural(a.eventos.length, "torneo", "torneos")), el("span", "anio-cuenta"));
-      b.addEventListener("click", () => elegir(i));
-      mapa.append(b);
-      return b;
+    // ---- Tarjetas, puntos del eje y marcas de año
+    const lista = el("ol", "tl-lista");
+    lienzo.append(lista);
+    const puntos: HTMLElement[] = [];
+    const tarjetas = datos.map((e, k) => {
+      const li = el("li", `tl-tarjeta ${k % 2 ? "abajo" : "arriba"}${e.campeones.length ? "" : " hito"}`);
+      const cabeza = el("div", "tl-cabeza");
+      cabeza.append(el("span", "tl-cuando", `${e.mes} ${e.anio}`));
+      if (e.rating) cabeza.append(el("span", "tl-sello", "Rating FIDE"));
+      li.append(cabeza, el("h4", "", e.torneo));
+      if (e.campeones.length) {
+        const ul = el("ul", "tl-medallas");
+        for (const c of e.campeones) {
+          const item = el("li");
+          const b = el("button", "tl-medalla");
+          b.type = "button";
+          b.disabled = !c.nombre;
+          b.dataset.nombre = c.nombre ?? "";
+          b.setAttribute("aria-pressed", "false");
+          const txt = el("span", "tl-medalla-texto");
+          txt.append(el("span", "tl-nombre", c.nombre ?? "Campeón"));
+          if (c.categoria) txt.append(el("span", "tl-cat", c.categoria));
+          b.append(el("span", "tl-corona", "♛︎"), txt);
+          b.addEventListener("click", () => seguir(c.nombre!));
+          item.append(b);
+          ul.append(item);
+        }
+        li.append(ul);
+      }
+      if (e.fuente) {
+        const a = el("a", "tl-fuente", e.fide ? "Informe FIDE →" : "Ver resultados →");
+        a.href = e.fuente;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.setAttribute("aria-label", `${e.fide ? "Informe FIDE" : "Resultados"} de ${e.torneo}`);
+        li.append(a);
+      }
+      lista.append(li);
+      const p = el("span", "tl-punto");
+      p.setAttribute("aria-hidden", "true");
+      lienzo.append(p);
+      puntos.push(p);
+      return li;
+    });
+    const marcasAnio = [...new Set(datos.map((e) => e.anio))].map((a) => {
+      const m = el("span", "tl-marca-anio", a);
+      m.setAttribute("aria-hidden", "true");
+      lienzo.append(m);
+      return { anio: a, m };
     });
 
-    // ---- Estado
-    let sel = 0;
-    let giro = 0; // ángulo actual del anillo (grados)
-    let nombre = "";
-    let tarjetas: HTMLElement[] = [];
-    let angulosAnimando = false;
-
-    const escritorio = () => mapa.clientWidth >= 820;
-
-    // ---- Rama del año elegido: tarjetas de torneos con medallas de campeones
-    function armarRama() {
-      tarjetas.forEach((t) => t.remove());
-      tarjetas = datos[sel].eventos.map((e, k) => {
-        const t = el("div", `nodo torneo${e.campeones.length ? "" : " hito"}`);
-        t.style.setProperty("--k", String(k));
-        const cabeza = el("div", "torneo-cabeza");
-        cabeza.append(el("span", "cuando", e.mes));
-        if (e.rating) cabeza.append(el("span", "sello", "Rating FIDE"));
-        t.append(cabeza, el("h4", "", e.torneo));
-        if (e.campeones.length) {
-          const ul = el("ul", "medallas");
-          for (const c of e.campeones) {
-            const li = el("li");
-            const b = el("button", "medalla");
-            b.type = "button";
-            b.disabled = !c.nombre;
-            b.dataset.nombre = c.nombre ?? "";
-            b.setAttribute("aria-pressed", String(!!c.nombre && c.nombre === nombre));
-            const texto = el("span", "medalla-texto");
-            texto.append(el("span", "medalla-nombre", c.nombre ?? "Campeón"));
-            if (c.categoria) texto.append(el("span", "medalla-cat", c.categoria));
-            b.append(el("span", "corona", "♛︎"), texto);
-            b.addEventListener("click", () => seguir(c.nombre!));
-            li.append(b);
-            ul.append(li);
-          }
-          t.append(ul);
-        }
-        if (e.fuente) {
-          const a = el("a", "fuente", e.fide ? "Informe FIDE →" : "Ver resultados →");
-          a.href = e.fuente;
-          a.target = "_blank";
-          a.rel = "noopener";
-          a.setAttribute("aria-label", `${e.fide ? "Informe FIDE" : "Resultados"} de ${e.torneo}`);
-          t.append(a);
-        }
-        mapa.append(t);
-        return t;
+    // ---- Geometría: cada torneo ocupa un «paso» del eje; las tarjetas alternan arriba y abajo
+    let xs: number[] = [];
+    let yEje = 0;
+    function disponer() {
+      const angosto = pista.clientWidth < 700;
+      const paso = angosto ? 150 : 190;
+      const ancho = angosto ? 250 : 290;
+      // Medio ancho de pantalla en cada extremo: el primer y el último torneo pueden quedar al centro.
+      const margen = Math.max(angosto ? 40 : 90, pista.clientWidth / 2);
+      const rama = angosto ? 46 : 58;
+      tarjetas.forEach((t) => (t.style.width = `${ancho}px`));
+      const altoArriba = Math.max(...tarjetas.filter((_, k) => k % 2 === 0).map((t) => t.offsetHeight));
+      const altoAbajo = Math.max(...tarjetas.filter((_, k) => k % 2 === 1).map((t) => t.offsetHeight));
+      yEje = 24 + altoArriba + rama;
+      const H = yEje + rama + altoAbajo + 34;
+      // Un respiro entre años: el cambio de año se nota en el eje
+      let x = margen;
+      xs = datos.map((e, k) => {
+        if (k > 0 && e.anio !== datos[k - 1].anio) x += paso * 0.55;
+        const pos = x;
+        x += paso;
+        return pos;
       });
-    }
-
-    // ---- Posiciones
-    const colocar = (n: HTMLElement, x: number, y: number) => {
-      n.style.left = `${Math.round(x - n.offsetWidth / 2)}px`;
-      n.style.top = `${Math.round(y - n.offsetHeight / 2)}px`;
-    };
-    const centro = (n: HTMLElement) => ({ x: n.offsetLeft + n.offsetWidth / 2, y: n.offsetTop + n.offsetHeight / 2 });
-    const curva = (x1: number, y1: number, x2: number, y2: number, vertical = false) =>
-      vertical
-        ? `M${x1},${y1} C${x1},${(y1 + y2) / 2} ${x2},${(y1 + y2) / 2} ${x2},${y2}`
-        : `M${x1},${y1} C${(x1 + x2) / 2},${y1} ${(x1 + x2) / 2},${y2} ${x2},${y2}`;
-
-    let geo = { rx: 0, ry: 0, R: 0 };
-    function disponer(animarRama: boolean, conRama = true) {
-      const W = mapa.clientWidth;
-      const n = datos.length;
-      if (escritorio()) {
-        const anchoT = Math.min(300, Math.max(230, W - 560));
-        tarjetas.forEach((t) => (t.style.width = `${anchoT}px`));
-        const alturas = tarjetas.map((t) => t.offsetHeight);
-        const gap = 16;
-        const total = alturas.reduce((a, b) => a + b, 0) + gap * Math.max(0, alturas.length - 1);
-        const H = Math.max(560, total + 90);
-        mapa.style.height = `${H}px`;
-        const R = 150;
-        const rx = Math.max(170, Math.min(W * 0.26, 290));
-        const ry = H / 2;
-        geo = { rx, ry, R };
-        colocar(nodoRaiz, rx, ry);
-        anillo();
-        // Tarjetas en abanico: las del medio más afuera, como una rama que se abre
-        const x0 = rx + R + 120;
-        let y = ry - total / 2;
-        tarjetas.forEach((t, k) => {
-          const m = (tarjetas.length - 1) / 2 || 1;
-          const u = (k - (tarjetas.length - 1) / 2) / m;
-          const dx = 56 * (1 - u * u);
-          t.style.left = `${Math.round(x0 + dx)}px`;
-          t.style.top = `${Math.round(y)}px`;
-          y += alturas[k] + gap;
-        });
-      } else {
-        // Celular: el club arriba, los años en fila y la rama hacia abajo
-        const pad = 16;
-        tarjetas.forEach((t) => (t.style.width = `${W - pad - 44}px`));
-        const yRaiz = nodoRaiz.offsetHeight / 2 + 18;
-        colocar(nodoRaiz, W / 2, yRaiz);
-        const paso = (W - pad * 2) / n;
-        const yAnios = yRaiz + nodoRaiz.offsetHeight / 2 + 58;
-        nodosAnio.forEach((b, i) => {
-          b.style.width = `${Math.max(56, paso - 6)}px`;
-          colocar(b, pad + paso * (i + 0.5), yAnios);
-        });
-        let y = yAnios + 74;
-        tarjetas.forEach((t) => {
-          t.style.left = `${pad + 44 - 4}px`;
-          t.style.top = `${Math.round(y)}px`;
-          y += t.offsetHeight + 14;
-        });
-        mapa.style.height = `${Math.round(y + 10)}px`;
+      const W = x - paso + Math.max(ancho * 0.72 + 30, margen);
+      lienzo.style.width = `${W}px`;
+      lienzo.style.height = `${H}px`;
+      eje.style.top = `${yEje - 7}px`;
+      tarjetas.forEach((t, k) => {
+        const izq = xs[k] - ancho * 0.28;
+        t.style.left = `${Math.round(izq)}px`;
+        t.style.top = `${Math.round(k % 2 === 0 ? yEje - rama - t.offsetHeight : yEje + rama)}px`;
+        puntos[k].style.left = `${xs[k]}px`;
+        puntos[k].style.top = `${yEje}px`;
+      });
+      for (const { anio, m } of marcasAnio) {
+        const primero = datos.findIndex((e) => e.anio === anio);
+        // Lejos del punto: el caballo (58 px) no debe tapar el año
+        m.style.left = `${xs[primero] - Math.max(82, paso * 0.5)}px`;
+        m.style.top = `${yEje}px`;
       }
-      dibujar(animarRama, conRama);
+      ramas(ancho);
+      moverCaballo(true);
     }
 
-    // El anillo de años alrededor del club; el elegido queda a la derecha (ángulo 0).
-    function anillo() {
-      if (!escritorio()) return;
-      const { rx, ry, R } = geo;
-      nodosAnio.forEach((b, i) => {
-        const a = ((i * 360) / datos.length - giro) * (Math.PI / 180);
-        colocar(b, rx + R * Math.cos(a), ry + R * Math.sin(a));
-      });
-    }
-
-    // ---- Líneas
-    function dibujar(animarRama: boolean, conRama = true) {
-      const W = mapa.clientWidth;
-      const H = mapa.offsetHeight;
+    function ramas(ancho: number) {
+      const W = lienzo.offsetWidth;
+      const H = lienzo.offsetHeight;
       svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
       svg.setAttribute("width", String(W));
       svg.setAttribute("height", String(H));
       svg.replaceChildren();
-      const c = centro(nodoRaiz);
-      const vertical = !escritorio();
-      nodosAnio.forEach((b, i) => {
-        const p = centro(b);
-        const path = document.createElementNS(NS, "path");
-        path.setAttribute("d", vertical ? curva(c.x, c.y + 40, p.x, p.y - b.offsetHeight / 2, true) : `M${c.x},${c.y} L${p.x},${p.y}`);
-        path.setAttribute("class", i === sel ? "linea-anio activa" : "linea-anio");
-        svg.append(path);
-      });
-      if (!conRama) return;
-      const a = nodosAnio[sel];
-      const pa = centro(a);
       tarjetas.forEach((t, k) => {
-        const path = document.createElementNS(NS, "path");
-        const tx = t.offsetLeft;
-        const ty = t.offsetTop + Math.min(34, t.offsetHeight / 2);
-        path.setAttribute(
-          "d",
-          vertical
-            ? `M${pa.x},${pa.y + a.offsetHeight / 2} C${pa.x},${ty} ${tx - 30},${ty} ${tx},${ty}`
-            : curva(pa.x + a.offsetWidth / 2 - 6, pa.y, tx, ty),
-        );
-        path.setAttribute("class", "linea-rama");
+        const x0 = xs[k];
+        const arriba = k % 2 === 0;
+        const x1 = t.offsetLeft + ancho * 0.28 + 30;
+        const y1 = arriba ? t.offsetTop + t.offsetHeight : t.offsetTop;
+        const yMedio = (yEje + y1) / 2;
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", `M${x0},${yEje} C${x0},${yMedio} ${x1},${yMedio} ${x1},${y1}`);
+        path.dataset.k = String(k);
         svg.append(path);
-        if (animarRama) {
-          const largo = (path as SVGPathElement).getTotalLength();
-          path.style.strokeDasharray = `${largo}`;
-          path.style.strokeDashoffset = `${largo}`;
-          path.style.transitionDelay = `${k * 70}ms`;
-          requestAnimationFrame(() => requestAnimationFrame(() => (path.style.strokeDashoffset = "0")));
-        }
       });
     }
 
-    // ---- Elegir un año: el anillo gira y brota la rama
-    function marcar() {
-      nodosAnio.forEach((b, i) => {
-        b.setAttribute("aria-pressed", String(i === sel));
-        b.setAttribute("aria-label", `${datos[i].anio}: ${plural(datos[i].eventos.length, "torneo", "torneos")}${i === sel ? " (abierto)" : ""}`);
+    // ---- El torneo del centro: el caballo va hasta él y su tarjeta se destaca
+    let actual = -1;
+    function centroVisible() {
+      const c = pista.scrollLeft + pista.clientWidth / 2;
+      let mejor = 0;
+      xs.forEach((x, k) => {
+        if (Math.abs(x - c) < Math.abs(xs[mejor] - c)) mejor = k;
       });
+      return mejor;
     }
-    function elegir(i: number, primera = false) {
-      const destino = (i * 360) / datos.length;
-      sel = i;
-      marcar();
-      armarRama();
-      // En escritorio las tarjetas esperan a que el anillo termine de girar
-      mapa.style.setProperty("--espera", escritorio() && !primera ? "560ms" : "0ms");
-      mapa.classList.remove("brota");
-      void mapa.offsetWidth;
-      mapa.classList.add("brota");
-      if (!escritorio() || primera) {
-        giro = destino;
-        disponer(true);
-        return;
-      }
-      // Giro por el camino más corto, con suavizado
-      let delta = ((destino - giro + 540) % 360) - 180;
-      const desde = giro;
-      const t0 = performance.now();
-      const dur = 650;
-      angulosAnimando = true;
-      disponer(false, false);
-      const paso = (ahora: number) => {
-        const t = Math.min(1, (ahora - t0) / dur);
-        const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-        giro = desde + delta * e;
-        anillo();
-        dibujar(false, false);
-        if (t < 1) requestAnimationFrame(paso);
-        else {
-          angulosAnimando = false;
-          giro = destino;
-          anillo();
-          dibujar(true);
-        }
-      };
-      requestAnimationFrame(paso);
+    function moverCaballo(inmediato = false) {
+      const k = centroVisible();
+      if (k === actual && !inmediato) return;
+      actual = k;
+      caballo.style.left = `${xs[k]}px`;
+      caballo.style.top = `${yEje}px`;
+      tarjetas.forEach((t, i) => t.classList.toggle("activa", i === k));
+      puntos.forEach((p, i) => p.classList.toggle("activo", i === k));
+      svg.querySelectorAll("path").forEach((p) => p.classList.toggle("activa", p.dataset.k === String(k)));
+      botonesAnio.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.ir === datos[k].anio)));
     }
+    let pendiente = false;
+    pista.addEventListener(
+      "scroll",
+      () => {
+        if (pendiente) return;
+        pendiente = true;
+        requestAnimationFrame(() => {
+          pendiente = false;
+          moverCaballo();
+        });
+      },
+      { passive: true },
+    );
 
-    // ---- Seguir a un campeón por todos los años
+    // ---- Navegación
+    const irA = (k: number, suave = true) => {
+      k = Math.max(0, Math.min(datos.length - 1, k));
+      pista.scrollTo({ left: xs[k] - pista.clientWidth / 2, behavior: suave ? "smooth" : "auto" });
+    };
+    botonesAnio.forEach((b) =>
+      b.addEventListener("click", () => {
+        detener();
+        irA(datos.findIndex((e) => e.anio === b.dataset.ir));
+      }),
+    );
+    raiz.querySelectorAll<HTMLElement>("[data-paso]").forEach((b) =>
+      b.addEventListener("click", () => {
+        detener();
+        irA(centroVisible() + Number(b.dataset.paso));
+      }),
+    );
+
+    // Recorrer la historia: de 2022 a hoy, torneo por torneo
+    let reloj = 0;
+    function detener() {
+      if (!reloj) return;
+      clearInterval(reloj);
+      reloj = 0;
+      play.setAttribute("aria-pressed", "false");
+      play.innerHTML = '<span aria-hidden="true">▶</span> Recorrer la historia';
+    }
+    play.addEventListener("click", () => {
+      if (reloj) return detener();
+      play.setAttribute("aria-pressed", "true");
+      play.innerHTML = '<span aria-hidden="true">❚❚</span> Pausar';
+      let k = centroVisible() >= datos.length - 1 ? 0 : centroVisible();
+      irA(k);
+      reloj = window.setInterval(() => {
+        k += 1;
+        if (k >= datos.length) return detener();
+        irA(k);
+      }, 1700);
+    });
+
+    // Arrastrar con el mouse (en celular ya se desliza con el dedo)
+    let arrastre: { x: number; s: number } | null = null;
+    pista.addEventListener("pointerdown", (ev) => {
+      if ((ev.target as HTMLElement).closest("button, a")) return;
+      detener();
+      if (ev.pointerType !== "mouse") return;
+      arrastre = { x: ev.clientX, s: pista.scrollLeft };
+      pista.classList.add("arrastrando");
+    });
+    window.addEventListener("pointermove", (ev) => {
+      if (arrastre) pista.scrollLeft = arrastre.s - (ev.clientX - arrastre.x);
+    });
+    window.addEventListener("pointerup", () => {
+      if (!arrastre) return;
+      arrastre = null;
+      pista.classList.remove("arrastrando");
+    });
+
+    // ---- Seguir a un campeón por toda la historia
+    let nombre = "";
     function seguir(n: string) {
       nombre = nombre === n ? "" : n;
-      const porAnio = datos.map((a) => a.eventos.reduce((s, e) => s + e.campeones.filter((c) => c.nombre === nombre).length, 0));
-      nodosAnio.forEach((b, i) => {
-        const cuenta = b.querySelector<HTMLElement>(".anio-cuenta")!;
-        cuenta.textContent = nombre && porAnio[i] ? `♛︎ ${porAnio[i]}` : "";
-        b.classList.toggle("con-titulos", !!nombre && porAnio[i] > 0);
+      let total = 0;
+      const anios = new Set<string>();
+      tarjetas.forEach((t, k) => {
+        const suyos = datos[k].campeones.filter((c) => c.nombre === nombre).length;
+        total += suyos;
+        if (suyos) anios.add(datos[k].anio);
+        t.classList.toggle("atenuada", !!nombre && !suyos);
+        puntos[k].classList.toggle("con-titulo", !!nombre && suyos > 0);
       });
-      mapa.querySelectorAll<HTMLElement>(".medalla").forEach((m) => m.setAttribute("aria-pressed", String(!!nombre && m.dataset.nombre === nombre)));
+      raiz.querySelectorAll<HTMLElement>(".tl-medalla").forEach((m) => m.setAttribute("aria-pressed", String(!!nombre && m.dataset.nombre === nombre)));
       estado.replaceChildren();
       if (nombre) {
-        const total = porAnio.reduce((a, b) => a + b, 0);
-        const anios = datos.filter((_, i) => porAnio[i] > 0).map((a) => a.anio);
         const quitar = el("button", "quitar", "Dejar de seguir");
         quitar.type = "button";
         quitar.addEventListener("click", () => seguir(nombre));
-        estado.append(`${nombre}: ${plural(total, "título", "títulos")} (${anios.join(", ")}). Los años marcados con ♛ tienen sus títulos. `, quitar);
+        estado.append(`${nombre}: ${plural(total, "título", "títulos")} (${[...anios].join(", ")}). Sus torneos brillan en el eje. `, quitar);
       }
     }
 
-    // ---- Arranque: el mapa se despliega al aparecer en pantalla
-    armarRama();
-    marcar();
-    disponer(false);
-    // Solo se recalcula si cambia el ancho (no mientras la altura se anima).
-    let anchoPrevio = mapa.clientWidth;
+    // ---- Arranque: se abre en lo más reciente; si cambia el ancho, se vuelve a medir
+    disponer();
+    irA(datos.length - 1, false);
+    moverCaballo(true);
+    let anchoPrevio = pista.clientWidth;
     new ResizeObserver(() => {
-      if (angulosAnimando || mapa.clientWidth === anchoPrevio) return;
-      anchoPrevio = mapa.clientWidth;
-      disponer(false);
-    }).observe(mapa);
-    const obs = new IntersectionObserver(
-      (en) => {
-        if (en.some((x) => x.isIntersecting)) {
-          obs.disconnect();
-          mapa.classList.add("despliega");
-          elegir(0, true);
-        }
-      },
-      { threshold: 0.2 },
-    );
-    obs.observe(mapa);
+      if (pista.clientWidth === anchoPrevio) return;
+      anchoPrevio = pista.clientWidth;
+      const k = centroVisible();
+      disponer();
+      irA(k, false);
+    }).observe(pista);
+    // Al aparecer en pantalla, las ramas se dibujan
+    const obs = new IntersectionObserver((en) => {
+      if (en.some((x) => x.isIntersecting)) {
+        obs.disconnect();
+        pista.classList.add("dibuja");
+      }
+    });
+    obs.observe(pista);
   }
 </script>
 
@@ -387,10 +374,77 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
   .historia-cabeza {
     max-width: 760px;
   }
-  .ayuda-mapa {
-    margin: 4px 0 0;
-    font-size: 0.9rem;
-    color: var(--suave);
+
+  /* ---------- Controles ---------- */
+  .tl-controles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 18px 0 0;
+  }
+  .tl-anios {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 5px;
+    border-radius: 14px;
+    background: var(--a);
+  }
+  .tl-anios button {
+    min-height: 44px;
+    min-width: 60px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #eadfd1;
+    font: inherit;
+    font-weight: 700;
+    font-stretch: 88%;
+    cursor: pointer;
+    transition:
+      background-color 0.25s,
+      color 0.25s;
+  }
+  .tl-anios button:hover {
+    color: #fff;
+    background: rgb(255 255 255 / 0.08);
+  }
+  .tl-anios button[aria-pressed="true"] {
+    background: var(--b);
+    color: var(--a);
+  }
+  .tl-navegar {
+    display: inline-flex;
+    gap: 8px;
+  }
+  .tl-flecha,
+  .tl-play {
+    min-height: 44px;
+    border-radius: 999px;
+    border: 1.5px solid var(--linea);
+    background: var(--papel);
+    font: inherit;
+    font-weight: 700;
+    color: var(--tinta);
+    cursor: pointer;
+  }
+  .tl-flecha {
+    width: 44px;
+    font-size: 1.1rem;
+  }
+  .tl-play {
+    padding: 0 18px;
+    background: var(--b);
+    border-color: var(--b);
+    color: var(--a);
+  }
+  .tl-play[aria-pressed="true"] {
+    background: var(--a);
+    border-color: var(--a);
+    color: #fff;
   }
   .estado:empty {
     display: none;
@@ -419,221 +473,209 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     cursor: pointer;
   }
 
-  /* ---------- Lienzo ---------- */
-  .mapa {
+  /* ---------- Pista con desplazamiento horizontal ---------- */
+  .tl-pista {
     position: relative;
-    margin-top: 18px;
-    min-height: 560px;
+    margin: 16px 0 0;
+    overflow-x: auto;
+    overflow-y: hidden;
     border-radius: 24px;
-    overflow: hidden;
-    background:
-      radial-gradient(circle at 26% 50%, rgb(242 138 30 / 0.14), transparent 45%),
-      conic-gradient(rgb(166 75 8 / 0.045) 25%, transparent 0 50%, rgb(166 75 8 / 0.045) 0 75%, transparent 0) 0 0 / 48px 48px,
-      #fffaf4;
     border: 1px solid var(--linea);
-    transition: height 0.4s;
+    background:
+      conic-gradient(rgb(166 75 8 / 0.04) 25%, transparent 0 50%, rgb(166 75 8 / 0.04) 0 75%, transparent 0) 0 0 / 48px 48px,
+      #fffaf4;
+    cursor: grab;
+    scrollbar-width: thin;
+    scrollbar-color: var(--b) transparent;
+    overscroll-behavior-x: contain;
   }
-  .lineas {
+  .tl-pista.arrastrando {
+    cursor: grabbing;
+    user-select: none;
+  }
+  .tl-pista:focus-visible {
+    outline: 3px solid var(--b);
+    outline-offset: 3px;
+  }
+  .tl-lienzo {
+    position: relative;
+  }
+  .tl-pista-ayuda {
+    margin: 8px 0 0;
+    font-size: 0.86rem;
+    color: var(--suave);
+  }
+
+  /* Eje: una fila de casillas de tablero */
+  .tl-eje {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 14px;
+    background: repeating-linear-gradient(90deg, var(--a) 0 14px, var(--b) 14px 28px);
+  }
+  .tl-ramas {
     position: absolute;
     inset: 0;
     pointer-events: none;
   }
-  .lineas :global(path) {
+  .tl-ramas :global(path) {
     fill: none;
-    transition: stroke-dashoffset 0.7s cubic-bezier(0.3, 0.7, 0.2, 1);
-  }
-  .lineas :global(.linea-anio) {
-    stroke: rgb(26 23 20 / 0.22);
-    stroke-width: 2;
-    stroke-dasharray: 3 7;
-  }
-  .lineas :global(.linea-anio.activa) {
-    stroke: var(--b);
-    stroke-width: 4;
-    stroke-dasharray: none;
-  }
-  .lineas :global(.linea-rama) {
-    stroke: var(--b);
+    stroke: rgb(242 138 30 / 0.55);
     stroke-width: 3;
     stroke-linecap: round;
+    stroke-dasharray: 600;
+    stroke-dashoffset: 600;
+    transition:
+      stroke-dashoffset 1.1s cubic-bezier(0.3, 0.7, 0.2, 1),
+      stroke 0.3s,
+      stroke-width 0.3s;
+  }
+  .tl-pista.dibuja .tl-ramas :global(path) {
+    stroke-dashoffset: 0;
+  }
+  .tl-ramas :global(path.activa) {
+    stroke: var(--b);
+    stroke-width: 4;
   }
 
-  .nodo {
+  /* Puntos del eje y años */
+  .tl-lienzo :global(.tl-punto) {
     position: absolute;
-    z-index: 1;
-  }
-  .mapa :global(.nodo) {
-    position: absolute;
-    z-index: 1;
-  }
-
-  /* El club al centro, flotando */
-  .raiz {
-    display: grid;
-    justify-items: center;
-    gap: 8px;
-    width: 128px;
     z-index: 2;
-    animation: flota-raiz 5s ease-in-out infinite;
-  }
-  .raiz-medalla {
-    display: block;
-    width: 110px;
-    height: 110px;
-    padding: 14px;
+    width: 18px;
+    height: 18px;
+    margin: -9px 0 0 -9px;
     border-radius: 50%;
     background: #fff;
-    box-shadow:
-      0 0 0 6px var(--b),
-      0 0 0 18px rgb(242 138 30 / 0.16),
-      0 18px 34px rgb(90 42 6 / 0.25);
-  }
-  .raiz-texto {
-    display: grid;
-    justify-items: center;
-    line-height: 1.1;
-  }
-  .raiz-texto strong {
-    font-family: var(--titulo);
-    font-stretch: 72%;
-    font-weight: 900;
-    font-size: 1.3rem;
-    text-transform: uppercase;
-    color: #a64b08;
-  }
-  .raiz-texto span {
-    font-size: 0.78rem;
-    font-weight: 650;
-    color: var(--suave);
-  }
-  @media (max-width: 819px) {
-    .raiz-medalla {
-      width: 84px;
-      height: 84px;
-      padding: 10px;
-    }
-  }
-  @keyframes flota-raiz {
-    50% {
-      translate: 0 -6px;
-    }
-  }
-
-  /* Años: fichas que orbitan */
-  .mapa :global(.anio) {
-    display: grid;
-    justify-items: center;
-    gap: 2px;
-    width: 96px;
-    min-height: 60px;
-    padding: 8px 6px;
-    border: 0;
-    border-radius: 16px;
-    background: var(--a);
-    color: #eadfd1;
-    font: inherit;
-    cursor: pointer;
-    box-shadow: 0 8px 20px rgb(26 23 20 / 0.22);
+    border: 4px solid var(--a);
     transition:
-      background-color 0.25s,
-      box-shadow 0.25s,
-      scale 0.25s;
+      transform 0.3s,
+      border-color 0.3s;
   }
-  .mapa :global(.anio:hover) {
-    scale: 1.06;
+  .tl-lienzo :global(.tl-punto.activo) {
+    border-color: var(--b);
+    transform: scale(1.35);
   }
-  .mapa :global(.anio[aria-pressed="true"]) {
+  .tl-lienzo :global(.tl-punto.con-titulo) {
     background: var(--b);
-    color: var(--a);
-    box-shadow:
-      0 0 0 6px rgb(242 138 30 / 0.25),
-      0 10px 24px rgb(90 42 6 / 0.3);
+    border-color: var(--a);
+    animation: brilla 1.4s ease-in-out infinite;
   }
-  .mapa :global(.anio-num) {
+  @keyframes brilla {
+    50% {
+      box-shadow: 0 0 0 9px rgb(242 138 30 / 0.3);
+    }
+  }
+  .tl-lienzo :global(.tl-marca-anio) {
+    position: absolute;
+    z-index: 2;
+    translate: -50% -50%;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background: var(--a);
+    color: var(--b);
     font-family: var(--titulo);
     font-stretch: 72%;
     font-weight: 900;
     font-size: 1.6rem;
     line-height: 1;
-    color: var(--b);
+    box-shadow: 0 0 0 5px #fffaf4;
   }
-  .mapa :global(.anio[aria-pressed="true"] .anio-num) {
-    color: var(--a);
-  }
-  .mapa :global(.anio-sub) {
-    font-size: 0.7rem;
-    font-weight: 600;
-  }
-  .mapa :global(.anio-cuenta:empty) {
-    display: none;
-  }
-  .mapa :global(.anio-cuenta) {
+
+  /* El caballo que recorre el eje */
+  .tl-caballo {
     position: absolute;
-    top: -10px;
-    right: -10px;
-    padding: 2px 8px;
-    border-radius: 999px;
+    z-index: 3;
+    width: 58px;
+    height: 58px;
+    margin: -29px 0 0 -29px;
+    padding: 8px;
+    border-radius: 50%;
     background: #fff;
-    color: #a64b08;
-    font-size: 0.78rem;
-    font-weight: 800;
-    box-shadow: 0 4px 10px rgb(0 0 0 / 0.2);
+    box-shadow:
+      0 0 0 4px var(--b),
+      0 10px 22px rgb(90 42 6 / 0.3);
+    transition:
+      left 0.55s cubic-bezier(0.3, 0.7, 0.2, 1),
+      top 0.55s;
+    pointer-events: none;
   }
-  .mapa :global(.anio.con-titulos) {
-    animation: late 1.6s ease-in-out infinite;
+  .tl-caballo :global(svg) {
+    display: block;
+    animation: salta 1.8s ease-in-out infinite;
   }
-  @keyframes late {
+  @keyframes salta {
     50% {
-      box-shadow:
-        0 0 0 8px rgb(242 138 30 / 0.35),
-        0 8px 20px rgb(26 23 20 / 0.22);
+      translate: 0 -3px;
     }
   }
 
-  /* Torneos: tarjetas que brotan del año */
-  .mapa :global(.torneo) {
-    padding: 14px 16px 6px;
+  /* Tarjetas */
+  .tl-lienzo :global(.tl-lista) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .tl-lienzo :global(.tl-tarjeta) {
+    position: absolute;
+    z-index: 1;
+    padding: 12px 14px 4px;
     border-radius: 16px;
     background: #fff;
     border: 1px solid var(--linea);
-    border-left: 5px solid var(--b);
-    box-shadow: 0 10px 24px rgb(90 42 6 / 0.1);
+    box-shadow: 0 8px 20px rgb(90 42 6 / 0.08);
+    transition:
+      transform 0.35s cubic-bezier(0.3, 0.7, 0.2, 1),
+      box-shadow 0.35s,
+      opacity 0.3s;
   }
-  .mapa.brota :global(.torneo) {
-    animation: brota 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-    animation-delay: calc(var(--espera, 0ms) + var(--k) * 70ms + 120ms);
+  .tl-lienzo :global(.tl-tarjeta.arriba) {
+    border-bottom: 4px solid var(--b);
   }
-  @keyframes brota {
-    from {
-      opacity: 0;
-      translate: -40px 0;
-      scale: 0.9;
-    }
+  .tl-lienzo :global(.tl-tarjeta.abajo) {
+    border-top: 4px solid var(--b);
   }
-  .mapa :global(.torneo.hito) {
+  .tl-lienzo :global(.tl-tarjeta.activa) {
+    box-shadow:
+      0 0 0 3px var(--b),
+      0 16px 30px rgb(90 42 6 / 0.2);
+  }
+  .tl-lienzo :global(.tl-tarjeta.arriba.activa) {
+    transform: translateY(-6px);
+  }
+  .tl-lienzo :global(.tl-tarjeta.abajo.activa) {
+    transform: translateY(6px);
+  }
+  /* Tarjetas sin el campeón seguido: en gris (sin bajar el contraste del texto) */
+  .tl-lienzo :global(.tl-tarjeta.atenuada) {
+    filter: grayscale(1);
+    box-shadow: none;
+    border-style: dashed;
+  }
+  .tl-lienzo :global(.tl-tarjeta.hito) {
     background: var(--a);
     border-color: var(--a);
-    border-left-color: var(--b);
     color: #fff;
   }
-  .mapa :global(.torneo-cabeza) {
+  .tl-lienzo :global(.tl-cabeza) {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
   }
-  .mapa :global(.cuando) {
-    font-size: 0.74rem;
+  .tl-lienzo :global(.tl-cuando) {
+    font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
     color: var(--suave);
   }
-  .mapa :global(.hito .cuando) {
+  .tl-lienzo :global(.hito .tl-cuando) {
     color: #eadfd1;
   }
-  .mapa :global(.sello) {
-    font-size: 0.68rem;
+  .tl-lienzo :global(.tl-sello) {
+    font-size: 0.66rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -642,31 +684,31 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     background: #fde7d1;
     color: #7a3606;
   }
-  .mapa :global(.torneo h4) {
+  .tl-lienzo :global(.tl-tarjeta h4) {
     font-family: var(--titulo);
     font-stretch: var(--angosto);
     font-weight: 800;
-    font-size: 1.18rem;
+    font-size: 1.12rem;
     line-height: 1.1;
-    margin: 4px 0 10px;
+    margin: 3px 0 8px;
   }
-  .mapa :global(.hito h4) {
+  .tl-lienzo :global(.hito h4) {
     color: #fff;
   }
-  .mapa :global(.medallas) {
+  .tl-lienzo :global(.tl-medallas) {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
   }
-  .mapa :global(.medalla) {
+  .tl-lienzo :global(.tl-medalla) {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     min-height: 44px;
-    padding: 4px 12px 4px 4px;
+    padding: 3px 10px 3px 4px;
     border-radius: 999px;
     border: 1px solid #f7c08a;
     background: #fff4e8;
@@ -676,85 +718,64 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     cursor: pointer;
     transition:
       background-color 0.2s,
-      color 0.2s,
-      scale 0.2s;
+      color 0.2s;
   }
-  .mapa :global(.medalla:hover) {
-    scale: 1.04;
-  }
-  .mapa :global(.medalla[aria-pressed="true"]) {
+  .tl-lienzo :global(.tl-medalla[aria-pressed="true"]) {
     background: var(--a);
     border-color: var(--a);
     color: #fff;
   }
-  .mapa :global(.corona) {
+  .tl-lienzo :global(.tl-corona) {
     display: grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #ffc27a, var(--b) 60%, #c9660d);
     font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", serif;
     color: var(--a);
   }
-  .mapa :global(.medalla-texto) {
+  .tl-lienzo :global(.tl-medalla-texto) {
     display: grid;
     line-height: 1.1;
   }
-  .mapa :global(.medalla-nombre) {
+  .tl-lienzo :global(.tl-nombre) {
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
   }
-  .mapa :global(.medalla-cat) {
-    font-size: 0.74rem;
+  .tl-lienzo :global(.tl-cat) {
+    font-size: 0.72rem;
     font-weight: 600;
     color: var(--suave);
   }
-  .mapa :global(.medalla[aria-pressed="true"] .medalla-cat) {
+  .tl-lienzo :global(.tl-medalla[aria-pressed="true"] .tl-cat) {
     color: #f7c08a;
   }
-  .mapa :global(.fuente) {
+  .tl-lienzo :global(.tl-fuente) {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    font-size: 0.86rem;
+    font-size: 0.84rem;
     font-weight: 650;
   }
-  .mapa :global(.hito .fuente) {
+  .tl-lienzo :global(.hito .tl-fuente) {
     color: #f7a54a;
   }
 
-  /* Al aparecer: los años salen del centro */
-  .mapa.despliega :global(.anio) {
-    animation: sale 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  }
-  @keyframes sale {
-    from {
-      opacity: 0;
-      scale: 0.4;
-    }
-  }
-
   /* ---------- Sin JavaScript: lista ---------- */
-  .con-mapa .lista-historia {
+  .con-linea .lista-historia {
     display: none;
   }
   .lista-historia {
     margin: 18px 0 0;
-    padding-left: 18px;
+    padding-left: 20px;
   }
-  .lista-historia h3 {
-    margin: 14px 0 4px;
-  }
-  .lista-historia ul {
-    padding-left: 18px;
-  }
-  .lista-historia li li {
-    margin-bottom: 4px;
+  .lista-historia li {
+    margin-bottom: 6px;
   }
 
   .pendiente {
-    margin: 26px 0 0;
+    margin: 24px 0 0;
     padding: 12px 16px;
     border: 1px dashed #f7c08a;
     border-radius: 12px;

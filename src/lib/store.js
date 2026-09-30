@@ -9,7 +9,7 @@
 
 import contenidoBase from "../data/contenido.json";
 import { CATEGORIAS } from "./categorias.js";
-import { enlaceContacto } from "./contacto.js";
+import { enlaceContacto, numeroWhatsapp } from "./contacto.js";
 import { hayBaseDeDatos } from "./backend.js";
 import personalDemo from "../data/personal-demo.json";
 
@@ -140,6 +140,11 @@ export function pintarCampos(raiz = document) {
       : "Hola, quisiera información sobre las clases de ajedrez.";
   }
   const wa = contenido("whatsapp");
+  // Botón flotante de WhatsApp: con número, abre el chat directo.
+  const numero = numeroWhatsapp(wa);
+  for (const a of raiz.querySelectorAll("[data-wsp]")) {
+    if (numero) a.href = `https://wa.me/${numero}?text=${encodeURIComponent(a.dataset.mensaje ?? "")}`;
+  }
   for (const a of raiz.querySelectorAll("[data-contacto]")) {
     const e = enlaceContacto({ correo: contenido("correo"), whatsapp: wa }, a.dataset.mensaje, a.dataset.accion);
     a.href = e.href;

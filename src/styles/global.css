@@ -301,11 +301,10 @@ main:focus {
   border-bottom: 0;
   color: #111;
 }
-.cabecera .cta-cabecera,
 .acceso-cabecera {
   display: none;
 }
-/* Iniciar sesión: enlace discreto en la cabecera, junto al botón de contacto */
+/* Iniciar sesión: enlace discreto al final de la cabecera */
 .acceso-cabecera {
   align-items: center;
   gap: 6px;
@@ -335,9 +334,6 @@ main:focus {
   .menu-movil,
   .menu-movil.abierto {
     display: none;
-  }
-  .cabecera .cta-cabecera {
-    display: inline-flex;
   }
 }
 
@@ -396,15 +392,6 @@ main:focus {
   min-height: 44px;
   padding: 0 16px;
   font-size: 0.92rem;
-}
-/* El botón de la cabecera es oscuro: el naranja queda para la acción principal de cada pantalla. */
-.cabecera .cta-cabecera {
-  background: var(--tinta);
-  color: var(--fondo);
-}
-.cabecera .cta-cabecera:hover {
-  background: color-mix(in srgb, var(--tinta) 85%, var(--oro));
-  color: var(--fondo);
 }
 .boton[disabled],
 .boton[aria-disabled="true"] {
@@ -826,6 +813,59 @@ textarea[aria-invalid="true"] {
 .boton-contacto:not([data-tipo="facebook"]) .ico-fb {
   display: none;
 }
+/* ---------- Botón flotante de WhatsApp (único botón flotante de la web) ---------- */
+.wsp {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+.wsp-boton {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border: 0;
+  border-radius: 50%;
+  background: #1f8a4c;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.25);
+  transition:
+    transform 0.2s,
+    filter 0.2s;
+}
+.wsp-boton:hover {
+  color: #fff;
+  transform: scale(1.06);
+  filter: brightness(0.95);
+}
+.wsp-boton[hidden] {
+  display: none;
+}
+.wsp-aviso {
+  order: -1;
+  max-width: 260px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--linea);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 0.18);
+  font-size: 0.88rem;
+}
+.wsp-aviso p {
+  margin: 0 0 6px;
+}
+.wsp-aviso a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 650;
+}
+
 /* Enlace de contacto en texto (temas secundarios): sin ícono, con área táctil de 44 px */
 .enlace-contacto {
   display: inline-flex;
