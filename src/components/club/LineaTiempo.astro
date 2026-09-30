@@ -1,9 +1,11 @@
 ---
-// «Nuestra historia»: los campeones de los torneos PRESENCIALES del club, año por año.
+// «Nuestra historia» como MAPA MENTAL: el club al centro, los años orbitando y, al tocar un año,
+// sus torneos brotan como ramas con los campeones en medallas. En celular, un árbol vertical.
 // Datos en src/data/historia.json (clasificaciones públicas de Chess-Results, con su enlace).
 // De cada campeón solo el nombre y la inicial del apellido; si una familia lo pide, va a «ocultar».
-// El eje es una columna de casillas de tablero; los torneos se alternan a cada lado.
+// Sin JavaScript se ve la lista simple de abajo.
 import historia from "../../data/historia.json";
+import Caballo from "../Caballo.astro";
 import { esProduccion } from "../../lib/contenido.js";
 import { LEMA } from "../../lib/club.js";
 
@@ -16,75 +18,59 @@ const anios = [...new Set(eventos.map((e) => e.fecha.slice(0, 4)))].sort().rever
 const delAnio = (a: string) => eventos.filter((e) => e.fecha.startsWith(a)).sort((x, y) => y.fecha.localeCompare(x.fecha));
 const mes = (e: Evento) => e.fecha_texto.replace(/ de \d{4}$/, "");
 const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
-// IRT = torneo válido para el rating FIDE.
-const conRating = (e: Evento) => /\bIRT\b|FIDE/.test(e.torneo);
-const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
+const conRating = (e: Evento) => /\bIRT\b|FIDE/.test(e.torneo); // IRT = válido para el rating FIDE
+const titulos = historia.torneos.reduce((n, e) => n + e.campeones.length, 0);
+
+// Datos para el mapa (el navegador los dibuja).
+const datos = anios.map((a) => ({
+  anio: a,
+  eventos: delAnio(a).map((e) => ({
+    mes: mes(e),
+    torneo: e.torneo,
+    rating: conRating(e),
+    fuente: e.fuentes[0] ?? null,
+    fide: (e.fuentes[0] ?? "").includes("fide.com"),
+    campeones: e.campeones.map((c) => ({ nombre: ocultos.has(c.nombre) ? null : c.nombre, categoria: c.categoria })),
+  })),
+}));
+const json = JSON.stringify(datos).replace(/</g, "\\u003c");
 ---
 
-<div class="linea" data-linea>
-  <div class="linea-cabeza">
+<div class="historia" data-historia>
+  <div class="historia-cabeza">
     <p class="antetitulo">Nuestra historia</p>
     <h2>{LEMA}</h2>
     <p class="bajada">Desde {primero}, los campeones de los torneos presenciales del club.</p>
-  </div>
-
-  <!-- Controles (solo con JavaScript; sin él se ve la historia completa) -->
-  <div class="controles" data-controles hidden>
-    <div class="filtro" role="group" aria-label="Filtrar por año">
-      <button type="button" data-filtro="" aria-pressed="true">Todos</button>
-      {anios.map((a) => (
-        <button type="button" data-filtro={a} aria-pressed="false">{a}</button>
-      ))}
-    </div>
-    <p class="ayuda-linea">Toca un año para filtrar, o un campeón para ver todos sus títulos.</p>
+    <p class="ayuda-mapa" data-solo-mapa hidden>Toca un año para abrir su rama. Toca un campeón para seguir todos sus títulos.</p>
     <p class="estado" data-estado aria-live="polite"></p>
   </div>
 
-  <ol class="anios">
-    {anios.map((a) => {
-      const lista = delAnio(a);
-      const titulos = lista.reduce((n, e) => n + e.campeones.length, 0);
-      return (
-        <li class="anio" data-anio={a}>
-          <h3 class="anio-marca">
-            <span class="anio-num">{a}</span>
-            <span class="anio-resumen">{plural(lista.length, "torneo", "torneos")}{titulos > 0 && ` · ${plural(titulos, "título", "títulos")}`}</span>
-          </h3>
-          <ol class="eventos">
-            {lista.map((e) => (
-              <li class:list={["evento", { hito: e.campeones.length === 0 }]}>
-                <div class="evento-cabeza">
-                  <span class="cuando">{mes(e)}</span>
-                  {conRating(e) && <span class="sello">Rating FIDE</span>}
-                </div>
-                <h4>{e.torneo}</h4>
-                {e.campeones.length > 0 && (
-                  <ul class:list={["campeones", { muchos: e.campeones.length > 2 }]}>
-                    {e.campeones.map((c) => (
-                      <li>
-                        <button type="button" class="campeon" data-nombre={ocultos.has(c.nombre) ? "" : c.nombre} aria-pressed="false" disabled={ocultos.has(c.nombre)}>
-                          <span class="medalla" aria-hidden="true">♛&#xfe0e;</span>
-                          <span class="campeon-texto">
-                            <span class="nombre">{ocultos.has(c.nombre) ? "Campeón" : c.nombre}</span>
-                            {c.categoria && <span class="categoria">{c.categoria}</span>}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {e.fuentes[0] && (
-                  <a class="fuente" href={e.fuentes[0]} rel="noopener" target="_blank">
-                    {e.fuentes[0].includes("fide.com") ? "Informe FIDE" : "Ver resultados"} <span aria-hidden="true">→</span>
-                    <span class="visually-hidden"> de {e.torneo}</span>
-                  </a>
-                )}
-              </li>
-            ))}
-          </ol>
-        </li>
-      );
-    })}
+  <!-- Mapa mental (lo arma el navegador) -->
+  <div class="mapa" data-mapa role="region" aria-label="Mapa de campeones por año" hidden>
+    <svg class="lineas" aria-hidden="true"></svg>
+    <div class="nodo raiz">
+      <span class="raiz-medalla"><Caballo tam="100%" /></span>
+      <span class="raiz-texto"><strong>Mokewa</strong><span>{titulos} títulos</span></span>
+    </div>
+  </div>
+  <script type="application/json" data-datos-historia set:html={json} />
+
+  <!-- Sin JavaScript: la misma historia en lista -->
+  <ol class="lista-historia" data-lista>
+    {datos.map((a) => (
+      <li>
+        <h3>{a.anio}</h3>
+        <ul>
+          {a.eventos.map((e) => (
+            <li>
+              <strong>{e.torneo}</strong> <span class="suave">({e.mes})</span>
+              {e.campeones.length > 0 && <>: {e.campeones.map((c) => `${c.categoria ? c.categoria + " " : ""}${c.nombre ?? "Campeón"}`).join(" · ")}</>}
+              {e.fuente && <> · <a href={e.fuente} rel="noopener" target="_blank">{e.fide ? "Informe FIDE" : "Resultados"}</a></>}
+            </li>
+          ))}
+        </ul>
+      </li>
+    ))}
   </ol>
 
   {!esProduccion && (
@@ -98,122 +84,319 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
 </div>
 
 <script>
-  // Interacción: filtro por año, resaltado de todos los títulos de un campeón y aparición al hacer scroll.
-  const raiz = document.querySelector<HTMLElement>("[data-linea]");
-  if (raiz) {
-    const controles = raiz.querySelector<HTMLElement>("[data-controles]")!;
+  type Campeon = { nombre: string | null; categoria: string | null };
+  type Ev = { mes: string; torneo: string; rating: boolean; fuente: string | null; fide: boolean; campeones: Campeon[] };
+  type Anio = { anio: string; eventos: Ev[] };
+
+  const raiz = document.querySelector<HTMLElement>("[data-historia]");
+  if (raiz) iniciar(raiz);
+
+  function iniciar(raiz: HTMLElement) {
+    const datos: Anio[] = JSON.parse(raiz.querySelector("[data-datos-historia]")!.textContent || "[]");
+    const mapa = raiz.querySelector<HTMLElement>("[data-mapa]")!;
+    const svg = mapa.querySelector<SVGSVGElement>(".lineas")!;
+    const nodoRaiz = mapa.querySelector<HTMLElement>(".raiz")!;
     const estado = raiz.querySelector<HTMLElement>("[data-estado]")!;
-    controles.hidden = false;
-    let anio = "";
+    mapa.hidden = false;
+    raiz.querySelector<HTMLElement>("[data-solo-mapa]")!.hidden = false;
+    raiz.classList.add("con-mapa");
+
+    const NS = "http://www.w3.org/2000/svg";
+    const el = <K extends keyof HTMLElementTagNameMap>(tag: K, clase = "", texto = "") => {
+      const e = document.createElement(tag);
+      if (clase) e.className = clase;
+      if (texto) e.textContent = texto;
+      return e;
+    };
+    const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
+
+    // ---- Nodos de año
+    const nodosAnio = datos.map((a, i) => {
+      const b = el("button", "nodo anio");
+      b.type = "button";
+      b.setAttribute("aria-pressed", "false");
+      b.append(el("span", "anio-num", a.anio), el("span", "anio-sub", plural(a.eventos.length, "torneo", "torneos")), el("span", "anio-cuenta"));
+      b.addEventListener("click", () => elegir(i));
+      mapa.append(b);
+      return b;
+    });
+
+    // ---- Estado
+    let sel = 0;
+    let giro = 0; // ángulo actual del anillo (grados)
     let nombre = "";
-    const aplicar = () => {
-      for (const li of raiz.querySelectorAll<HTMLElement>(".anio")) li.hidden = !!anio && li.dataset.anio !== anio;
-      for (const b of raiz.querySelectorAll<HTMLElement>("[data-filtro]")) b.setAttribute("aria-pressed", String(b.dataset.filtro === anio));
-      let titulos = 0;
-      for (const c of raiz.querySelectorAll<HTMLElement>(".campeon")) {
-        const si = !!nombre && c.dataset.nombre === nombre;
-        c.setAttribute("aria-pressed", String(si));
-        if (si) titulos++;
+    let tarjetas: HTMLElement[] = [];
+    let angulosAnimando = false;
+
+    const escritorio = () => mapa.clientWidth >= 820;
+
+    // ---- Rama del año elegido: tarjetas de torneos con medallas de campeones
+    function armarRama() {
+      tarjetas.forEach((t) => t.remove());
+      tarjetas = datos[sel].eventos.map((e, k) => {
+        const t = el("div", `nodo torneo${e.campeones.length ? "" : " hito"}`);
+        t.style.setProperty("--k", String(k));
+        const cabeza = el("div", "torneo-cabeza");
+        cabeza.append(el("span", "cuando", e.mes));
+        if (e.rating) cabeza.append(el("span", "sello", "Rating FIDE"));
+        t.append(cabeza, el("h4", "", e.torneo));
+        if (e.campeones.length) {
+          const ul = el("ul", "medallas");
+          for (const c of e.campeones) {
+            const li = el("li");
+            const b = el("button", "medalla");
+            b.type = "button";
+            b.disabled = !c.nombre;
+            b.dataset.nombre = c.nombre ?? "";
+            b.setAttribute("aria-pressed", String(!!c.nombre && c.nombre === nombre));
+            const texto = el("span", "medalla-texto");
+            texto.append(el("span", "medalla-nombre", c.nombre ?? "Campeón"));
+            if (c.categoria) texto.append(el("span", "medalla-cat", c.categoria));
+            b.append(el("span", "corona", "♛︎"), texto);
+            b.addEventListener("click", () => seguir(c.nombre!));
+            li.append(b);
+            ul.append(li);
+          }
+          t.append(ul);
+        }
+        if (e.fuente) {
+          const a = el("a", "fuente", e.fide ? "Informe FIDE →" : "Ver resultados →");
+          a.href = e.fuente;
+          a.target = "_blank";
+          a.rel = "noopener";
+          a.setAttribute("aria-label", `${e.fide ? "Informe FIDE" : "Resultados"} de ${e.torneo}`);
+          t.append(a);
+        }
+        mapa.append(t);
+        return t;
+      });
+    }
+
+    // ---- Posiciones
+    const colocar = (n: HTMLElement, x: number, y: number) => {
+      n.style.left = `${Math.round(x - n.offsetWidth / 2)}px`;
+      n.style.top = `${Math.round(y - n.offsetHeight / 2)}px`;
+    };
+    const centro = (n: HTMLElement) => ({ x: n.offsetLeft + n.offsetWidth / 2, y: n.offsetTop + n.offsetHeight / 2 });
+    const curva = (x1: number, y1: number, x2: number, y2: number, vertical = false) =>
+      vertical
+        ? `M${x1},${y1} C${x1},${(y1 + y2) / 2} ${x2},${(y1 + y2) / 2} ${x2},${y2}`
+        : `M${x1},${y1} C${(x1 + x2) / 2},${y1} ${(x1 + x2) / 2},${y2} ${x2},${y2}`;
+
+    let geo = { rx: 0, ry: 0, R: 0 };
+    function disponer(animarRama: boolean, conRama = true) {
+      const W = mapa.clientWidth;
+      const n = datos.length;
+      if (escritorio()) {
+        const anchoT = Math.min(300, Math.max(230, W - 560));
+        tarjetas.forEach((t) => (t.style.width = `${anchoT}px`));
+        const alturas = tarjetas.map((t) => t.offsetHeight);
+        const gap = 16;
+        const total = alturas.reduce((a, b) => a + b, 0) + gap * Math.max(0, alturas.length - 1);
+        const H = Math.max(560, total + 90);
+        mapa.style.height = `${H}px`;
+        const R = 150;
+        const rx = Math.max(170, Math.min(W * 0.26, 290));
+        const ry = H / 2;
+        geo = { rx, ry, R };
+        colocar(nodoRaiz, rx, ry);
+        anillo();
+        // Tarjetas en abanico: las del medio más afuera, como una rama que se abre
+        const x0 = rx + R + 120;
+        let y = ry - total / 2;
+        tarjetas.forEach((t, k) => {
+          const m = (tarjetas.length - 1) / 2 || 1;
+          const u = (k - (tarjetas.length - 1) / 2) / m;
+          const dx = 56 * (1 - u * u);
+          t.style.left = `${Math.round(x0 + dx)}px`;
+          t.style.top = `${Math.round(y)}px`;
+          y += alturas[k] + gap;
+        });
+      } else {
+        // Celular: el club arriba, los años en fila y la rama hacia abajo
+        const pad = 16;
+        tarjetas.forEach((t) => (t.style.width = `${W - pad - 44}px`));
+        const yRaiz = nodoRaiz.offsetHeight / 2 + 18;
+        colocar(nodoRaiz, W / 2, yRaiz);
+        const paso = (W - pad * 2) / n;
+        const yAnios = yRaiz + nodoRaiz.offsetHeight / 2 + 58;
+        nodosAnio.forEach((b, i) => {
+          b.style.width = `${Math.max(56, paso - 6)}px`;
+          colocar(b, pad + paso * (i + 0.5), yAnios);
+        });
+        let y = yAnios + 74;
+        tarjetas.forEach((t) => {
+          t.style.left = `${pad + 44 - 4}px`;
+          t.style.top = `${Math.round(y)}px`;
+          y += t.offsetHeight + 14;
+        });
+        mapa.style.height = `${Math.round(y + 10)}px`;
       }
-      for (const ev of raiz.querySelectorAll<HTMLElement>(".evento")) {
-        ev.classList.toggle("atenuado", !!nombre && !ev.querySelector('.campeon[aria-pressed="true"]'));
+      dibujar(animarRama, conRama);
+    }
+
+    // El anillo de años alrededor del club; el elegido queda a la derecha (ángulo 0).
+    function anillo() {
+      if (!escritorio()) return;
+      const { rx, ry, R } = geo;
+      nodosAnio.forEach((b, i) => {
+        const a = ((i * 360) / datos.length - giro) * (Math.PI / 180);
+        colocar(b, rx + R * Math.cos(a), ry + R * Math.sin(a));
+      });
+    }
+
+    // ---- Líneas
+    function dibujar(animarRama: boolean, conRama = true) {
+      const W = mapa.clientWidth;
+      const H = mapa.offsetHeight;
+      svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+      svg.setAttribute("width", String(W));
+      svg.setAttribute("height", String(H));
+      svg.replaceChildren();
+      const c = centro(nodoRaiz);
+      const vertical = !escritorio();
+      nodosAnio.forEach((b, i) => {
+        const p = centro(b);
+        const path = document.createElementNS(NS, "path");
+        path.setAttribute("d", vertical ? curva(c.x, c.y + 40, p.x, p.y - b.offsetHeight / 2, true) : `M${c.x},${c.y} L${p.x},${p.y}`);
+        path.setAttribute("class", i === sel ? "linea-anio activa" : "linea-anio");
+        svg.append(path);
+      });
+      if (!conRama) return;
+      const a = nodosAnio[sel];
+      const pa = centro(a);
+      tarjetas.forEach((t, k) => {
+        const path = document.createElementNS(NS, "path");
+        const tx = t.offsetLeft;
+        const ty = t.offsetTop + Math.min(34, t.offsetHeight / 2);
+        path.setAttribute(
+          "d",
+          vertical
+            ? `M${pa.x},${pa.y + a.offsetHeight / 2} C${pa.x},${ty} ${tx - 30},${ty} ${tx},${ty}`
+            : curva(pa.x + a.offsetWidth / 2 - 6, pa.y, tx, ty),
+        );
+        path.setAttribute("class", "linea-rama");
+        svg.append(path);
+        if (animarRama) {
+          const largo = (path as SVGPathElement).getTotalLength();
+          path.style.strokeDasharray = `${largo}`;
+          path.style.strokeDashoffset = `${largo}`;
+          path.style.transitionDelay = `${k * 70}ms`;
+          requestAnimationFrame(() => requestAnimationFrame(() => (path.style.strokeDashoffset = "0")));
+        }
+      });
+    }
+
+    // ---- Elegir un año: el anillo gira y brota la rama
+    function marcar() {
+      nodosAnio.forEach((b, i) => {
+        b.setAttribute("aria-pressed", String(i === sel));
+        b.setAttribute("aria-label", `${datos[i].anio}: ${plural(datos[i].eventos.length, "torneo", "torneos")}${i === sel ? " (abierto)" : ""}`);
+      });
+    }
+    function elegir(i: number, primera = false) {
+      const destino = (i * 360) / datos.length;
+      sel = i;
+      marcar();
+      armarRama();
+      // En escritorio las tarjetas esperan a que el anillo termine de girar
+      mapa.style.setProperty("--espera", escritorio() && !primera ? "560ms" : "0ms");
+      mapa.classList.remove("brota");
+      void mapa.offsetWidth;
+      mapa.classList.add("brota");
+      if (!escritorio() || primera) {
+        giro = destino;
+        disponer(true);
+        return;
       }
+      // Giro por el camino más corto, con suavizado
+      let delta = ((destino - giro + 540) % 360) - 180;
+      const desde = giro;
+      const t0 = performance.now();
+      const dur = 650;
+      angulosAnimando = true;
+      disponer(false, false);
+      const paso = (ahora: number) => {
+        const t = Math.min(1, (ahora - t0) / dur);
+        const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        giro = desde + delta * e;
+        anillo();
+        dibujar(false, false);
+        if (t < 1) requestAnimationFrame(paso);
+        else {
+          angulosAnimando = false;
+          giro = destino;
+          anillo();
+          dibujar(true);
+        }
+      };
+      requestAnimationFrame(paso);
+    }
+
+    // ---- Seguir a un campeón por todos los años
+    function seguir(n: string) {
+      nombre = nombre === n ? "" : n;
+      const porAnio = datos.map((a) => a.eventos.reduce((s, e) => s + e.campeones.filter((c) => c.nombre === nombre).length, 0));
+      nodosAnio.forEach((b, i) => {
+        const cuenta = b.querySelector<HTMLElement>(".anio-cuenta")!;
+        cuenta.textContent = nombre && porAnio[i] ? `♛︎ ${porAnio[i]}` : "";
+        b.classList.toggle("con-titulos", !!nombre && porAnio[i] > 0);
+      });
+      mapa.querySelectorAll<HTMLElement>(".medalla").forEach((m) => m.setAttribute("aria-pressed", String(!!nombre && m.dataset.nombre === nombre)));
       estado.replaceChildren();
       if (nombre) {
-        const quitar = Object.assign(document.createElement("button"), { type: "button", className: "quitar", textContent: "Ver a todos" });
-        quitar.addEventListener("click", () => ((nombre = ""), aplicar()));
-        estado.append(`${nombre}: ${titulos} ${titulos === 1 ? "título" : "títulos"} en los torneos del club. `, quitar);
+        const total = porAnio.reduce((a, b) => a + b, 0);
+        const anios = datos.filter((_, i) => porAnio[i] > 0).map((a) => a.anio);
+        const quitar = el("button", "quitar", "Dejar de seguir");
+        quitar.type = "button";
+        quitar.addEventListener("click", () => seguir(nombre));
+        estado.append(`${nombre}: ${plural(total, "título", "títulos")} (${anios.join(", ")}). Los años marcados con ♛ tienen sus títulos. `, quitar);
       }
-    };
-    raiz.addEventListener("click", (e) => {
-      const t = e.target as HTMLElement;
-      const filtro = t.closest<HTMLElement>("[data-filtro]");
-      if (filtro) {
-        anio = filtro.dataset.filtro ?? "";
-        return aplicar();
-      }
-      const c = t.closest<HTMLElement>(".campeon");
-      if (c?.dataset.nombre) {
-        nombre = nombre === c.dataset.nombre ? "" : c.dataset.nombre;
-        if (nombre) anio = ""; // para ver todos sus títulos, en todos los años
-        aplicar();
-      }
-    });
-    // Cada tarjeta entra con un fundido al aparecer en pantalla (movimiento corto; se ve para todos).
-    if ("IntersectionObserver" in window) {
-      raiz.classList.add("con-entrada");
-      const obs = new IntersectionObserver(
-        (entradas) => {
-          for (const en of entradas) {
-            if (en.isIntersecting) {
-              en.target.classList.add("visto");
-              obs.unobserve(en.target);
-            }
-          }
-        },
-        { rootMargin: "0px 0px -8% 0px" },
-      );
-      raiz.querySelectorAll(".evento, .anio-marca").forEach((el) => obs.observe(el));
     }
+
+    // ---- Arranque: el mapa se despliega al aparecer en pantalla
+    armarRama();
+    marcar();
+    disponer(false);
+    // Solo se recalcula si cambia el ancho (no mientras la altura se anima).
+    let anchoPrevio = mapa.clientWidth;
+    new ResizeObserver(() => {
+      if (angulosAnimando || mapa.clientWidth === anchoPrevio) return;
+      anchoPrevio = mapa.clientWidth;
+      disponer(false);
+    }).observe(mapa);
+    const obs = new IntersectionObserver(
+      (en) => {
+        if (en.some((x) => x.isIntersecting)) {
+          obs.disconnect();
+          mapa.classList.add("despliega");
+          elegir(0, true);
+        }
+      },
+      { threshold: 0.2 },
+    );
+    obs.observe(mapa);
   }
 </script>
 
 <style>
-  .linea {
-    --casilla-a: #1a1714;
-    --casilla-b: #f28a1e;
+  .historia {
+    --a: #1a1714;
+    --b: #f28a1e;
   }
-  .linea-cabeza {
-    max-width: 720px;
-    margin-bottom: 18px;
+  .historia-cabeza {
+    max-width: 760px;
   }
-
-  /* ---------- Selector de años: un marcador oscuro ---------- */
-  .controles {
-    margin-bottom: 30px;
-  }
-  .filtro {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 5px;
-    border-radius: 14px;
-    background: var(--casilla-a);
-    box-shadow: 0 8px 20px rgb(26 23 20 / 0.18);
-  }
-  .filtro button {
-    min-height: 44px;
-    min-width: 64px;
-    padding: 0 16px;
-    border: 0;
-    border-radius: 10px;
-    background: transparent;
-    color: #eadfd1;
-    font: inherit;
-    font-weight: 700;
-    font-stretch: 88%;
-    font-size: 1.02rem;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
-  }
-  .filtro button:hover {
-    background: rgb(255 255 255 / 0.08);
-    color: #fff;
-  }
-  .filtro button[aria-pressed="true"] {
-    background: var(--casilla-b);
-    color: #141211;
-  }
-  .ayuda-linea {
-    margin: 10px 0 0;
-    font-size: 0.86rem;
+  .ayuda-mapa {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
     color: var(--suave);
   }
   .estado:empty {
     display: none;
   }
   .estado {
-    margin: 10px 0 0;
+    margin: 12px 0 0;
     padding: 8px 8px 8px 14px;
     border-radius: 12px;
     background: #fff4e8;
@@ -225,305 +408,360 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
     gap: 4px 10px;
   }
   .estado :global(.quitar) {
-    min-height: 36px;
+    min-height: 40px;
     padding: 0 14px;
     border-radius: 999px;
     border: 0;
-    background: var(--casilla-a);
+    background: var(--a);
     color: #fff;
     font: inherit;
     font-size: 0.86rem;
     cursor: pointer;
   }
 
-  /* ---------- Eje: una columna de casillas de tablero ---------- */
-  .anios {
-    --eje: 14px;
-    --x-eje: 7px;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  /* ---------- Lienzo ---------- */
+  .mapa {
     position: relative;
-    display: grid;
-    gap: 34px;
-  }
-  .anios::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: var(--x-eje);
-    width: var(--eje);
-    margin-left: calc(var(--eje) / -2);
-    border-radius: 3px;
-    background: repeating-linear-gradient(var(--casilla-a) 0 var(--eje), var(--casilla-b) var(--eje) calc(var(--eje) * 2));
-    opacity: 0.9;
-  }
-  .anio {
-    position: relative;
-  }
-
-  /* Ficha del año, sobre el eje */
-  .anio-marca {
-    position: relative;
-    z-index: 1;
-    display: inline-grid;
-    margin: 0 0 16px;
-    padding: 8px 16px 8px 14px;
-    border-radius: 12px;
-    background: var(--casilla-a);
-    box-shadow: 0 0 0 5px var(--fondo), 0 10px 22px rgb(26 23 20 / 0.2);
-    line-height: 1;
-  }
-  .anio-num {
-    font-size: clamp(1.7rem, 4.4vw, 2.3rem);
-    font-weight: 900;
-    font-stretch: 72%;
-    color: var(--casilla-b);
-  }
-  .anio-resumen {
-    margin-top: 4px;
-    font-family: var(--sans);
-    font-stretch: 90%;
-    font-size: 0.74rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: #eadfd1;
-  }
-
-  /* Tarjetas */
-  .eventos {
-    list-style: none;
-    margin: 0;
-    padding: 0 0 0 34px;
-    display: grid;
-    gap: 16px;
-  }
-  .evento {
-    position: relative;
-    background: var(--papel);
+    margin-top: 18px;
+    min-height: 560px;
+    border-radius: 24px;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 26% 50%, rgb(242 138 30 / 0.14), transparent 45%),
+      conic-gradient(rgb(166 75 8 / 0.045) 25%, transparent 0 50%, rgb(166 75 8 / 0.045) 0 75%, transparent 0) 0 0 / 48px 48px,
+      #fffaf4;
     border: 1px solid var(--linea);
-    border-top: 4px solid var(--casilla-b);
-    border-radius: 16px;
-    padding: 16px 18px 8px;
-    box-shadow: 0 6px 18px rgb(90 42 6 / 0.08);
-    transition:
-      opacity 0.3s,
-      transform 0.3s,
-      box-shadow 0.2s;
+    transition: height 0.4s;
   }
-  .evento:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 26px rgb(90 42 6 / 0.14);
-  }
-  /* Conector de la tarjeta al eje */
-  .evento::before {
-    content: "";
+  .lineas {
     position: absolute;
-    top: 26px;
-    left: -27px;
-    width: 27px;
-    border-top: 2px dashed rgb(26 23 20 / 0.35);
+    inset: 0;
+    pointer-events: none;
   }
-  .evento.hito {
-    background: var(--casilla-a);
-    border-color: var(--casilla-a);
-    border-top-color: var(--casilla-b);
-    color: #fff;
+  .lineas :global(path) {
+    fill: none;
+    transition: stroke-dashoffset 0.7s cubic-bezier(0.3, 0.7, 0.2, 1);
   }
-  .evento.hito .cuando {
+  .lineas :global(.linea-anio) {
+    stroke: rgb(26 23 20 / 0.22);
+    stroke-width: 2;
+    stroke-dasharray: 3 7;
+  }
+  .lineas :global(.linea-anio.activa) {
+    stroke: var(--b);
+    stroke-width: 4;
+    stroke-dasharray: none;
+  }
+  .lineas :global(.linea-rama) {
+    stroke: var(--b);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+
+  .nodo {
+    position: absolute;
+    z-index: 1;
+  }
+  .mapa :global(.nodo) {
+    position: absolute;
+    z-index: 1;
+  }
+
+  /* El club al centro, flotando */
+  .raiz {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    width: 128px;
+    z-index: 2;
+    animation: flota-raiz 5s ease-in-out infinite;
+  }
+  .raiz-medalla {
+    display: block;
+    width: 110px;
+    height: 110px;
+    padding: 14px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow:
+      0 0 0 6px var(--b),
+      0 0 0 18px rgb(242 138 30 / 0.16),
+      0 18px 34px rgb(90 42 6 / 0.25);
+  }
+  .raiz-texto {
+    display: grid;
+    justify-items: center;
+    line-height: 1.1;
+  }
+  .raiz-texto strong {
+    font-family: var(--titulo);
+    font-stretch: 72%;
+    font-weight: 900;
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    color: #a64b08;
+  }
+  .raiz-texto span {
+    font-size: 0.78rem;
+    font-weight: 650;
+    color: var(--suave);
+  }
+  @media (max-width: 819px) {
+    .raiz-medalla {
+      width: 84px;
+      height: 84px;
+      padding: 10px;
+    }
+  }
+  @keyframes flota-raiz {
+    50% {
+      translate: 0 -6px;
+    }
+  }
+
+  /* Años: fichas que orbitan */
+  .mapa :global(.anio) {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    width: 96px;
+    min-height: 60px;
+    padding: 8px 6px;
+    border: 0;
+    border-radius: 16px;
+    background: var(--a);
     color: #eadfd1;
+    font: inherit;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgb(26 23 20 / 0.22);
+    transition:
+      background-color 0.25s,
+      box-shadow 0.25s,
+      scale 0.25s;
   }
-  .evento.hito h4 {
+  .mapa :global(.anio:hover) {
+    scale: 1.06;
+  }
+  .mapa :global(.anio[aria-pressed="true"]) {
+    background: var(--b);
+    color: var(--a);
+    box-shadow:
+      0 0 0 6px rgb(242 138 30 / 0.25),
+      0 10px 24px rgb(90 42 6 / 0.3);
+  }
+  .mapa :global(.anio-num) {
+    font-family: var(--titulo);
+    font-stretch: 72%;
+    font-weight: 900;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--b);
+  }
+  .mapa :global(.anio[aria-pressed="true"] .anio-num) {
+    color: var(--a);
+  }
+  .mapa :global(.anio-sub) {
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .mapa :global(.anio-cuenta:empty) {
+    display: none;
+  }
+  .mapa :global(.anio-cuenta) {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fff;
+    color: #a64b08;
+    font-size: 0.78rem;
+    font-weight: 800;
+    box-shadow: 0 4px 10px rgb(0 0 0 / 0.2);
+  }
+  .mapa :global(.anio.con-titulos) {
+    animation: late 1.6s ease-in-out infinite;
+  }
+  @keyframes late {
+    50% {
+      box-shadow:
+        0 0 0 8px rgb(242 138 30 / 0.35),
+        0 8px 20px rgb(26 23 20 / 0.22);
+    }
+  }
+
+  /* Torneos: tarjetas que brotan del año */
+  .mapa :global(.torneo) {
+    padding: 14px 16px 6px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid var(--linea);
+    border-left: 5px solid var(--b);
+    box-shadow: 0 10px 24px rgb(90 42 6 / 0.1);
+  }
+  .mapa.brota :global(.torneo) {
+    animation: brota 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--espera, 0ms) + var(--k) * 70ms + 120ms);
+  }
+  @keyframes brota {
+    from {
+      opacity: 0;
+      translate: -40px 0;
+      scale: 0.9;
+    }
+  }
+  .mapa :global(.torneo.hito) {
+    background: var(--a);
+    border-color: var(--a);
+    border-left-color: var(--b);
     color: #fff;
   }
-  .evento.hito .fuente {
-    color: #f7a54a;
-  }
-  .evento-cabeza {
+  .mapa :global(.torneo-cabeza) {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     gap: 8px;
   }
-  .cuando {
-    font-size: 0.76rem;
+  .mapa :global(.cuando) {
+    font-size: 0.74rem;
     font-weight: 700;
-    font-stretch: 88%;
     letter-spacing: 0.07em;
     text-transform: uppercase;
     color: var(--suave);
   }
-  .sello {
-    font-size: 0.7rem;
+  .mapa :global(.hito .cuando) {
+    color: #eadfd1;
+  }
+  .mapa :global(.sello) {
+    font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    padding: 3px 8px;
+    padding: 2px 7px;
     border-radius: 6px;
     background: #fde7d1;
     color: #7a3606;
   }
-  h4 {
+  .mapa :global(.torneo h4) {
     font-family: var(--titulo);
     font-stretch: var(--angosto);
     font-weight: 800;
-    font-size: 1.3rem;
+    font-size: 1.18rem;
     line-height: 1.1;
-    margin: 4px 0 12px;
+    margin: 4px 0 10px;
   }
-
-  /* Campeones: medallas con corona */
-  .campeones {
+  .mapa :global(.hito h4) {
+    color: #fff;
+  }
+  .mapa :global(.medallas) {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: grid;
-    gap: 8px;
-  }
-  .campeones.muchos {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-  .campeon {
     display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .mapa :global(.medalla) {
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    width: 100%;
-    min-height: 48px;
-    padding: 6px 12px 6px 6px;
-    border-radius: 12px;
+    gap: 8px;
+    min-height: 44px;
+    padding: 4px 12px 4px 4px;
+    border-radius: 999px;
     border: 1px solid #f7c08a;
     background: #fff4e8;
     font: inherit;
     color: var(--tinta);
     text-align: left;
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      scale 0.2s;
   }
-  .campeon:hover {
-    border-color: var(--casilla-b);
+  .mapa :global(.medalla:hover) {
+    scale: 1.04;
   }
-  .medalla {
-    flex: none;
+  .mapa :global(.medalla[aria-pressed="true"]) {
+    background: var(--a);
+    border-color: var(--a);
+    color: #fff;
+  }
+  .mapa :global(.corona) {
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #ffc27a, var(--casilla-b) 60%, #c9660d);
-    box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.15);
+    background: radial-gradient(circle at 35% 30%, #ffc27a, var(--b) 60%, #c9660d);
     font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", serif;
-    font-size: 1.05rem;
-    color: var(--casilla-a);
+    color: var(--a);
   }
-  .campeon-texto {
+  .mapa :global(.medalla-texto) {
     display: grid;
-    line-height: 1.15;
+    line-height: 1.1;
   }
-  .nombre {
+  .mapa :global(.medalla-nombre) {
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
-  .categoria {
-    font-size: 0.78rem;
+  .mapa :global(.medalla-cat) {
+    font-size: 0.74rem;
     font-weight: 600;
     color: var(--suave);
   }
-  .campeon[aria-pressed="true"] {
-    background: var(--casilla-a);
-    border-color: var(--casilla-a);
-    color: #fff;
-  }
-  .campeon[aria-pressed="true"] .categoria {
+  .mapa :global(.medalla[aria-pressed="true"] .medalla-cat) {
     color: #f7c08a;
   }
-  .campeon:disabled {
-    cursor: default;
-  }
-  .fuente {
+  .mapa :global(.fuente) {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
     min-height: 44px;
-    font-size: 0.88rem;
-    font-weight: 600;
+    font-size: 0.86rem;
+    font-weight: 650;
   }
-  .evento.atenuado {
-    opacity: 0.5;
+  .mapa :global(.hito .fuente) {
+    color: #f7a54a;
   }
 
-  /* Entrada al hacer scroll (solo con JavaScript) */
-  .con-entrada .evento:not(.visto),
-  .con-entrada .anio-marca:not(.visto) {
-    opacity: 0;
-    transform: translateY(14px);
+  /* Al aparecer: los años salen del centro */
+  .mapa.despliega :global(.anio) {
+    animation: sale 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
-  .con-entrada .anio-marca {
-    transition:
-      opacity 0.4s,
-      transform 0.4s;
-  }
-  .anio:not([hidden]) {
-    animation: aparece-anio 0.35s ease-out;
-  }
-  @keyframes aparece-anio {
+  @keyframes sale {
     from {
       opacity: 0;
+      scale: 0.4;
     }
   }
 
-  /* ---------- Escritorio: eje al centro y tarjetas alternadas ---------- */
-  @media (min-width: 900px) {
-    .anios {
-      --x-eje: 50%;
-      gap: 40px;
-    }
-    .anio {
-      display: grid;
-      justify-items: center;
-    }
-    .anio-marca {
-      justify-items: center;
-      text-align: center;
-    }
-    .eventos {
-      width: 100%;
-      padding: 0;
-      grid-template-columns: 1fr 1fr;
-      column-gap: 72px;
-      row-gap: 18px;
-      align-items: start;
-    }
-    .evento:nth-child(odd)::before {
-      left: auto;
-      right: -37px;
-      width: 37px;
-    }
-    .evento:nth-child(even)::before {
-      left: -37px;
-      width: 37px;
-    }
-    /* Las tarjetas de la derecha bajan un poco: el recorrido zigzaguea como en un tablero */
-    .evento:nth-child(even) {
-      margin-top: 36px;
-    }
-    .con-entrada .evento:nth-child(odd):not(.visto) {
-      transform: translateX(-18px);
-    }
-    .con-entrada .evento:nth-child(even):not(.visto) {
-      transform: translateX(18px);
-    }
+  /* ---------- Sin JavaScript: lista ---------- */
+  .con-mapa .lista-historia {
+    display: none;
+  }
+  .lista-historia {
+    margin: 18px 0 0;
+    padding-left: 18px;
+  }
+  .lista-historia h3 {
+    margin: 14px 0 4px;
+  }
+  .lista-historia ul {
+    padding-left: 18px;
+  }
+  .lista-historia li li {
+    margin-bottom: 4px;
   }
 
   .pendiente {
-    margin: 30px 0 0;
+    margin: 26px 0 0;
     padding: 12px 16px;
     border: 1px dashed #f7c08a;
     border-radius: 12px;
     color: var(--suave);
   }
   .nota-fuente {
-    margin: 16px 0 0;
+    margin: 14px 0 0;
     font-size: 0.86rem;
     color: var(--suave);
   }
