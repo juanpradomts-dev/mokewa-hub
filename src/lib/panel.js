@@ -4,14 +4,13 @@ import {
   CAMPOS, contenido, guardarContenido, pendientesDeConfirmar, todosLosTorneos, torneosCreados, crearTorneo, borrarTorneo,
   inscripciones, cambiarEstadoPago, suprimirInscripcion, leerVoucher, csvInscritos, noticias, crearNoticia, borrarNoticia,
   resultadosPublicados, publicarResultados, borrarResultados, leerCsvResultados, sembrarDemo, reiniciarDemo, alCambiar,
-  TORNEO_VERANO, hayNube, listo, sesionPanel, entrarPanel, salirPanel, cargarPanel,
+  TORNEO_VERANO, hayNube, listo, sesionPanel, entrarPanel, salirPanel, cargarPanel, ROLES, listaPersonal, darAcceso, quitarAcceso,
 } from "./store.js";
 import { esc } from "./html.js";
 import contenidoBaseCompleto from "../data/contenido.json";
 
 const $ = (id) => document.getElementById(id);
 const base = document.body.dataset.base ?? "";
-const SESION = "mokewa-panel";
 
 // Una acción que va a la base de datos puede fallar (sin internet, sesión vencida): se avisa, no se calla.
 async function conAviso(accion) {
@@ -23,25 +22,22 @@ async function conAviso(accion) {
   }
 }
 
-// ------------------------------------------------------------------ entrada
+// ------------------------------------------------------------------ entrada y rol
+let perfilActual = null;
 async function entrar(perfil) {
-  if (!hayNube) {
-    try {
-      sessionStorage.setItem(SESION, "1");
-    } catch {}
-  }
+  perfilActual = perfil;
   $("puerta").hidden = true;
   $("panel").hidden = false;
-  if (perfil?.nombre) $("saludo").textContent = `Hola, ${perfil.nombre}`;
+  aplicarRol(perfil);
   pintarTodo();
   if (hayNube) {
     await listo();
-    await conAviso(cargarPanel).catch(() => {});
+    // Los contactos y pagos solo los carga el admin (la base de datos igual se los niega al resto).
+    if (perfil.rol === "admin") await conAviso(cargarPanel).catch(() => {});
   } else await sembrarDemo();
   pintarTodo();
 }
-$("entrar")?.addEventListener("click", () => entrar());
-$("acceso")?.addEventListener("submit", async (e) => {
+$("acceso").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = new FormData(e.target);
   const aviso = $("acceso-aviso");
@@ -49,15 +45,21 @@ $("acceso")?.addEventListener("submit", async (e) => {
   try {
     const perfil = await entrarPanel(String(f.get("correo") ?? "").trim(), String(f.get("clave") ?? ""));
     aviso.textContent = "";
+    e.target.reset();
     entrar(perfil);
   } catch (err) {
     aviso.textContent = err.message;
   }
 });
+// Demo: «Usar esta cuenta» llena el formulario con una cuenta de prueba.
+document.querySelectorAll("[data-cuenta]").forEach((b) =>
+  b.addEventListener("click", () => {
+    $("acceso-correo").value = b.dataset.cuenta;
+    $("acceso-clave").value = b.dataset.clave;
+    $("acceso").requestSubmit();
+  }),
+);
 $("salir").addEventListener("click", async () => {
-  try {
-    sessionStorage.removeItem(SESION);
-  } catch {}
   await salirPanel();
   location.reload();
 });
@@ -74,15 +76,25 @@ function abrir(tab, enfocar = false) {
   if (enfocar) tab.focus();
   history.replaceState(null, "", `#${tab.id.slice(2)}`);
 }
-pestanas.forEach((t, i) => {
+const visibles = () => pestanas.filter((t) => !t.hidden);
+pestanas.forEach((t) => {
   t.addEventListener("click", () => abrir(t));
   t.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight") abrir(pestanas[(i + 1) % pestanas.length], true);
-    if (e.key === "ArrowLeft") abrir(pestanas[(i - 1 + pestanas.length) % pestanas.length], true);
+    const v = visibles();
+    const i = v.indexOf(t);
+    if (e.key === "ArrowRight") abrir(v[(i + 1) % v.length], true);
+    if (e.key === "ArrowLeft") abrir(v[(i - 1 + v.length) % v.length], true);
   });
 });
-const inicial = pestanas.find((t) => t.id === `t-${location.hash.slice(1)}`);
-if (inicial) abrir(inicial);
+// Cada rol ve solo sus pestañas (data-roles en panel.astro).
+function aplicarRol(perfil) {
+  $("saludo").textContent = `Hola, ${perfil.nombre}`;
+  $("rol-etiqueta").textContent = ROLES[perfil.rol] ?? perfil.rol;
+  $("rol-texto").textContent = perfil.rol === "admin" ? "Acceso completo" : "Torneos, resultados y noticias";
+  for (const t of pestanas) t.hidden = !t.dataset.roles.split(" ").includes(perfil.rol);
+  const v = visibles();
+  abrir(v.find((t) => t.id === `t-${location.hash.slice(1)}`) ?? v[0]);
+}
 
 // ------------------------------------------------------------------ resumen
 const CINCO = ["horario_basico", "precio_mensual", "sede", "whatsapp"];
@@ -452,8 +464,68 @@ $("reiniciar")?.addEventListener("click", async () => {
   pintarTodo();
 });
 
+// ------------------------------------------------------------------ personal (solo admin)
+async function pintarPersonal() {
+  let lista = [];
+  try {
+    lista = await listaPersonal();
+  } catch (err) {
+    $("personal-aviso").textContent = err.message;
+  }
+  $("personal-lista").innerHTML = lista.length
+    ? `<div class="tabla-envoltura"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th><span class="visually-hidden">Acciones</span></th></tr></thead><tbody>${lista
+        .map((c) => {
+          const yo = c.correo === perfilActual?.correo;
+          return `<tr data-correo="${esc(c.correo)}" data-nombre="${esc(c.nombre)}"><td>${esc(c.nombre)}${yo ? " (tú)" : ""}</td><td>${esc(c.correo)}</td>
+            <td><label class="visually-hidden" for="rol-${esc(c.correo)}">Rol de ${esc(c.nombre)}</label><select id="rol-${esc(c.correo)}" data-cambiar-rol ${yo ? "disabled" : ""}>${Object.entries(ROLES)
+              .map(([k, v]) => `<option value="${k}" ${k === c.rol ? "selected" : ""}>${v}</option>`)
+              .join("")}</select></td>
+            <td>${yo ? "" : `<button class="boton boton-secundario boton-chico peligro" type="button" data-quitar>Quitar acceso</button>`}</td></tr>`;
+        })
+        .join("")}</tbody></table></div>`
+    : `<p class="suave">Aún no hay personal con acceso.</p>`;
+}
+$("personal-lista").addEventListener("change", async (e) => {
+  const sel = e.target.closest("[data-cambiar-rol]");
+  if (!sel) return;
+  const fila = sel.closest("tr");
+  $("personal-aviso").textContent = "";
+  try {
+    await darAcceso({ correo: fila.dataset.correo, nombre: fila.dataset.nombre, rol: sel.value });
+    $("personal-aviso").textContent = `Rol actualizado: ${fila.dataset.nombre} ahora es ${ROLES[sel.value].toLowerCase()}.`;
+  } catch (err) {
+    $("personal-aviso").textContent = err.message;
+  }
+  pintarPersonal();
+});
+$("personal-lista").addEventListener("click", async (e) => {
+  if (!e.target.closest("[data-quitar]")) return;
+  const fila = e.target.closest("tr");
+  if (!confirm(`¿Quitar el acceso al panel a ${fila.dataset.nombre}?`)) return;
+  try {
+    await quitarAcceso(fila.dataset.correo, perfilActual?.correo);
+    $("personal-aviso").textContent = `${fila.dataset.nombre} ya no tiene acceso.`;
+  } catch (err) {
+    $("personal-aviso").textContent = err.message;
+  }
+  pintarPersonal();
+});
+$("form-personal").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  try {
+    await darAcceso({ nombre: f.get("nombre"), correo: f.get("correo"), rol: f.get("rol"), clave: f.get("clave") });
+    $("personal-aviso").textContent = `Listo: ${String(f.get("nombre")).trim()} ya puede iniciar sesión como ${ROLES[f.get("rol")].toLowerCase()}.`;
+    e.target.reset();
+  } catch (err) {
+    $("personal-aviso").textContent = err.message;
+  }
+  pintarPersonal();
+});
+
 // ------------------------------------------------------------------ todo
 function pintarTodo() {
+  if (perfilActual?.rol === "admin") pintarPersonal();
   pintarResumen();
   pintarInscripciones();
   pintarTorneos();
@@ -467,14 +539,6 @@ alCambiar(() => {
 });
 
 // Al recargar con la sesión abierta se entra directo. Va al final: todo lo de arriba ya está definido.
-if (hayNube) {
-  sesionPanel()
-    .then((perfil) => perfil && entrar(perfil))
-    .catch(() => {});
-} else {
-  let dentro = false;
-  try {
-    dentro = sessionStorage.getItem(SESION) === "1";
-  } catch {}
-  if (dentro) entrar();
-}
+sesionPanel()
+  .then((perfil) => perfil && entrar(perfil))
+  .catch(() => {});

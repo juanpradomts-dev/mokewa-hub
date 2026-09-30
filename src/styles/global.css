@@ -579,6 +579,7 @@ span.dato {
 
 /* ---------- Tablas ---------- */
 .tabla-envoltura {
+  position: relative; /* contiene los textos ocultos para lectores de pantalla: no ensanchan la página */
   overflow-x: auto;
   border: 1px solid var(--linea);
   border-radius: var(--radio);
@@ -630,6 +631,7 @@ th.num {
 }
 input[type="text"],
 input[type="email"],
+input[type="password"],
 input[type="tel"],
 input[type="date"],
 input[type="number"],

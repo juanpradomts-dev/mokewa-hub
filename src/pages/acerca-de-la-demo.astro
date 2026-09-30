@@ -12,14 +12,15 @@ const pantallas = [
   ["Inicio", "Quiénes somos, misión y visión, los tres niveles de la academia y por qué elegir el club.", "Real; misión y visión son una propuesta", "mixto"],
   ["Academia", "Niveles básico, intermedio y avanzado, con lo que aprende cada uno y preguntas frecuentes.", "Niveles reales; contenidos, horarios y precios por confirmar", "mixto"],
   ["Torneos", "Solo torneos presenciales: el II IRT FIDE de 2024 y un «Torneo de Verano 2027» de ejemplo con la inscripción funcionando.", "Real + ejemplo marcado", "mixto"],
-  ["El Club", "Nuestra historia (línea de tiempo de logros en torneos presenciales) y la comunidad en Lichess.", "Real; victorias por confirmar", "mixto"],
-  ["Inscripción y panel", "Formulario, carga de comprobante y la vista del organizador validando pagos.", "Funcional, con datos de prueba", "prueba"],
+  ["El Club", "Nuestra historia: los campeones de los torneos presenciales del club, año por año, y la comunidad en Lichess.", "Real (Chess-Results); victorias en torneos de otros organizadores por confirmar", "mixto"],
+  ["Inscripción y panel", "Formulario, carga de comprobante y panel con inicio de sesión por roles: administrador (todo) y entrenador (torneos, resultados y noticias).", "Funcional, con cuentas y datos de prueba", "prueba"],
   ["Contacto", "Facebook, Lichess, sede y WhatsApp.", "Facebook y Lichess verificados; lo demás por confirmar", "prueba"],
 ];
 const fuentes = [
   ["Ajedrez Club Mokewa en Facebook", "https://www.facebook.com/ACMokewa/"],
   ["Equipo «Ajedrez Club Mokewa» en Lichess (API pública)", "https://lichess.org/api/team/ajedrez-club-mokewa"],
   ["FIDE Ratings: II IRT Clásico Cerrado «Ajedrez Club Mokewa», enero de 2024", "https://ratings.fide.com/report.phtml?event=350802"],
+  ["Chess-Results: clasificaciones de los torneos presenciales del club (2022–2026), enlazadas una a una en «Nuestra historia»", "https://chess-results.com/"],
   ["Radio Sol 94.5 FM (20-08-2021): «Promocionan Festival Ajedrez Club Moquegua», con la página de Facebook Ajedrez Club Mokewa", "https://www.radiosol.com.pe/promocionan-festival-ajedrez-club-moquegua.html"],
   ["Municipalidad de Mariscal Nieto: I Torneo Provincial de Ajedrez 2026 (156 escolares de 26 colegios)", "https://munimoquegua.gob.pe/estudiantes-moqueguanos-convierten-nuestra-plaza-en-capital-del-deporte-ciencia/"],
 ];
@@ -65,7 +66,7 @@ const fuentes = [
       <p>Todo lo marcado <span class="pc">por confirmar</span> se completa en segundos desde el <a href={`${b}/panel/`}>panel del organizador</a>, pestaña «Datos del club».</p>
 
       <h2>Privacidad en la demo</h2>
-      <p>La web no muestra nombres ni fotos de alumnos. Los inscritos del «Torneo de Verano 2027» son nombres de ejemplo, y lo que escribas en los formularios se guarda únicamente en tu navegador. La página no se indexa en buscadores.</p>
+      <p>De los campeones, la web muestra solo el nombre y la inicial del apellido; ninguna foto de alumnos. Los inscritos del «Torneo de Verano 2027» son nombres de ejemplo, y lo que escribas en los formularios se guarda únicamente en tu navegador. La página no se indexa en buscadores.</p>
 
       <h2>Fuentes</h2>
       <ul class="fuentes">

@@ -112,3 +112,12 @@ test("contacto: sin número dice «Escríbenos» y abre Facebook; con número, W
   assert.equal(enlaceContacto(null, "x", "Consultar horario").texto, "Consultar horario");
   assert.equal(numeroWhatsapp("+51 987-654-321"), "51987654321");
 });
+
+test("nuestra historia: de cada campeón solo el nombre y la inicial del apellido (o el equipo)", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const historia = JSON.parse(await readFile(new URL("../src/data/historia.json", import.meta.url), "utf8"));
+  const nombres = historia.torneos.flatMap((t) => t.campeones.map((c) => c.nombre));
+  assert.ok(nombres.length > 0);
+  for (const n of nombres) assert.match(n, /^(Equipo .+|[\p{Lu}][\p{Ll}]+ [\p{Lu}]\.)$/u, n);
+  for (const t of historia.torneos) assert.ok(t.fuentes.every((u) => u.startsWith("https://")), t.torneo);
+});

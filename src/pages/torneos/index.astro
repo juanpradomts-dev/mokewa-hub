@@ -70,7 +70,7 @@ const realizados = [...presenciales.torneos].sort((a, c) => c.fecha.localeCompar
             <div class="torneo-cuerpo">
               <div class="etiquetas"><span class="etiqueta etiqueta-vino">{x.tipo}</span></div>
               <h3>{x.nombre}</h3>
-              <p class="cat">{x.fecha_texto}{x.jugadores ? ` · ${x.jugadores} jugadores` : ""}{x.lugar ? ` · ${x.lugar}` : ""}</p>
+              <p class="cat">{x.fecha.slice(0, 4)}</p>
               {x.resumen && <p>{x.resumen}</p>}
               {x.fuente && <a class="fuente" href={x.fuente} rel="noopener" target="_blank">{x.fuente_texto ?? "Fuente"}</a>}
             </div>
@@ -78,7 +78,7 @@ const realizados = [...presenciales.torneos].sort((a, c) => c.fecha.localeCompar
         ))}
       </div>
       <p class="nota nota-torneos">
-        Los demás torneos presenciales del club se suman aquí con su foto cuando el club los entregue. ¿Buscas los torneos en línea? Están en <a href={`${b}/el-club/#comunidad`}>El Club · Comunidad</a>.
+        Los campeones de cada torneo del club están en <a href={`${b}/el-club/#historia`}>Nuestra historia</a>. ¿Buscas los torneos en línea? Están en <a href={`${b}/el-club/#comunidad`}>El Club · Comunidad</a>.
       </p>
     </div>
   </section>

@@ -6,11 +6,11 @@
       "nombre": "II IRT Clásico Cerrado «Ajedrez Club Mokewa»",
       "fecha": "2024-01",
       "fecha_texto": "enero de 2024",
-      "tipo": "Oficial · rating FIDE estándar",
+      "tipo": "Oficial · rating FIDE",
       "jugadores": 10,
       "lugar": null,
       "foto": null,
-      "resumen": "Torneo cerrado a ritmo clásico organizado por el club y válido para el rating FIDE.",
+      "resumen": "Torneo oficial válido para el rating FIDE, organizado por el club.",
       "fuente": "https://ratings.fide.com/report.phtml?event=350802",
       "fuente_texto": "Informe en FIDE"
     }

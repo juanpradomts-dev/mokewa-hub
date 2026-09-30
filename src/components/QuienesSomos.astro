@@ -2,12 +2,10 @@
 // «Quiénes somos» con misión y visión.
 // El texto de presentación sale de datos verificados. Misión y visión: si el club no las confirmó,
 // en la demo se muestra una PROPUESTA marcada como tal; en producción no se muestran.
-import club from "../data/club.json";
 import contenido from "../data/contenido.json";
 import { valor, esProduccion } from "../lib/contenido.js";
 
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
-const t = club.totales;
 const bloques = (["mision", "vision"] as const)
   .map((campo) => {
     const c = contenido.campos[campo] as { etiqueta: string; propuesta?: string };
@@ -22,7 +20,7 @@ const bloques = (["mision", "vision"] as const)
     <p class="antetitulo">Quiénes somos</p>
     <h2>Un club que forma y <span class="lema">compite</span></h2>
     <p>
-      Somos un club de ajedrez de Moquegua que enseña por niveles —básico, intermedio y avanzado— y organiza torneos desde {t.desde}, entre ellos un torneo oficial válido para el rating FIDE (2024).
+      Somos un club de ajedrez que enseña por niveles y organiza torneos presenciales, también oficiales con rating FIDE.
     </p>
     <a class="ver-historia" href={`${b}/el-club/#historia`}>Conoce nuestra historia →</a>
   </div>

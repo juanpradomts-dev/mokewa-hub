@@ -11,6 +11,7 @@ import contenidoBase from "../data/contenido.json";
 import { CATEGORIAS } from "./categorias.js";
 import { enlaceContacto } from "./contacto.js";
 import { hayBaseDeDatos } from "./backend.js";
+import personalDemo from "../data/personal-demo.json";
 
 const CLAVE = "mokewa-demo-v1";
 const EVENTO = "mokewa:cambio";
@@ -28,7 +29,7 @@ export const TORNEO_VERANO = {
 };
 
 // ---------------------------------------------------------------- estado
-const vacio = () => ({ version: 1, contenido: {}, torneos: [], inscripciones: [], noticias: [], resultados: {}, sembrado: false });
+const vacio = () => ({ version: 1, contenido: {}, torneos: [], inscripciones: [], noticias: [], resultados: {}, personal: null, sembrado: false });
 
 // ---------------------------------------------------------------- motor «nube» (web oficial)
 const NUBE = hayBaseDeDatos;
@@ -384,20 +385,71 @@ export async function reiniciarDemo() {
   window.dispatchEvent(new CustomEvent(EVENTO));
 }
 
-// ---------------------------------------------------------------- acceso al panel
-// Demo: se entra con un botón. Web oficial: correo y contraseña (Supabase Auth) y un rol en «perfiles».
+// ---------------------------------------------------------------- acceso al panel y roles
+// Roles: «admin» (todo) y «entrenador» (torneos, resultados y noticias). En la web oficial los impone la
+// base de datos (RLS); en la demo el acceso es una simulación con cuentas de prueba (personal-demo.json).
+export const ROLES = { admin: "Administrador", entrenador: "Entrenador" };
+const SESION = "mokewa-panel";
+const cuentasDemo = () => leer().personal ?? personalDemo.cuentas;
+const sinClave = ({ correo, nombre, rol }) => ({ correo, nombre, rol });
+function guardarCuentasDemo(lista) {
+  guardar({ ...leer(), personal: lista });
+}
+
 export async function sesionPanel() {
-  return NUBE ? (await nube()).sesion() : null;
+  if (NUBE) return (await nube()).sesion();
+  let correo = null;
+  try {
+    correo = sessionStorage.getItem(SESION);
+  } catch {}
+  const c = cuentasDemo().find((x) => x.correo === correo);
+  return c ? sinClave(c) : null;
 }
 export async function entrarPanel(correo, clave) {
-  return (await nube()).entrar(correo, clave);
+  if (NUBE) return (await nube()).entrar(correo, clave);
+  const c = cuentasDemo().find((x) => x.correo.toLowerCase() === String(correo).trim().toLowerCase() && x.clave === clave);
+  if (!c) throw new Error("Correo o contraseña incorrectos.");
+  try {
+    sessionStorage.setItem(SESION, c.correo);
+  } catch {}
+  return sinClave(c);
 }
 export async function salirPanel() {
-  if (NUBE) await (await nube()).salir();
+  if (NUBE) return (await nube()).salir();
+  try {
+    sessionStorage.removeItem(SESION);
+  } catch {}
 }
-// Carga las inscripciones con los datos de contacto (solo el personal; en la demo ya están).
+// Carga las inscripciones con los datos de contacto (solo el admin; en la demo ya están).
 export async function cargarPanel() {
   if (!NUBE) return;
   const lista = await (await nube()).cargarPanel();
   cambiar((e) => (e.inscripciones = lista));
+}
+
+// Personal con acceso al panel (solo el admin lo ve y lo cambia).
+export async function listaPersonal() {
+  return NUBE ? (await nube()).personal() : cuentasDemo().map(sinClave);
+}
+export async function darAcceso({ correo, nombre, rol, clave }) {
+  correo = String(correo ?? "").trim().toLowerCase();
+  nombre = String(nombre ?? "").trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) throw new Error("Revisa el correo.");
+  if (!nombre) throw new Error("Escribe el nombre.");
+  if (!ROLES[rol]) throw new Error("Elige un rol.");
+  if (NUBE) return (await nube()).darAcceso(correo, nombre, rol);
+  const lista = cuentasDemo();
+  const existe = lista.find((x) => x.correo === correo);
+  if (existe && existe.rol === "admin" && rol !== "admin" && lista.filter((x) => x.rol === "admin").length === 1)
+    throw new Error("Debe quedar al menos un administrador.");
+  if (!existe && String(clave ?? "").length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
+  guardarCuentasDemo(existe ? lista.map((x) => (x.correo === correo ? { ...x, nombre, rol } : x)) : [...lista, { correo, nombre, rol, clave }]);
+}
+export async function quitarAcceso(correo, yo) {
+  if (correo === yo) throw new Error("No puedes quitarte el acceso a ti mismo.");
+  if (NUBE) return (await nube()).quitarAcceso(correo);
+  const lista = cuentasDemo();
+  const c = lista.find((x) => x.correo === correo);
+  if (c?.rol === "admin" && lista.filter((x) => x.rol === "admin").length === 1) throw new Error("Debe quedar al menos un administrador.");
+  guardarCuentasDemo(lista.filter((x) => x.correo !== correo));
 }

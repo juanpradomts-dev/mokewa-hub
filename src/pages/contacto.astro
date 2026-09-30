@@ -25,7 +25,6 @@ import { valor } from "../lib/contenido.js";
         <div class="tarjeta">
           <h2 class="h-bloque">Sede</h2>
           <Dato como="p" etiqueta="Dirección" campo="sede" />
-          <p>Moquegua, Perú</p>
           <Dato como="p" etiqueta="Horario de atención" campo="atencion" />
           <a class="boton boton-secundario" id="mapa" data-si-campos="mapa" hidden={!valor("mapa")} href={valor("mapa") ?? "#"} rel="noopener" target="_blank">Ver en Google Maps</a>
         </div>
@@ -39,7 +38,7 @@ import { valor } from "../lib/contenido.js";
         </div>
         <div class="tarjeta">
           <h2 class="h-bloque">Colegios y empresas</h2>
-          <p>Talleres escolares, torneos intercolegiales, delegaciones y patrocinio. En la primera fecha del I Torneo Provincial 2026, Moquegua reunió a 156 escolares de 26 colegios: hay espacio para más ajedrez.</p>
+          <p>Talleres escolares, torneos intercolegiales, delegaciones y patrocinio.</p>
           <BotonContacto variante="secundario" accion="Escribir al club" mensaje="Hola, escribo de un colegio/empresa y quisiera información sobre talleres o patrocinio." />
         </div>
       </div>

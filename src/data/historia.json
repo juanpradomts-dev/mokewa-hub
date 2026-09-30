@@ -1,23 +1,331 @@
 {
-  "_nota": "Línea de tiempo «Nuestra historia»: SOLO logros en torneos PRESENCIALES. «hitos»: torneos presenciales que el club organizó o jugó, con fuente. «victorias»: resultados en torneos presenciales oficiales (regionales, nacionales, FIDE), con fuente o confirmados por el club. Nombre del jugador solo con autorización (si es menor, de sus padres); si no, la categoría. Fecha: AAAA-MM.",
+  "_nota": "Nuestra historia: campeones de los torneos PRESENCIALES organizados por el Ajedrez Club Mokewa, tomados de las clasificaciones públicas de Chess-Results (revisado el 29-09-2026). Criterio: torneos con «Mokewa» en el nombre, organizador o director; clasificación final. De cada campeón solo el nombre y la inicial del apellido. Si una familia pide retirar un nombre, se agrega a «ocultar» y la web muestra solo la categoría.",
+  "fuente": {
+    "texto": "Chess-Results",
+    "url": "https://chess-results.com/"
+  },
+  "ocultar": [],
   "hitos": [
     {
       "fecha": "2024-01",
       "fecha_texto": "enero de 2024",
-      "titulo": "El club organiza un torneo oficial FIDE",
-      "texto": "II IRT Clásico Cerrado «Ajedrez Club Mokewa», con 10 jugadores y válido para el rating FIDE estándar.",
-      "fuente": "https://ratings.fide.com/report.phtml?event=350802",
-      "fuente_texto": "FIDE"
+      "torneo": "II IRT Clásico Cerrado · torneo oficial FIDE",
+      "campeones": [],
+      "fuentes": [
+        "https://ratings.fide.com/report.phtml?event=350802"
+      ]
     }
   ],
-  "victorias": [],
-  "_ejemplo_victoria": {
-    "fecha": "2025-06",
-    "fecha_texto": "junio de 2025",
-    "torneo": "Nombre del torneo oficial",
-    "resultado": "Campeón",
-    "categoria": "Sub-12",
-    "jugador": null,
-    "fuente": "https://enlace-a-la-nota-o-al-informe"
-  }
+  "torneos": [
+    {
+      "fecha": "2022-10",
+      "torneo": "Torneo de rápidas del club",
+      "campeones": [
+        {
+          "categoria": null,
+          "nombre": "Richard C."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr686710.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "octubre de 2022"
+    },
+    {
+      "fecha": "2022-11",
+      "torneo": "I IRT Blitz del club",
+      "campeones": [
+        {
+          "categoria": null,
+          "nombre": "Anthony A."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr702067.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "noviembre de 2022"
+    },
+    {
+      "fecha": "2022-11",
+      "torneo": "IRT Clásico «David Flores»",
+      "campeones": [
+        {
+          "categoria": null,
+          "nombre": "Richard C."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr700604.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "noviembre de 2022"
+    },
+    {
+      "fecha": "2022-11",
+      "torneo": "Torneo por categorías",
+      "campeones": [
+        {
+          "categoria": "Sub-8",
+          "nombre": "Emanuel Q."
+        },
+        {
+          "categoria": "Sub-10",
+          "nombre": "Joshua S."
+        },
+        {
+          "categoria": "Sub-12",
+          "nombre": "Hernan D."
+        },
+        {
+          "categoria": "Sub-16",
+          "nombre": "Joseph C."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr701481.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr701482.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr701483.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr701484.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "noviembre de 2022"
+    },
+    {
+      "fecha": "2023-06",
+      "torneo": "Rápidas Don Fernando",
+      "campeones": [
+        {
+          "categoria": "Fecha 1",
+          "nombre": "Richard C."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr779624.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "junio de 2023"
+    },
+    {
+      "fecha": "2023-09",
+      "torneo": "I IRT «James Fischer Chicalla»",
+      "campeones": [
+        {
+          "categoria": "Blitz",
+          "nombre": "Richard C."
+        },
+        {
+          "categoria": "Clásico",
+          "nombre": "Richard C."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr819199.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr819196.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "septiembre de 2023"
+    },
+    {
+      "fecha": "2024-01",
+      "torneo": "VI Torneo de Verano",
+      "campeones": [
+        {
+          "categoria": "Premier",
+          "nombre": "Anthony A."
+        },
+        {
+          "categoria": "Sub-12",
+          "nombre": "Adriano A."
+        },
+        {
+          "categoria": "Sub-16",
+          "nombre": "Adriana C."
+        },
+        {
+          "categoria": "Novatos",
+          "nombre": "Génesis R."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr884917.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr885034.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr885044.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr885047.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "enero de 2024"
+    },
+    {
+      "fecha": "2024-03",
+      "torneo": "Blitz preparatorio para el Mundial Escolar",
+      "campeones": [
+        {
+          "categoria": null,
+          "nombre": "Joshua S."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr917038.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "marzo de 2024"
+    },
+    {
+      "fecha": "2024-03",
+      "torneo": "Torneos relámpago",
+      "campeones": [
+        {
+          "categoria": "Fecha 1",
+          "nombre": "Frank C."
+        },
+        {
+          "categoria": "Fecha 2",
+          "nombre": "Frank C."
+        },
+        {
+          "categoria": "Fecha 3",
+          "nombre": "Richard C."
+        },
+        {
+          "categoria": "Fecha 5",
+          "nombre": "James M."
+        },
+        {
+          "categoria": "Fecha 6",
+          "nombre": "Richard C."
+        },
+        {
+          "categoria": "Fecha 7",
+          "nombre": "Joshua S."
+        },
+        {
+          "categoria": "Fecha 8",
+          "nombre": "Joshua S."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr907655.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr920554.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr927827.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr947814.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr958061.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr975778.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr997134.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "de marzo a agosto de 2024"
+    },
+    {
+      "fecha": "2024-06",
+      "torneo": "Rápidas Don Fernando",
+      "campeones": [
+        {
+          "categoria": "Fecha 3",
+          "nombre": "Richard C."
+        },
+        {
+          "categoria": "Fecha 5",
+          "nombre": "Francisco C."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr954732.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr986574.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "de junio a agosto de 2024"
+    },
+    {
+      "fecha": "2025-03",
+      "torneo": "Torneo San Francisco",
+      "campeones": [
+        {
+          "categoria": "Sub-16",
+          "nombre": "Iker C."
+        },
+        {
+          "categoria": "IRT Blitz",
+          "nombre": "Alvaro R."
+        },
+        {
+          "categoria": "IRT Rápidas",
+          "nombre": "James M."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr1143381.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr1141002.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr1141006.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "marzo de 2025"
+    },
+    {
+      "fecha": "2025-07",
+      "torneo": "Blitz del club",
+      "campeones": [
+        {
+          "categoria": null,
+          "nombre": "Joshua S."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr1221823.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "julio de 2025"
+    },
+    {
+      "fecha": "2025-07",
+      "torneo": "V Copa Escolar",
+      "campeones": [
+        {
+          "categoria": "Infantiles",
+          "nombre": "Equipo Simón Bolívar"
+        },
+        {
+          "categoria": "Juveniles",
+          "nombre": "Equipo Simón Bolívar"
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr1220960.aspx?lan=2&art=1",
+        "https://chess-results.com/tnr1221006.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "julio de 2025"
+    },
+    {
+      "fecha": "2025-11",
+      "torneo": "II IRT Clásico de noviembre",
+      "campeones": [
+        {
+          "categoria": null,
+          "nombre": "Richard C."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr1281539.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "noviembre de 2025"
+    },
+    {
+      "fecha": "2026-03",
+      "torneo": "IRT Blitz «Campeón Nacional»",
+      "campeones": [
+        {
+          "categoria": null,
+          "nombre": "Joshua S."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr1377604.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "marzo de 2026"
+    },
+    {
+      "fecha": "2026-07",
+      "torneo": "III Copa Mokewa",
+      "campeones": [
+        {
+          "categoria": null,
+          "nombre": "Nicolas H."
+        }
+      ],
+      "fuentes": [
+        "https://chess-results.com/tnr1468101.aspx?lan=2&art=1"
+      ],
+      "fecha_texto": "julio de 2026"
+    }
+  ],
+  "victorias": []
 }

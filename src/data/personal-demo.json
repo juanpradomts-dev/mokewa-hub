@@ -1,0 +1,7 @@
+{
+  "_nota": "Cuentas de PRUEBA de la demo. La demo no tiene servidor: el acceso es una simulación en el navegador. En la web oficial las cuentas viven en Supabase Auth, las contraseñas nunca están en el código y los roles están en la tabla perfiles.",
+  "cuentas": [
+    { "correo": "admin@mokewa.test", "nombre": "Administración del club", "rol": "admin", "clave": "admin-demo" },
+    { "correo": "entrenador@mokewa.test", "nombre": "Entrenador", "rol": "entrenador", "clave": "entrenador-demo" }
+  ]
+}

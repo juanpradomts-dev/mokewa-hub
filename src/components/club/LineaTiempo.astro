@@ -1,165 +1,199 @@
 ---
-// «Nuestra historia»: logros del club SOLO en torneos presenciales (pedido del club/JP).
-// Hitos y victorias vienen de src/data/historia.json, con fuente o confirmados por el club.
+// «Nuestra historia»: los campeones de los torneos PRESENCIALES del club, año por año.
+// Datos en src/data/historia.json (clasificaciones públicas de Chess-Results, con su enlace).
+// De cada campeón solo el nombre y la inicial del apellido; si una familia lo pide, va a «ocultar».
 import historia from "../../data/historia.json";
 import { esProduccion } from "../../lib/contenido.js";
 import { LEMA } from "../../lib/club.js";
 
-type Evento = { fecha: string; fecha_texto: string; titulo: string; texto?: string; fuente?: string; fuente_texto?: string; tipo: "hito" | "victoria" };
+type Campeon = { categoria: string | null; nombre: string };
+type Evento = { fecha: string; fecha_texto: string; torneo: string; campeones: Campeon[]; fuentes: string[] };
 
-
-const eventos: Evento[] = [
-  ...historia.hitos.map((h) => ({ ...h, tipo: "hito" as const })),
-  ...historia.victorias.map((v: any) => ({
-    fecha: v.fecha,
-    fecha_texto: v.fecha_texto,
-    titulo: `${v.resultado} · ${v.torneo}`,
-    texto: [v.categoria && `Categoría ${v.categoria}`, v.jugador].filter(Boolean).join(" · "),
-    fuente: v.fuente,
-    fuente_texto: "Fuente",
-    tipo: "victoria" as const,
-  })),
-].sort((a, b) => a.fecha.localeCompare(b.fecha));
-
-const hayVictorias = historia.victorias.length > 0;
+const ocultos = new Set<string>(historia.ocultar ?? []);
+const eventos: Evento[] = [...historia.torneos, ...historia.hitos];
+const anios = [...new Set(eventos.map((e) => e.fecha.slice(0, 4)))].sort().reverse();
+const delAnio = (a: string) => eventos.filter((e) => e.fecha.startsWith(a)).sort((x, y) => y.fecha.localeCompare(x.fecha));
+const mes = (e: Evento) => e.fecha_texto.replace(/ de \d{4}$/, "");
+const primero = Math.min(...eventos.map((e) => Number(e.fecha.slice(0, 4))));
 ---
 
 <div class="linea">
   <div class="linea-cabeza">
     <p class="antetitulo">Nuestra historia</p>
     <h2>{LEMA}</h2>
-    <p class="bajada">Logros del club en torneos presenciales: los que organizamos y los que ganamos.</p>
+    <p class="bajada">Desde {primero}, los campeones de los torneos presenciales del club.</p>
   </div>
-  <ol class="tiempo">
-    {eventos.map((e) => (
-      <li class:list={["evento", e.tipo]}>
-        <span class="marca" aria-hidden="true">{e.tipo === "victoria" ? "♛︎" : ""}</span>
-        <div class="evento-caja">
-          <span class="cuando">{e.fecha_texto}</span>
-          <h3>{e.titulo}</h3>
-          {e.texto && <p>{e.texto}</p>}
-          {e.fuente && <a class="fuente" href={e.fuente} rel="noopener" target="_blank">{e.fuente_texto}</a>}
-        </div>
+
+  <ol class="anios">
+    {anios.map((a) => (
+      <li class="anio">
+        <h3 class="anio-marca"><span>{a}</span></h3>
+        <ol class="eventos">
+          {delAnio(a).map((e) => (
+            <li class="evento">
+              <span class="cuando">{mes(e)}</span>
+              <h4>{e.torneo}</h4>
+              {e.campeones.length > 0 && (
+                <ul class="campeones">
+                  {e.campeones.map((c) => (
+                    <li>
+                      <span class="corona" aria-hidden="true">♛&#xfe0e;</span>
+                      {c.categoria && <span class="categoria">{c.categoria}</span>}
+                      <span class="nombre">{ocultos.has(c.nombre) ? "Campeón" : c.nombre}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {e.fuentes[0] && (
+                <a class="fuente" href={e.fuentes[0]} rel="noopener" target="_blank">
+                  {e.fuentes[0].includes("fide.com") ? "Informe FIDE" : "Ver resultados"}
+                  <span class="visually-hidden"> de {e.torneo}</span>
+                </a>
+              )}
+            </li>
+          ))}
+        </ol>
       </li>
     ))}
-    {!hayVictorias && !esProduccion && (
-      <li class="evento victoria pendiente">
-        <span class="marca" aria-hidden="true">♛&#xfe0e;</span>
-        <div class="evento-caja">
-          <span class="cuando">Por confirmar con el club</span>
-          <h3>Victorias en torneos presenciales</h3>
-          <p>Campeonatos regionales, nacionales y torneos FIDE: el club entrega torneo, fecha, puesto y categoría (el nombre del jugador, solo con autorización).</p>
-        </div>
-      </li>
-    )}
   </ol>
+
+  {!esProduccion && (
+    <p class="pendiente">
+      <strong>Por confirmar con el club:</strong> las victorias de sus jugadores en torneos de otros organizadores (regionales, nacionales y escolares).
+    </p>
+  )}
+  <p class="nota-fuente">
+    Fuente: clasificaciones públicas de cada torneo en <a href={historia.fuente.url} rel="noopener" target="_blank">{historia.fuente.texto}</a>. De cada campeón se muestra el nombre y la inicial del apellido.
+  </p>
 </div>
 
 <style>
   .linea-cabeza {
     max-width: 720px;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
   }
-  .tiempo {
+  .anios {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 26px;
+    position: relative;
+    display: grid;
+    gap: 28px;
+  }
+  /* Riel de la línea de tiempo */
+  .anios::before {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 10px;
+    bottom: 10px;
+    width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(#f28a1e, #fde7d1);
+  }
+  .anio-marca {
+    position: relative;
+    margin: 0 0 12px;
+    font-size: clamp(1.6rem, 4vw, 2.1rem);
+    line-height: 1;
+    color: #a64b08;
+  }
+  .anio-marca::before {
+    content: "";
+    position: absolute;
+    left: -26px;
+    top: 50%;
+    width: 17px;
+    height: 17px;
+    margin-top: -8.5px;
+    border-radius: 50%;
+    background: #f28a1e;
+    box-shadow: 0 0 0 4px var(--fondo);
+  }
+  .eventos {
     list-style: none;
     margin: 0;
     padding: 0;
-    position: relative;
     display: grid;
-    gap: 18px;
+    gap: 12px;
   }
-  .tiempo::before {
-    content: "";
-    position: absolute;
-    left: 21px;
-    top: 8px;
-    bottom: 8px;
-    width: 3px;
-    border-radius: 3px;
-    background: linear-gradient(#fde7d1, #f28a1e);
+  @media (min-width: 760px) {
+    .eventos {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
   .evento {
-    position: relative;
-    display: grid;
-    grid-template-columns: 44px 1fr;
-    gap: 16px;
-    align-items: start;
-  }
-  .marca {
-    position: relative;
-    z-index: 1;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    background: #fff;
-    border: 3px solid #f7a54a;
-    font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", serif;
-    font-size: 1.3rem;
-    color: #fff;
-  }
-  .victoria .marca {
-    background: #f28a1e;
-    border-color: #fff;
-    box-shadow: 0 0 0 3px #f28a1e;
-    color: #141211;
-  }
-  .evento-caja {
     background: var(--papel);
     border: 1px solid var(--linea);
     border-radius: var(--radio);
-    padding: 16px 20px;
-  }
-  .victoria .evento-caja {
-    background: #fff4e8;
-    border-color: #f7c08a;
-  }
-  .pendiente .evento-caja {
-    border-style: dashed;
-    background: transparent;
+    padding: 14px 18px 6px;
+    display: grid;
+    align-content: start;
+    gap: 2px;
   }
   .cuando {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 700;
+    font-stretch: 88%;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    color: var(--suave);
+  }
+  h4 {
+    font-family: var(--titulo);
+    font-stretch: var(--angosto);
+    font-weight: 750;
+    font-size: 1.15rem;
+    line-height: 1.15;
+    margin: 0 0 6px;
+  }
+  .campeones {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .campeones li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px 3px 8px;
+    border-radius: 999px;
+    background: #fff4e8;
+    border: 1px solid #f7c08a;
+    font-size: 0.92rem;
+  }
+  .corona {
+    font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", serif;
     color: #a64b08;
   }
-  h3 {
-    margin: 4px 0 4px;
-    font-size: 1.2rem;
-  }
-  .evento-caja p {
-    margin: 0;
+  .categoria {
+    font-size: 0.78rem;
+    font-weight: 650;
     color: var(--suave);
+  }
+  .nombre {
+    font-weight: 650;
   }
   .fuente {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
     font-size: 0.86rem;
+    width: fit-content;
   }
-  @media (min-width: 900px) {
-    .tiempo::before {
-      left: 50%;
-      margin-left: -1.5px;
-    }
-    .evento {
-      grid-template-columns: 1fr 44px 1fr;
-    }
-    .marca {
-      grid-column: 2;
-      grid-row: 1;
-    }
-    .evento:nth-child(odd) .evento-caja {
-      grid-column: 1;
-      grid-row: 1;
-      text-align: right;
-    }
-    .evento:nth-child(even) .evento-caja {
-      grid-column: 3;
-      grid-row: 1;
-    }
+  .pendiente {
+    margin: 24px 0 0;
+    padding: 12px 16px;
+    border: 1px dashed #f7c08a;
+    border-radius: 12px;
+    color: var(--suave);
+  }
+  .nota-fuente {
+    margin: 16px 0 0;
+    font-size: 0.86rem;
+    color: var(--suave);
   }
 </style>

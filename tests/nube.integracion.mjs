@@ -156,3 +156,21 @@ test("admin: ve contactos y comprobante, valida, y borra todo (derecho de supres
   assert.equal((await c.from("tutores").select("id").eq("jugador_id", data.jugador_id)).data.length, 0);
   assert.equal((await c.from("inscripciones").select("id").eq("id", ins.id)).data.length, 0);
 });
+
+test("personal: solo el admin ve y cambia roles; siempre queda un admin", async () => {
+  const admin = await cuenta("admin2");
+  const entrenador = await cuenta("entrenador2");
+  // El entrenador no ve la lista ni puede darse más permisos.
+  assert.deepEqual((await entrenador.c.rpc("personal")).data ?? [], []);
+  assert.ok((await entrenador.c.rpc("dar_acceso", { p_correo: `entrenador2.${sello}@prueba.mokewa.pe`, p_nombre: "Yo", p_rol: "admin" })).error);
+  // El público tampoco.
+  assert.ok((await anon.rpc("dar_acceso", { p_correo: "x@y.pe", p_nombre: "X", p_rol: "admin" })).error);
+  // El admin ve la lista con correos y cambia el rol del entrenador.
+  const lista = (await admin.c.rpc("personal")).data;
+  assert.ok(lista.some((p) => p.correo === `entrenador2.${sello}@prueba.mokewa.pe`));
+  assert.ifError((await admin.c.rpc("dar_acceso", { p_correo: `entrenador2.${sello}@prueba.mokewa.pe`, p_nombre: "Entrenador 2", p_rol: "admin" })).error);
+  assert.ifError((await admin.c.rpc("quitar_acceso", { p_correo: `entrenador2.${sello}@prueba.mokewa.pe` })).error);
+  // No se quita el acceso a sí mismo; una cuenta inexistente se avisa.
+  assert.ok((await admin.c.rpc("quitar_acceso", { p_correo: `admin2.${sello}@prueba.mokewa.pe` })).error?.message.includes("a_ti_mismo"));
+  assert.ok((await admin.c.rpc("dar_acceso", { p_correo: `nadie.${sello}@prueba.mokewa.pe`, p_nombre: "Nadie", p_rol: "entrenador" })).error?.message.includes("cuenta_no_existe"));
+});

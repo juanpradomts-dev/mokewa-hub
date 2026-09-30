@@ -27,6 +27,53 @@ $$;
 create policy "personal ve su perfil" on perfiles for select using (id = auth.uid() or rol_actual() = 'admin');
 create policy "admin gestiona perfiles" on perfiles for all using (rol_actual() = 'admin') with check (rol_actual() = 'admin');
 
+-- Gestión del personal desde el panel (solo el admin). Las cuentas se crean en Supabase → Authentication;
+-- aquí se les da un rol, se cambia o se quita. Siempre queda al menos un admin.
+create or replace function personal() returns table (nombre text, rol text, correo text)
+language sql stable security definer set search_path = public, auth as $$
+  select p.nombre, p.rol, u.email::text from perfiles p join auth.users u on u.id = p.id
+  where rol_actual() = 'admin'
+  order by p.rol, p.nombre
+$$;
+
+create or replace function dar_acceso(p_correo text, p_nombre text, p_rol text) returns void
+language plpgsql security definer set search_path = public, auth as $$
+declare uid uuid; rol_previo text;
+begin
+  if rol_actual() is distinct from 'admin' then raise exception 'solo_admin' using errcode = 'P0001'; end if;
+  if p_rol not in ('admin', 'entrenador') then raise exception 'rol_invalido' using errcode = 'P0001'; end if;
+  if trim(coalesce(p_nombre, '')) !~ '^.{1,80}$' then raise exception 'datos_incompletos' using errcode = 'P0001'; end if;
+  select id into uid from auth.users where lower(email) = lower(trim(p_correo));
+  if uid is null then raise exception 'cuenta_no_existe' using errcode = 'P0001'; end if;
+  select rol into rol_previo from perfiles where id = uid;
+  if rol_previo = 'admin' and p_rol <> 'admin' and (select count(*) from perfiles where rol = 'admin') = 1 then
+    raise exception 'ultimo_admin' using errcode = 'P0001';
+  end if;
+  insert into perfiles (id, nombre, rol) values (uid, trim(p_nombre), p_rol)
+  on conflict (id) do update set nombre = excluded.nombre, rol = excluded.rol;
+end
+$$;
+
+create or replace function quitar_acceso(p_correo text) returns void
+language plpgsql security definer set search_path = public, auth as $$
+declare uid uuid;
+begin
+  if rol_actual() is distinct from 'admin' then raise exception 'solo_admin' using errcode = 'P0001'; end if;
+  select id into uid from auth.users where lower(email) = lower(trim(p_correo));
+  if uid = auth.uid() then raise exception 'a_ti_mismo' using errcode = 'P0001'; end if;
+  if (select rol from perfiles where id = uid) = 'admin' and (select count(*) from perfiles where rol = 'admin') = 1 then
+    raise exception 'ultimo_admin' using errcode = 'P0001';
+  end if;
+  delete from perfiles where id = uid;
+end
+$$;
+revoke all on function personal() from public, anon, authenticated;
+revoke all on function dar_acceso(text, text, text) from public, anon, authenticated;
+revoke all on function quitar_acceso(text) from public, anon, authenticated;
+grant execute on function personal() to authenticated;
+grant execute on function dar_acceso(text, text, text) to authenticated;
+grant execute on function quitar_acceso(text) to authenticated;
+
 -- ---------------------------------------------------------------- categorías (igual que src/lib/categorias.js)
 -- Edad al 1 de enero del año del torneo; la primera Sub-N con edad < N, o «Libre».
 create or replace function categoria_para(nac date, anio int, cats text[]) returns text

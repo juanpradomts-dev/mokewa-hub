@@ -1,6 +1,18 @@
 ---
 import { esProduccion as esProduccionPanel } from "../lib/contenido.js";
 import { hayBaseDeDatos } from "../lib/backend.js";
+import personalDemo from "../data/personal-demo.json";
+const ROLES: Record<string, string> = { admin: "Administrador", entrenador: "Entrenador" };
+const cuentasDemo = personalDemo.cuentas;
+// Lo mismo que imponen las reglas de la base de datos (supabase/migrations).
+const PERMISOS: [string, boolean, boolean][] = [
+  ["Crear torneos, publicar resultados y noticias", true, true],
+  ["Ver inscripciones y contactos de los tutores", true, false],
+  ["Ver comprobantes y validar o rechazar pagos", true, false],
+  ["Borrar los datos de un alumno (derecho de supresión)", true, false],
+  ["Editar los datos del club", true, false],
+  ["Dar o quitar acceso al personal", true, false],
+];
 import Base from "../layouts/Base.astro";
 import club from "../data/club.json";
 import { miles } from "../lib/formato.js";
@@ -25,22 +37,32 @@ if (esProduccionPanel && !hayBaseDeDatos) return Astro.redirect(`${import.meta.e
       <div id="puerta" class="tarjeta puerta">
         <p class="antetitulo">Panel del organizador</p>
         <h1>Todo lo operativo, sin programar</h1>
-        <p class="bajada">Crear torneos, validar pagos, publicar resultados y noticias, y completar los datos del club. {hayBaseDeDatos ? "Solo para el personal del club." : "En la versión oficial se entra con correo y contraseña (roles: administrador y entrenador)."}</p>
-        {hayBaseDeDatos ? (
-          <form id="acceso" class="acceso" novalidate>
-            <div class="campo">
-              <label for="acceso-correo">Correo</label>
-              <input id="acceso-correo" name="correo" type="email" autocomplete="username" required />
-            </div>
-            <div class="campo">
-              <label for="acceso-clave">Contraseña</label>
-              <input id="acceso-clave" name="clave" type="password" autocomplete="current-password" required />
-            </div>
-            <button class="boton boton-primario" type="submit">Entrar</button>
-            <p class="suave" id="acceso-aviso" role="alert"></p>
-          </form>
-        ) : (
-          <button class="boton boton-primario" type="button" id="entrar">Entrar como organizador (demo)</button>
+        <p class="bajada">Crear torneos, validar pagos, publicar resultados y noticias, y completar los datos del club. Solo para el personal del club.</p>
+        <form id="acceso" class="acceso" novalidate>
+          <h2 class="h-bloque">Iniciar sesión</h2>
+          <div class="campo">
+            <label for="acceso-correo">Correo</label>
+            <input id="acceso-correo" name="correo" type="email" autocomplete="username" required />
+          </div>
+          <div class="campo">
+            <label for="acceso-clave">Contraseña</label>
+            <input id="acceso-clave" name="clave" type="password" autocomplete="current-password" required />
+          </div>
+          <button class="boton boton-primario" type="submit">Entrar</button>
+          <p class="suave" id="acceso-aviso" role="alert"></p>
+        </form>
+        {!hayBaseDeDatos && (
+          <div class="cuentas-prueba">
+            <p><strong>Demo:</strong> cuentas de prueba. El acceso se simula en este navegador; en la web oficial la contraseña se verifica en el servidor.</p>
+            <ul>
+              {cuentasDemo.map((c) => (
+                <li>
+                  <span><strong>{ROLES[c.rol]}</strong> · <code>{c.correo}</code> · contraseña <code>{c.clave}</code></span>
+                  <button class="boton boton-secundario boton-chico" type="button" data-cuenta={c.correo} data-clave={c.clave}>Usar esta cuenta</button>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
 
@@ -48,7 +70,8 @@ if (esProduccionPanel && !hayBaseDeDatos) return Astro.redirect(`${import.meta.e
         <div class="panel-cabeza">
           <div>
             <p class="antetitulo">{hayBaseDeDatos ? "Panel del organizador" : "Panel del organizador · demo"}</p>
-            <h1 id="saludo">Hola, organizador</h1>
+            <h1 id="saludo">Hola</h1>
+            <p class="rol-actual"><span class="etiqueta" id="rol-etiqueta"></span> <span class="suave" id="rol-texto"></span></p>
           </div>
           <div class="grupo-botones">
             <a class="boton boton-secundario boton-chico" href={`${b}/`} target="_blank">Ver la web ↗</a>
@@ -57,12 +80,13 @@ if (esProduccionPanel && !hayBaseDeDatos) return Astro.redirect(`${import.meta.e
         </div>
 
         <div class="pestanas" role="tablist" aria-label="Secciones del panel">
-          <button role="tab" aria-selected="true" aria-controls="p-resumen" id="t-resumen">Resumen</button>
-          <button role="tab" aria-selected="false" aria-controls="p-inscripciones" id="t-inscripciones">Inscripciones <span class="globo" id="globo-pendientes"></span></button>
-          <button role="tab" aria-selected="false" aria-controls="p-torneos" id="t-torneos">Torneos</button>
-          <button role="tab" aria-selected="false" aria-controls="p-resultados" id="t-resultados">Resultados</button>
-          <button role="tab" aria-selected="false" aria-controls="p-noticias" id="t-noticias">Noticias</button>
-          <button role="tab" aria-selected="false" aria-controls="p-datos" id="t-datos">Datos del club <span class="globo" id="globo-datos"></span></button>
+          <button role="tab" aria-selected="true" aria-controls="p-resumen" id="t-resumen" data-roles="admin">Resumen</button>
+          <button role="tab" aria-selected="false" aria-controls="p-inscripciones" id="t-inscripciones" data-roles="admin">Inscripciones <span class="globo" id="globo-pendientes"></span></button>
+          <button role="tab" aria-selected="false" aria-controls="p-torneos" id="t-torneos" data-roles="admin entrenador">Torneos</button>
+          <button role="tab" aria-selected="false" aria-controls="p-resultados" id="t-resultados" data-roles="admin entrenador">Resultados</button>
+          <button role="tab" aria-selected="false" aria-controls="p-noticias" id="t-noticias" data-roles="admin entrenador">Noticias</button>
+          <button role="tab" aria-selected="false" aria-controls="p-datos" id="t-datos" data-roles="admin">Datos del club <span class="globo" id="globo-datos"></span></button>
+          <button role="tab" aria-selected="false" aria-controls="p-personal" id="t-personal" data-roles="admin">Personal</button>
         </div>
 
         <!-- RESUMEN -->
@@ -214,6 +238,41 @@ if (esProduccionPanel && !hayBaseDeDatos) return Astro.redirect(`${import.meta.e
             </div>
           )}
         </div>
+
+        <div role="tabpanel" id="p-personal" aria-labelledby="t-personal" class="pestana" hidden>
+          <div class="tarjeta">
+            <h2 class="h-bloque">Qué puede hacer cada rol</h2>
+            <div class="tabla-envoltura">
+              <table class="permisos">
+                <thead><tr><th>Permiso</th><th>Administrador</th><th>Entrenador</th></tr></thead>
+                <tbody>
+                  {PERMISOS.map(([p, admin, entrenador]) => (
+                    <tr><td>{p}</td><td>{admin ? "Sí" : "No"}</td><td>{entrenador ? "Sí" : "No"}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tarjeta">
+            <h2 class="h-bloque">Personal con acceso</h2>
+            <div id="personal-lista"></div>
+            <p class="suave" id="personal-aviso" role="alert"></p>
+          </div>
+          <form class="tarjeta" id="form-personal" novalidate>
+            <h2 class="h-bloque">Dar acceso</h2>
+            <p class="suave">{hayBaseDeDatos ? "Primero se crea la cuenta en Supabase → Authentication → Add user; aquí se le da el rol." : "En la demo la cuenta nueva queda guardada solo en este navegador."}</p>
+            <div class="dos-columnas">
+              <div class="campo"><label for="pe-nombre">Nombre *</label><input id="pe-nombre" name="nombre" type="text" autocomplete="off" /></div>
+              <div class="campo"><label for="pe-correo">Correo *</label><input id="pe-correo" name="correo" type="email" autocomplete="off" /></div>
+              <div class="campo">
+                <label for="pe-rol">Rol *</label>
+                <select id="pe-rol" name="rol"><option value="entrenador">Entrenador</option><option value="admin">Administrador</option></select>
+              </div>
+              {!hayBaseDeDatos && <div class="campo"><label for="pe-clave">Contraseña (mín. 8) *</label><input id="pe-clave" name="clave" type="password" autocomplete="new-password" /></div>}
+            </div>
+            <button class="boton boton-primario" type="submit">Dar acceso</button>
+          </form>
+        </div>
       </div>
     </div>
   </section>
@@ -340,7 +399,7 @@ if (esProduccionPanel && !hayBaseDeDatos) return Astro.redirect(`${import.meta.e
   }
   :global(.inscripcion) {
     display: grid;
-    grid-template-columns: 84px 1fr;
+    grid-template-columns: 84px minmax(0, 1fr);
     gap: 16px;
     align-items: start;
   }
@@ -448,6 +507,61 @@ if (esProduccionPanel && !hayBaseDeDatos) return Astro.redirect(`${import.meta.e
   }
   #r-publicar {
     margin-top: 12px;
+  }
+  .cuentas-prueba {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px dashed var(--pc-borde);
+    border-radius: 12px;
+    background: var(--pc-fondo);
+    font-size: 0.92rem;
+  }
+  .cuentas-prueba ul {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .cuentas-prueba li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+  }
+  .rol-actual {
+    margin: 4px 0 0;
+  }
+  .permisos td:not(:first-child),
+  .permisos th:not(:first-child) {
+    text-align: center;
+  }
+  #p-personal {
+    display: grid;
+    gap: 16px;
+  }
+  #p-personal[hidden] {
+    display: none;
+  }
+  /* Pestañas que el rol no puede usar: fuera del todo (el CSS de los botones no las debe mostrar). */
+  .pestanas button[hidden] {
+    display: none;
+  }
+  /* En celular, nada del panel debe ensanchar la página: los elementos de rejilla se pueden encoger
+     y las tablas se desplazan dentro de su caja (.tabla-envoltura). */
+  .pestana .rejilla > *,
+  #p-personal > *,
+  :global(.ins-datos) {
+    min-width: 0;
+  }
+  :global(.inscripcion .motivo) {
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+  }
+  :global([data-cambiar-rol]) {
+    min-width: 9.5rem;
   }
   .acceso {
     display: grid;

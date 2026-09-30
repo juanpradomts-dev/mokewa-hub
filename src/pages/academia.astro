@@ -15,8 +15,8 @@ const preguntas = [
   { p: "¿Cuánto cuesta?", antes: "Mensualidad: ", campo: "precio_mensual", despues: ". Se paga por Yape o Plin." },
   { p: "¿Dónde son las clases?", antes: "En la sede del club: ", campo: "sede", despues: "." },
   { p: "¿Cómo sé en qué nivel inscribir a mi hijo o hija?", r: "Si nunca ha jugado, en básico. Si ya juega o compite, escríbenos y el club te recomienda el nivel." },
-  { p: "¿Pueden practicar en casa?", r: `Sí: el club tiene un equipo gratuito en Lichess con ${club.equipo.miembros} miembros donde se juegan torneos en línea desde el celular.` },
-  { p: "¿Hay torneos para alumnos?", r: "Sí. El club organiza torneos por nivel (básico, intermedio y avanzado) y en 2024 organizó un torneo oficial válido para el rating FIDE." },
+  { p: "¿Pueden practicar en casa?", r: "Sí: el club tiene un equipo gratuito en Lichess donde se juegan torneos en línea desde el celular." },
+  { p: "¿Hay torneos para alumnos?", r: "Sí: torneos por nivel a lo largo del año y torneos oficiales con rating FIDE." },
 ].filter((q) => !q.campo || valor(q.campo) || !esProduccion);
 ---
 
@@ -24,9 +24,9 @@ const preguntas = [
   <section class="seccion cabeza">
     <div class="contenedor">
       <p class="antetitulo">Academia</p>
-      <h1>Clases de ajedrez en Moquegua, por niveles</h1>
+      <h1>Clases de ajedrez por niveles</h1>
       <p class="bajada">
-        Tres niveles —básico, intermedio y avanzado—, los mismos que el club usa en sus torneos por nivel.
+        Básico, intermedio y avanzado: cada alumno aprende y compite a su ritmo.
       </p>
       <div class="grupo-botones">
         <BotonContacto accion="Pedir informes" mensaje="Hola, quisiera inscribir a mi hijo/a en la academia de ajedrez. ¿Qué horarios tienen?" />

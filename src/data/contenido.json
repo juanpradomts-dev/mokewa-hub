@@ -6,7 +6,7 @@
       "valor": null,
       "tipo": "textarea",
       "grupo": "Quiénes somos",
-      "propuesta": "Que cada niño y joven de Moquegua gane concentración, disciplina y ganas de competir, con clases por niveles y torneos presenciales para todas las edades.",
+      "propuesta": "Que cada niño y joven gane concentración, disciplina y ganas de competir, con clases por niveles y torneos presenciales para todas las edades.",
       "ayuda": "Mientras quede vacío, la demo muestra una propuesta marcada «por confirmar»; en producción no se muestra."
     },
     "vision": {
@@ -14,7 +14,7 @@
       "valor": null,
       "tipo": "textarea",
       "grupo": "Quiénes somos",
-      "propuesta": "Ser el club de ajedrez de referencia del sur del Perú, con jugadores que compitan y ganen en torneos regionales, nacionales e internacionales.",
+      "propuesta": "Ser un club de ajedrez de referencia, con jugadores que compitan y ganen en torneos regionales, nacionales e internacionales.",
       "ayuda": "Mientras quede vacío, la demo muestra una propuesta marcada «por confirmar»; en producción no se muestra."
     },
     "whatsapp": {

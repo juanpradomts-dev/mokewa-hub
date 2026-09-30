@@ -222,3 +222,19 @@ export async function guardarContenido(valores) {
   if (llenos.length) revisar(await sb.from("contenido").upsert(llenos));
   if (vacios.length) revisar(await sb.from("contenido").delete().in("campo", vacios));
 }
+
+// ---------------------------------------------------------------- personal (solo el admin)
+// Las cuentas se crean en Supabase → Authentication (sin registro público); aquí se da o quita el rol.
+export const personal = async () => revisar(await sb.rpc("personal"));
+export async function darAcceso(correo, nombre, rol) {
+  const { error: e } = await sb.rpc("dar_acceso", { p_correo: correo, p_nombre: nombre, p_rol: rol });
+  if (e?.message.includes("cuenta_no_existe")) throw new Error("Esa cuenta aún no existe: créala primero en Supabase → Authentication → Add user.");
+  if (e?.message.includes("ultimo_admin")) throw new Error("Debe quedar al menos un administrador.");
+  if (e) throw error(e, "No se pudo dar el acceso.");
+}
+export async function quitarAcceso(correo) {
+  const { error: e } = await sb.rpc("quitar_acceso", { p_correo: correo });
+  if (e?.message.includes("ultimo_admin")) throw new Error("Debe quedar al menos un administrador.");
+  if (e?.message.includes("a_ti_mismo")) throw new Error("No puedes quitarte el acceso a ti mismo.");
+  if (e) throw error(e, "No se pudo quitar el acceso.");
+}

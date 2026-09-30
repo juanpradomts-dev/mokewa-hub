@@ -22,8 +22,8 @@ Se abre en http://localhost:4321. El panel del organizador está en `/panel/` (e
 | Academia | `/academia/` | Niveles reales; horarios, precios y sede **por confirmar** |
 | Torneos | `/torneos/` | Solo torneos presenciales, cada uno con foto (ilustración del club mientras no haya foto autorizada) |
 | Inscripción | `/torneos/verano-2027/` | **Ejemplo** funcional: categoría automática, voucher, consentimiento del tutor |
-| El Club | `/el-club/` | «Nuestra historia»: logros en torneos presenciales (`src/data/historia.json`) y comunidad en Lichess |
-| Panel | `/panel/` | Validar pagos, exportar CSV, crear torneos, publicar resultados y noticias, editar datos del club |
+| El Club | `/el-club/` | «Nuestra historia»: campeones de los torneos presenciales del club desde 2022, tomados de Chess-Results (`src/data/historia.json`), y comunidad en Lichess |
+| Panel | `/panel/` | Inicio de sesión con roles. Administrador: todo, incluidos pagos, contactos, datos del club y personal. Entrenador: torneos, resultados y noticias. Cuentas de prueba de la demo en `src/data/personal-demo.json` |
 
 Qué se quitó a propósito (no generaba valor para el club): Salón de la Fama, fichas de jugador, historial de torneos en línea, gráfico en línea y puzzle del día. Está en el historial de git por si se necesita.
 

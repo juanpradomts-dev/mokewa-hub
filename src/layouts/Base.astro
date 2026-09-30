@@ -8,6 +8,7 @@ import club from "../data/club.json";
 import { MODO, esProduccion, valor } from "../lib/contenido.js";
 import { LEMA, NOMBRE } from "../lib/club.js";
 import { FACEBOOK } from "../lib/contacto.js";
+import { hayBaseDeDatos } from "../lib/backend.js";
 
 interface Props {
   titulo: string;
@@ -47,7 +48,7 @@ const fichaClub = indexable && seccion === "inicio"
       sameAs: [FACEBOOK, club.equipo.url],
     })
   : null;
-const tituloCompleto = seccion === "inicio" ? "Ajedrez Club Mokewa · Moquegua" : `${titulo} · Ajedrez Club Mokewa`;
+const tituloCompleto = seccion === "inicio" ? `Ajedrez Club Mokewa · ${LEMA}` : `${titulo} · Ajedrez Club Mokewa`;
 ---
 
 <!doctype html>
@@ -92,7 +93,7 @@ const tituloCompleto = seccion === "inicio" ? "Ajedrez Club Mokewa · Moquegua" 
       <div class="contenedor">
         <a class="marca" href={url("/")}>
           <Logo tam={40} />
-          <span class="marca-texto"><strong>Ajedrez Club Mokewa</strong><span>Moquegua · Perú</span></span>
+          <span class="marca-texto"><strong>Ajedrez Club Mokewa</strong></span>
         </a>
         <nav class="nav" aria-label="Principal">
           {enlaces.map(([id, href, texto]) => <a href={url(href)} aria-current={seccion === id ? "page" : undefined}>{texto}</a>)}
@@ -119,7 +120,7 @@ const tituloCompleto = seccion === "inicio" ? "Ajedrez Club Mokewa · Moquegua" 
         <div class:list={["rejilla", esProduccion ? "rejilla-2" : "rejilla-3"]}>
           <div>
             <h3>Ajedrez Club Mokewa</h3>
-            <p>Club de ajedrez de Moquegua: academia por niveles, torneos y una comunidad de {club.equipo.miembros} miembros en Lichess.</p>
+            <p>Academia por niveles, torneos presenciales y una comunidad que sigue jugando en línea.</p>
             <p>
               <a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook</a> ·{" "}
               <a href={club.equipo.url} rel="noopener" target="_blank">Equipo en Lichess</a>
@@ -134,6 +135,7 @@ const tituloCompleto = seccion === "inicio" ? "Ajedrez Club Mokewa · Moquegua" 
               <li><a href={url("/el-club/#comunidad")}>Comunidad en Lichess</a></li>
               <li><a href={url("/contacto/")}>Contacto</a></li>
               <li><a href={url("/privacidad/")}>Privacidad y datos de menores</a></li>
+              {(!esProduccion || hayBaseDeDatos) && <li><a href={url("/panel/")}>Iniciar sesión (personal del club)</a></li>}
             </ul>
           </div>
           {!esProduccion && (
@@ -144,7 +146,7 @@ const tituloCompleto = seccion === "inicio" ? "Ajedrez Club Mokewa · Moquegua" 
           )}
         </div>
         {!esProduccion && <p class="legal">
-          Demostración privada, no indexada, preparada sin costo para el club. No se difunde ni se presenta como web oficial hasta que el Ajedrez Club Mokewa la apruebe. No muestra nombres ni fotos de alumnos.
+          Demostración privada, no indexada, preparada sin costo para el club. No se difunde ni se presenta como web oficial hasta que el Ajedrez Club Mokewa la apruebe. De los campeones solo muestra el nombre y la inicial del apellido; ninguna foto de alumnos.
         </p>}
       </div>
     </footer>
