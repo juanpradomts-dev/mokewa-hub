@@ -107,7 +107,8 @@ function pintarSelectTorneos() {
 async function miniatura(id) {
   if (urlsVoucher.has(id)) return urlsVoucher.get(id);
   const blob = await leerVoucher(id).catch(() => null);
-  const info = blob ? { url: URL.createObjectURL(blob), tipo: blob.type } : null;
+  // Un comprobante dañado (no es un archivo) se trata como faltante: la lista se pinta igual.
+  const info = blob instanceof Blob ? { url: URL.createObjectURL(blob), tipo: blob.type } : null;
   if (info) urlsVoucher.set(id, info);
   return info;
 }
