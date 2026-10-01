@@ -1,11 +1,12 @@
 ---
+import { redirigir } from "../../lib/redireccion.js";
 import Base from "../../layouts/Base.astro";
 import FichaTorneo from "../../components/FichaTorneo.astro";
 import { esProduccion, valor } from "../../lib/contenido.js";
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 // Es un ejemplo hasta que el club confirme la fecha: en producción, sin fecha, esta página no se publica.
 const real = !!valor("verano_fecha");
-if (esProduccion && !real) return Astro.redirect(`${b}/torneos/`);
+if (esProduccion && !real) return redirigir(`${b}/torneos/`);
 ---
 
 <Base titulo="Torneo de Verano 2027" seccion="torneos" descripcion={real ? "Torneo de Verano 2027 del Ajedrez Club Mokewa en Moquegua: fecha, categorías e inscripción." : "Inscripción en línea al Torneo de Verano 2027 del Ajedrez Club Mokewa (ejemplo de la demo)."}>

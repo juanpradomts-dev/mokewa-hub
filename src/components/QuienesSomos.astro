@@ -56,10 +56,37 @@ const bloques = (["mision", "vision"] as const)
   .quienes h2 {
     max-width: 20ch;
   }
-  /* Sin misión ni visión confirmadas (producción): una sola columna de lectura */
+  /* Sin misión ni visión confirmadas (web oficial): título a la izquierda y texto a la derecha,
+     sin media pantalla vacía. */
   @media (min-width: 900px) {
     .quienes.solo {
-      grid-template-columns: minmax(0, 62ch);
+      grid-template-columns: 1fr;
+    }
+    .solo .quienes-texto {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      grid-template-areas:
+        "ante ."
+        "titulo texto"
+        "titulo enlace";
+      column-gap: 64px;
+      align-items: end;
+    }
+    .solo .quienes-texto > :global(.antetitulo) {
+      grid-area: ante;
+    }
+    .solo .quienes-texto > h2 {
+      grid-area: titulo;
+      margin: 0;
+      align-self: start;
+    }
+    .solo .quienes-texto > p:not(.antetitulo) {
+      grid-area: texto;
+      margin: 0;
+    }
+    .solo .quienes-texto > .ver-historia {
+      grid-area: enlace;
+      justify-self: start;
     }
   }
   .lema {

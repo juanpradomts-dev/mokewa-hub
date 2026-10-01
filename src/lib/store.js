@@ -6,11 +6,14 @@
 //   descarga en ese caso) y se guardan en el mismo estado en memoria. Las lecturas siguen siendo
 //   inmediatas; las escrituras devuelven una promesa (las páginas hacen «await», que en la demo
 //   no cambia nada).
+// - WEB OFICIAL SIN BASE DE DATOS: solo lo publicado (contenido.json). No lee ni escribe nada del
+//   navegador, así lo que alguien probó en la demo (mismo dominio) nunca aparece en la web oficial.
 
 import contenidoBase from "../data/contenido.json";
 import { CATEGORIAS } from "./categorias.js";
 import { enlaceContacto, numeroWhatsapp } from "./contacto.js";
 import { hayBaseDeDatos } from "./backend.js";
+import { esProduccion } from "./contenido.js";
 import personalDemo from "../data/personal-demo.json";
 
 const CLAVE = "mokewa-demo-v1";
@@ -54,9 +57,11 @@ export const listo = () => publicoListo;
 export const hayNube = NUBE;
 
 let cache = null;
+const FIJO = esProduccion && !NUBE;
 function leer() {
   if (NUBE) return estadoNube;
   if (cache) return cache;
+  if (FIJO) return (cache = { ...vacio(), sembrado: true });
   try {
     cache = { ...vacio(), ...JSON.parse(localStorage.getItem(CLAVE) ?? "null") };
   } catch {
@@ -66,6 +71,7 @@ function leer() {
 }
 function guardar(estado) {
   cache = estado;
+  if (FIJO) return window.dispatchEvent(new CustomEvent(EVENTO));
   try {
     localStorage.setItem(CLAVE, JSON.stringify(estado));
   } catch (e) {
@@ -77,7 +83,7 @@ export function alCambiar(fn) {
   window.addEventListener(EVENTO, fn);
   // Cambios hechos en otra pestaña (p. ej. el panel abierto al lado de la web).
   window.addEventListener("storage", (e) => {
-    if (e.key === CLAVE) {
+    if (!FIJO && e.key === CLAVE) {
       cache = null;
       fn();
     }
@@ -341,7 +347,7 @@ function voucherDePrueba(n) {
 }
 
 export async function sembrarDemo({ forzar = false } = {}) {
-  if (NUBE) return; // la web oficial nunca siembra datos de prueba
+  if (NUBE || FIJO) return; // la web oficial nunca siembra datos de prueba
   const e = leer();
   if (e.sembrado && !forzar) return;
   const base = [
@@ -381,7 +387,7 @@ export async function sembrarDemo({ forzar = false } = {}) {
 }
 
 export async function reiniciarDemo() {
-  if (NUBE) return;
+  if (NUBE || FIJO) return;
   for (const i of leer().inscripciones) await borrarVoucher(i.id);
   cache = null;
   try {

@@ -51,18 +51,29 @@ Qué se quitó a propósito (no generaba valor para el club): Salón de la Fama,
 2. SQL Editor: pegar y ejecutar `supabase/migrations/20260930000000_mokewa.sql` (o `npx supabase link` y `npx supabase db push`).
 3. Authentication → Sign In / Providers: desactivar el registro de usuarios nuevos. Las cuentas del panel las crea el administrador.
 4. Authentication → Users → Add user (correo y contraseña del administrador). Luego, en el SQL Editor: `insert into perfiles (id, nombre, rol) values ('<id del usuario>', 'Nombre', 'admin');` (o `'entrenador'`).
-5. GitHub → Settings → Secrets and variables → Actions → Variables: `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY` (Project Settings → API; la clave «anon» es pública por diseño) y, para lanzar, `PUBLIC_MODO` = `produccion`. El workflow ya las usa, y también mantiene activa la base de datos (el plan gratuito se pausa tras una semana sin uso).
+5. GitHub → Settings → Secrets and variables → Actions → Variables: `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY` (Project Settings → API; la clave «anon» es pública por diseño). El workflow ya las usa, y también mantiene activa la base de datos (el plan gratuito se pausa tras una semana sin uso).
 6. Respaldo: la guía pide una copia semanal. No se automatiza en GitHub porque el repositorio es público y la copia tendría datos de menores: el administrador exporta cada semana desde el panel («Exportar a Excel») y lo guarda en un lugar privado del club.
 
 Probar en local: `npx supabase start` (Docker) y `npm run prueba:nube`, que comprueba las reglas de privacidad contra la base de datos real: el público no lee datos privados, la lista pública muestra solo nombre, categoría y club, cada comprobante va en su ruta con tipo y tamaño permitidos, nadie se registra solo, el entrenador no ve contactos y el admin puede borrarlo todo.
 
-### Qué cambia solo al construir con `PUBLIC_MODO=produccion`
+### Web oficial y copia de prueba
+
+El workflow construye dos versiones y las publica juntas:
+
+- **Raíz** (`/mokewa-hub/`): la web oficial, con `PUBLIC_MODO=produccion`.
+- **`/mokewa-hub/demo/`**: la copia de prueba (`PUBLIC_MODO=demo`, `OUT_DIR=dist/demo`). Tiene el aviso de demo, las propuestas marcadas, el torneo de ejemplo y el panel con cuentas de prueba. Sirve para presentar el panel y no se indexa.
+
+La oficial no lee nada guardado en el navegador. Así, lo que alguien pruebe en `/demo/` (mismo dominio) nunca aparece en ella.
+
+Google: la oficial lleva `noindex` hasta que se cree la variable del repositorio `PUBLIC_INDEXAR` = `si` (Settings → Secrets and variables → Actions → Variables).
+
+### Qué cambia al construir con `PUBLIC_MODO=produccion`
 
 - Lo no confirmado se oculta: chips «por confirmar», misión, visión y temas de cada nivel propuestos por nosotros.
 - El «Torneo de Verano 2027» de ejemplo desaparece hasta que el club confirme su fecha (`verano_fecha`); entonces deja de decir «ejemplo».
-- «Acerca de la demo» redirige al inicio.
+- «Acerca de la demo», el panel sin base de datos y el torneo de ejemplo redirigen al instante (`src/lib/redireccion.js`, en español).
 - Sin base de datos (`PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY`, ver `src/lib/backend.js`), no hay inscripción en línea ni panel: la inscripción pasa al contacto del club, para que ninguna inscripción quede guardada solo en el navegador de un padre.
-- Se indexa: `index, follow`, URL canónica, `robots.txt` con el sitemap, `sitemap.xml` y la ficha del club para Google (`SportsClub`, solo con datos verificados o confirmados). El panel y la página 404 nunca se indexan.
+- Con `PUBLIC_INDEXAR` distinto de `no` se indexa: `index, follow`, URL canónica, `robots.txt` con el sitemap, `sitemap.xml` y la ficha del club para Google (`SportsClub`, solo con datos verificados o confirmados). El panel y la página 404 nunca se indexan.
 
 ### Datos del club: del panel a la web oficial
 
@@ -70,7 +81,7 @@ En la reunión se cargan en el panel («Datos del club»; «Usar la propuesta» 
 
 ## Privacidad
 
-- `noindex` en todas las páginas y `robots.txt` con `Disallow: /` mientras sea demo (los genera `src/pages/robots.txt.ts` según el modo).
+- `noindex` en todas las páginas y `robots.txt` con `Disallow: /` en la copia de prueba, y en la oficial mientras `PUBLIC_INDEXAR` no sea `si` (los genera `src/pages/robots.txt.ts`).
 - La web no muestra nombres ni fotos de alumnos. Fotos solo con autorización escrita de los padres.
 - Listas públicas: solo nombre, categoría y club (Ley N.º 29733). Los inscritos del torneo de ejemplo son nombres inventados y así se indica.
 
@@ -85,5 +96,5 @@ En la reunión se cargan en el panel («Datos del club»; «Usar la propuesta» 
 1. El club aprueba la demo y entrega los datos de `../PREGUNTAS-PARA-EL-CLUB.md`: WhatsApp, sede, horarios, precios, autorización del logo, victorias, fotos autorizadas, entrenadores y misión y visión.
 2. Si el club entrega el logo original, reemplazar el trazado (`src/components/Caballo.astro`, `public/favicon.svg`, `public/og.png`).
 3. Conectar Supabase y el correo transaccional (sin ellos se puede publicar igual: la inscripción va por el contacto del club).
-4. Añadir `PUBLIC_MODO: produccion` al paso «Construir» de `.github/workflows/publicar.yml`. Eso quita el aviso de demo y el `noindex` y activa el sitemap.
+4. Crear la variable del repositorio `PUBLIC_INDEXAR` = `si`. Eso quita el `noindex` y activa el sitemap. La raíz ya se publica como web oficial.
 5. Crear el perfil de Google Business del club con la misma dirección y el mismo teléfono de la web.

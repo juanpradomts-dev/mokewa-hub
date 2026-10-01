@@ -37,16 +37,24 @@ jobs:
           git config user.email "mokewa-bot@users.noreply.github.com"
           git add data/lichess
           git diff --cached --quiet || git commit -m "datos: actualización de Lichess" && git push
-      - name: Construir
+      - name: Construir la web oficial
         run: npm run build
         env:
           SITE: https://${{ github.repository_owner }}.github.io
           BASE: /${{ github.event.repository.name }}
-          # La web oficial se activa con variables del repositorio, sin tocar código
-          # (Settings → Secrets and variables → Actions → Variables). Vacías = demo.
-          PUBLIC_MODO: ${{ vars.PUBLIC_MODO }}
+          PUBLIC_MODO: produccion
+          # Variables del repositorio (Settings → Secrets and variables → Actions → Variables):
+          # PUBLIC_INDEXAR=si la muestra en Google; PUBLIC_SUPABASE_* activan inscripción en línea y panel.
+          PUBLIC_INDEXAR: ${{ vars.PUBLIC_INDEXAR || 'no' }}
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+      - name: Construir la copia de demostración en /demo/ (panel de prueba para presentar; no se indexa)
+        run: npm run build
+        env:
+          SITE: https://${{ github.repository_owner }}.github.io
+          BASE: /${{ github.event.repository.name }}/demo
+          OUT_DIR: dist/demo
+          PUBLIC_MODO: demo
       - name: Mantener activa la base de datos (el plan gratuito de Supabase se pausa tras una semana sin uso)
         if: ${{ vars.PUBLIC_SUPABASE_URL != '' }}
         run: |

@@ -5,6 +5,11 @@ import Base from "../layouts/Base.astro";
 import BotonContacto from "../components/BotonContacto.astro";
 import club from "../data/club.json";
 import { valor } from "../lib/contenido.js";
+import { enlaceContacto } from "../lib/contacto.js";
+
+// El texto dice por dónde responde el club de verdad: Gmail, WhatsApp o, mientras falten, Facebook.
+const POR = { correo: "por correo", whatsapp: "por WhatsApp", facebook: "por mensaje en Facebook" };
+const canal = enlaceContacto({ correo: valor("correo"), whatsapp: valor("whatsapp") }).tipo;
 ---
 
 <Base titulo="Contacto" seccion="contacto" descripcion="Contacto del Ajedrez Club Mokewa en Moquegua: clases, torneos, sede y redes.">
@@ -14,7 +19,7 @@ import { valor } from "../lib/contenido.js";
         <svg class="sobre" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M3 5.5h18v13H3z M3.5 6l8.5 7 8.5-7"></path></svg>
         <p class="antetitulo">Contacto</p>
         <h1>Escríbenos</h1>
-        <p class="bajada">Te respondemos por correo con horarios, precios y cómo empezar.</p>
+        <p class="bajada">Te respondemos <span data-por>{POR[canal]}</span> con horarios, precios y cómo empezar.</p>
         <Dato como="p" clase="correo-club" etiqueta="Gmail del club" campo="correo" />
         <BotonContacto variante="primario" clase="boton-grande" mensaje="Hola, quisiera información sobre las clases de ajedrez." />
         <p class="temas">
@@ -25,8 +30,8 @@ import { valor } from "../lib/contenido.js";
       </div>
 
       <ul class="otros">
-        <li><Dato etiqueta="WhatsApp" campo="whatsapp" /></li>
-        <li><a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook</a></li>
+        <li data-canal="whatsapp" hidden={canal === "whatsapp"}><Dato etiqueta="WhatsApp" campo="whatsapp" /></li>
+        <li data-canal="facebook" hidden={canal === "facebook"}><a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook</a></li>
         <li><a href={club.equipo.url} rel="noopener" target="_blank">Equipo en Lichess</a></li>
         <li><Dato etiqueta="Sede" campo="sede" /></li>
         <li><Dato etiqueta="Atención" campo="atencion" /></li>
@@ -38,8 +43,14 @@ import { valor } from "../lib/contenido.js";
 
 <script>
   import { contenido, alCambiar } from "../lib/store.js";
+  import { enlaceContacto } from "../lib/contacto.js";
+  const POR: Record<string, string> = { correo: "por correo", whatsapp: "por WhatsApp", facebook: "por mensaje en Facebook" };
   const mapa = document.getElementById("mapa") as HTMLAnchorElement;
   const pintar = () => {
+    // El canal principal no se repite en la lista pequeña.
+    const { tipo } = enlaceContacto({ correo: contenido("correo"), whatsapp: contenido("whatsapp") });
+    document.querySelector("[data-por]")!.textContent = POR[tipo];
+    for (const li of document.querySelectorAll<HTMLElement>("[data-canal]")) li.hidden = li.dataset.canal === tipo;
     const m = contenido("mapa");
     if (m && /^https:\/\//.test(m)) mapa.href = m;
     mapa.hidden = !(m && /^https:\/\//.test(m));
@@ -136,6 +147,8 @@ import { valor } from "../lib/contenido.js";
     font-size: 0.72rem;
   }
   #mapa[hidden],
+  .otros li[hidden],
+  .otros li:empty,
   .otros li:has(> #mapa[hidden]) {
     display: none;
   }

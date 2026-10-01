@@ -4,7 +4,7 @@ import archivoLatin from "@fontsource-variable/archivo/files/archivo-latin-wdth-
 import "../styles/global.css";
 import Logo from "../components/Logo.astro";
 import club from "../data/club.json";
-import { MODO, esProduccion, valor } from "../lib/contenido.js";
+import { MODO, esProduccion, indexar, valor } from "../lib/contenido.js";
 import { LEMA, NOMBRE } from "../lib/club.js";
 import { FACEBOOK } from "../lib/contacto.js";
 import { hayBaseDeDatos } from "../lib/backend.js";
@@ -26,8 +26,8 @@ const enlaces = [
   ["club", "/el-club/", "El Club"],
   ["contacto", "/contacto/", "Contacto"],
 ];
-// Indexación: la demo nunca se indexa (guía, 10.2). En producción sí, salvo las páginas privadas.
-const indexable = esProduccion && !privada;
+// Indexación: la demo nunca se indexa (guía, 10.2). La web oficial sí (salvo PUBLIC_INDEXAR=no y las páginas privadas).
+const indexable = indexar && !privada;
 const canonica = new URL(Astro.url.pathname, Astro.site).href;
 // Ficha del club para Google (solo producción y solo en el inicio), con datos verificados o confirmados.
 const whatsapp = valor("whatsapp");
@@ -60,7 +60,6 @@ const tituloCompleto = seccion === "inicio" ? `Ajedrez Club Mokewa · ${LEMA}` :
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Demo privada: no se indexa hasta que el club apruebe la web (guía, sección 10.2). -->
     <meta name="robots" content={indexable ? "index, follow" : "noindex, nofollow"} />
     {indexable && <link rel="canonical" href={canonica} />}
     {indexable && <meta property="og:url" content={canonica} />}

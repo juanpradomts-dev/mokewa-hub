@@ -1,6 +1,11 @@
 ---
 import Dato from "../components/Dato.astro";
 import Base from "../layouts/Base.astro";
+import { esProduccion } from "../lib/contenido.js";
+import { hayBaseDeDatos } from "../lib/backend.js";
+
+// Sin base de datos, la web oficial no tiene formularios: no recoge ningún dato personal.
+const recoge = !esProduccion || hayBaseDeDatos;
 ---
 
 <Base titulo="Privacidad" descripcion="Cómo el Ajedrez Club Mokewa protege los datos de sus jugadores, en especial de los menores de edad.">
@@ -10,6 +15,14 @@ import Base from "../layouts/Base.astro";
       <h1>Cómo cuidamos los datos, sobre todo los de menores</h1>
       <p class="bajada">La mayoría de nuestros jugadores son niños y adolescentes. Aplicamos la Ley N.º 29733, Ley de Protección de Datos Personales del Perú, y su reglamento.</p>
 
+      {!recoge && (
+        <>
+          <h2>Qué datos recoge esta web</h2>
+          <p>Ninguno. No tiene formularios, cuentas ni cookies: las consultas e inscripciones se hacen por los canales del club, en la <a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/contacto/`}>página de contacto</a>.</p>
+        </>
+      )}
+
+      {recoge && (<>
       <h2>Qué pedimos y para qué</h2>
       <ul>
         <li>Nombre, fecha de nacimiento (para calcular la categoría), nivel y club: para gestionar la inscripción al torneo.</li>
@@ -17,15 +30,17 @@ import Base from "../layouts/Base.astro";
         <li>Comprobante de pago: solo para validar el pago.</li>
         <li>No pedimos DNI, salvo que las bases de un torneo oficial lo exijan. Nunca lo publicamos.</li>
       </ul>
+      </>)}
 
       <h2>Qué es público</h2>
       <ul>
-        <li>En las listas de inscritos y en los resultados: solo nombre, categoría y club.</li>
+        {recoge && <li>En las listas de inscritos y en los resultados: solo nombre, categoría y club.</li>}
         <li>En «Nuestra historia»: de cada campeón, solo el nombre y la inicial del apellido, con enlace a los resultados públicos del torneo. Se retira cuando la familia lo pida.</li>
         <li>Nunca publicamos fechas de nacimiento, teléfonos ni correos.</li>
         <li>Fotos de menores: solo con autorización escrita del tutor, y se retiran cuando lo pida.</li>
       </ul>
 
+      {recoge && (<>
       <h2>Consentimiento</h2>
       <p>El formulario de inscripción tiene una casilla de autorización del padre, madre o tutor. Guardamos la fecha en que se marcó.</p>
 
@@ -33,14 +48,15 @@ import Base from "../layouts/Base.astro";
       <ul>
         <li>Los comprobantes se guardan en un almacenamiento privado; solo los ve el organizador, con enlaces que caducan.</li>
         <li>Cada tabla con datos personales tiene reglas de acceso por fila (solo el administrador lee datos de contacto).</li>
-        <li>El sitio no usa cookies de seguimiento: la analítica es anónima.</li>
+        <li>El sitio no usa cookies ni analítica de seguimiento.</li>
       </ul>
+      </>)}
 
       <h2>Tus derechos</h2>
-      <p>Puedes pedir ver, corregir o borrar los datos tuyos o de tu hijo o hija (derecho de supresión). Escríbenos por los canales de la <a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/contacto/`}>página de contacto</a>. El organizador lo borra desde el panel.</p>
+      <p>Puedes pedir ver, corregir o borrar los datos tuyos o de tu hijo o hija, o que retiremos un nombre de «Nuestra historia» (derecho de supresión). Escríbenos por los canales de la <a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/contacto/`}>página de contacto</a>.{recoge && " El organizador lo borra desde el panel."}</p>
       <Dato como="p" etiqueta="Correo del club" campo="correo" />
 
-      <p class="nota">En esta demostración, todo lo que escribas en los formularios se guarda solo en tu navegador y no se envía a ningún servidor.</p>
+      {!esProduccion && <p class="nota">En esta demostración, todo lo que escribas en los formularios se guarda solo en tu navegador y no se envía a ningún servidor.</p>}
     </div>
   </section>
 </Base>

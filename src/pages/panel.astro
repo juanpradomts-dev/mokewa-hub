@@ -1,4 +1,5 @@
 ---
+import { redirigir } from "../lib/redireccion.js";
 import { esProduccion as esProduccionPanel } from "../lib/contenido.js";
 import { hayBaseDeDatos } from "../lib/backend.js";
 import personalDemo from "../data/personal-demo.json";
@@ -28,7 +29,7 @@ const mesesSinOnline = (() => {
 })();
 const interno = { ...club.interno, meses_sin_online: mesesSinOnline, miembros: club.equipo.miembros };
 // En producción el panel necesita la base de datos (acceso con correo y contraseña); sin ella no se publica.
-if (esProduccionPanel && !hayBaseDeDatos) return Astro.redirect(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/`);
+if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/`);
 ---
 
 <Base titulo="Panel del organizador" seccion="panel" privada descripcion={hayBaseDeDatos ? "Panel privado del Ajedrez Club Mokewa." : "Panel privado del Ajedrez Club Mokewa (demo)."}>

@@ -1,12 +1,13 @@
 ---
 // Torneos creados en el panel: /torneos/torneo/?t=<id>. La cabecera la llena inscripcion.js.
+import { redirigir } from "../../lib/redireccion.js";
 import Base from "../../layouts/Base.astro";
 import FichaTorneo from "../../components/FichaTorneo.astro";
 import { esProduccion } from "../../lib/contenido.js";
 import { hayBaseDeDatos } from "../../lib/backend.js";
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 // En la web oficial los torneos del panel viven en la base de datos: sin ella no hay nada que mostrar.
-if (esProduccion && !hayBaseDeDatos) return Astro.redirect(`${b}/torneos/`);
+if (esProduccion && !hayBaseDeDatos) return redirigir(`${b}/torneos/`);
 ---
 
 <Base titulo="Torneo" seccion="torneos" descripcion="Torneo del Ajedrez Club Mokewa en Moquegua: fecha, categorías e inscripción.">
