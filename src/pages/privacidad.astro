@@ -53,7 +53,7 @@ const recoge = !esProduccion || hayBaseDeDatos;
       </>)}
 
       <h2>Tus derechos</h2>
-      <p>Puedes pedir ver, corregir o borrar los datos tuyos o de tu hijo o hija, o que retiremos un nombre de «Nuestra historia» (derecho de supresión). Escríbenos por los canales de la <a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/contacto/`}>página de contacto</a>.{recoge && " El organizador lo borra desde el panel."}</p>
+      <p>Puedes pedir ver, corregir o borrar los datos tuyos o de tu hijo o hija, o que retiremos un nombre de «Nuestra historia» (derecho de supresión). Pídelo por los canales de la <a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/contacto/`}>página de contacto</a>.{recoge && " El organizador lo borra desde el panel."}</p>
       <Dato como="p" etiqueta="Correo del club" campo="correo" />
 
       {!esProduccion && <p class="nota">En esta demostración, todo lo que escribas en los formularios se guarda solo en tu navegador y no se envía a ningún servidor.</p>}

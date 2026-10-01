@@ -150,12 +150,12 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
       <div class="cierre">
         <span class="jugada" aria-hidden="true">1.e4</span>
         <div class="cierre-texto">
-          <h2>La primera jugada: escríbenos</h2>
+          <h2>La primera jugada es tuya</h2>
           <p>Te contamos horarios, precios y cómo empezar.</p>
           <Dato como="p" etiqueta="Sede" campo="sede" />
           {mapa && <a class="mapa" href={mapa} rel="noopener" target="_blank">Ver en Google Maps</a>}
         </div>
-        <BotonContacto cta clase="cierre-boton" />
+        <BotonContacto accion="Hablar con el club" clase="cierre-boton" mensaje="Hola, quisiera información sobre las clases de ajedrez." />
       </div>
     </div>
   </section>

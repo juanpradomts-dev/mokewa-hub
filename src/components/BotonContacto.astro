@@ -15,7 +15,7 @@ interface Props {
 const { cta = false, variante = "primario", clase = "", mensaje: _m, accion: _a, ...resto } = Astro.props;
 // El botón principal dice «Clase de prueba» solo si el club confirmó que la ofrece.
 const conClase = !!contenido.campos.clase_prueba?.valor;
-const accion = cta ? (conClase ? "Clase de prueba" : "Escríbenos") : (Astro.props.accion ?? "");
+const accion = cta ? (conClase ? "Clase de prueba" : "Pide informes") : (Astro.props.accion ?? "");
 const mensaje = cta
   ? conClase
     ? "Hola, quisiera agendar una clase de prueba de ajedrez."

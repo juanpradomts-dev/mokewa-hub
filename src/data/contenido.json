@@ -33,14 +33,16 @@
     },
     "sede": {
       "etiqueta": "Sede (dirección)",
-      "valor": null,
+      "valor": "Villa Magisterial E-1, Moquegua",
+      "fuente": "https://chess-results.com/tnr1377604.aspx?lan=2",
+      "nota": "Dirección que el club publicó como lugar del IRT Blitz «Campeón Nacional» (21-03-2026) en Chess-Results. Confirmar con el club.",
       "tipo": "text",
       "grupo": "Contacto",
-      "ayuda": "Dirección donde se dictan las clases presenciales."
+      "ayuda": "Dirección del club."
     },
     "mapa": {
       "etiqueta": "Enlace de Google Maps de la sede",
-      "valor": null,
+      "valor": "https://www.google.com/maps/search/?api=1&query=Villa%20Magisterial%20E-1%2C%20Moquegua%2C%20Per%C3%BA",
       "tipo": "url",
       "grupo": "Contacto"
     },

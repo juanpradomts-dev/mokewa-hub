@@ -140,7 +140,7 @@ export function pintarCampos(raiz = document) {
   }
   const conClase = !!contenido("clase_prueba");
   for (const a of raiz.querySelectorAll("[data-cta]")) {
-    a.dataset.accion = conClase ? "Clase de prueba" : "Escríbenos";
+    a.dataset.accion = conClase ? "Clase de prueba" : "Pide informes";
     a.dataset.mensaje = conClase
       ? "Hola, quisiera agendar una clase de prueba de ajedrez."
       : "Hola, quisiera información sobre las clases de ajedrez.";

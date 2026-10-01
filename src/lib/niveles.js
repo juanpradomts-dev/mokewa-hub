@@ -9,6 +9,7 @@ export const NIVELES = [
     horario: "horario_basico",
     edad: "edad_basico",
     para: "Para quien empieza desde cero o recién aprende a mover las piezas.",
+    accion: "Quiero empezar", // texto del botón: cada tarjeta dice algo distinto
   },
   {
     id: "intermedio",
@@ -17,6 +18,7 @@ export const NIVELES = [
     horario: "horario_intermedio",
     edad: "edad_intermedio",
     para: "Para quien ya juega y quiere empezar a competir.",
+    accion: "Quiero competir", // texto del botón: cada tarjeta dice algo distinto
   },
   {
     id: "avanzado",
@@ -25,5 +27,6 @@ export const NIVELES = [
     horario: "horario_avanzado",
     edad: "edad_avanzado",
     para: "Para quien se prepara para torneos regionales, nacionales o con rating FIDE.",
+    accion: "Quiero ir por el podio", // texto del botón: cada tarjeta dice algo distinto
   },
 ];

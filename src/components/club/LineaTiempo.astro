@@ -1,8 +1,10 @@
 ---
 // «Nuestra historia»: LÍNEA DE TIEMPO horizontal (2022 → hoy) de los torneos PRESENCIALES del club.
 // Un eje de casillas de tablero; cada torneo es un punto del que sale una rama curva hacia su
-// tarjeta con los campeones. Se desliza en horizontal (dedo, arrastre o flechas); un caballo recorre
-// el eje hasta el torneo del centro y «Recorrer la historia» hace el viaje completo.
+// tarjeta con los campeones. Se desliza en horizontal (dedo, arrastre con inercia o flechas) y se
+// acomoda sola en el torneo más cercano. Un caballo salta de torneo en torneo, el eje se enciende por
+// donde pasó y, al verse por primera vez, el caballo viaja de 2022 a hoy. «Recorrer la historia»
+// repite el viaje paso a paso.
 // Datos: src/data/historia.json (clasificaciones públicas de Chess-Results, con su enlace).
 // De cada campeón solo el nombre y la inicial del apellido; si una familia lo pide, va a «ocultar».
 // Sin JavaScript se ve la lista simple de abajo.
@@ -41,6 +43,7 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
   <!-- Controles de la línea de tiempo (solo con JavaScript) -->
   <div class="tl-controles" data-controles hidden>
     <div class="tl-anios" role="group" aria-label="Ir a un año">
+      <span class="tl-pildora" aria-hidden="true"></span>
       {anios.map((a) => <button type="button" data-ir={a} aria-pressed="false">{a}</button>)}
     </div>
     <div class="tl-navegar">
@@ -51,11 +54,14 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
   </div>
   <p class="estado" data-estado aria-live="polite"></p>
 
-  <div class="tl-pista" data-pista tabindex="0" role="region" aria-label="Línea de tiempo de los campeones, de 2022 a hoy. Se desliza en horizontal." hidden>
-    <div class="tl-lienzo" data-lienzo>
-      <svg class="tl-ramas" aria-hidden="true"></svg>
-      <div class="tl-eje" aria-hidden="true"></div>
-      <div class="tl-caballo" data-caballo aria-hidden="true"><Caballo tam="100%" /></div>
+  <div class="tl-marco" data-marco hidden>
+    <div class="tl-pista" data-pista tabindex="0" role="region" aria-label="Línea de tiempo de los campeones, de 2022 a hoy. Se desliza en horizontal; las flechas del teclado pasan de torneo en torneo.">
+      <div class="tl-lienzo" data-lienzo>
+        <svg class="tl-ramas" aria-hidden="true"></svg>
+        <div class="tl-eje" aria-hidden="true"></div>
+        <div class="tl-eje-luz" aria-hidden="true"></div>
+        <div class="tl-caballo" data-caballo aria-hidden="true"><Caballo tam="100%" /></div>
+      </div>
     </div>
   </div>
   <p class="tl-pista-ayuda" data-solo-js hidden>Desliza a los lados para viajar en el tiempo. Toca un campeón para seguir todos sus títulos.</p>
@@ -91,17 +97,21 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
 
   function iniciar(raiz: HTMLElement) {
     const datos: Ev[] = JSON.parse(raiz.querySelector("[data-datos-historia]")!.textContent || "[]");
+    const n = datos.length;
+    const marco = raiz.querySelector<HTMLElement>("[data-marco]")!;
     const pista = raiz.querySelector<HTMLElement>("[data-pista]")!;
     const lienzo = raiz.querySelector<HTMLElement>("[data-lienzo]")!;
     const svg = lienzo.querySelector<SVGSVGElement>(".tl-ramas")!;
     const eje = lienzo.querySelector<HTMLElement>(".tl-eje")!;
+    const luz = lienzo.querySelector<HTMLElement>(".tl-eje-luz")!;
     const caballo = lienzo.querySelector<HTMLElement>("[data-caballo]")!;
     const estado = raiz.querySelector<HTMLElement>("[data-estado]")!;
+    const pildora = raiz.querySelector<HTMLElement>(".tl-pildora")!;
     const botonesAnio = [...raiz.querySelectorAll<HTMLButtonElement>("[data-ir]")];
     const play = raiz.querySelector<HTMLButtonElement>("[data-play]")!;
     raiz.querySelector<HTMLElement>("[data-controles]")!.hidden = false;
     raiz.querySelector<HTMLElement>("[data-solo-js]")!.hidden = false;
-    pista.hidden = false;
+    marco.hidden = false;
     raiz.classList.add("con-linea");
 
     const el = <K extends keyof HTMLElementTagNameMap>(tag: K, clase = "", texto = "") => {
@@ -110,9 +120,11 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
       if (texto) e.textContent = texto;
       return e;
     };
-    const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
+    const plural = (k: number, uno: string, varios: string) => `${k} ${k === 1 ? uno : varios}`;
+    const limitar = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+    const suave = (p: number) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
 
-    // ---- Tarjetas, puntos del eje y marcas de año
+    // ---- Tarjetas, puntos del eje, marcas de año y años de fondo
     const lista = el("ol", "tl-lista");
     lienzo.append(lista);
     const puntos: HTMLElement[] = [];
@@ -156,20 +168,26 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
       puntos.push(p);
       return li;
     });
-    const marcasAnio = [...new Set(datos.map((e) => e.anio))].map((a) => {
+    const anios = [...new Set(datos.map((e) => e.anio))].map((a) => {
       const m = el("span", "tl-marca-anio", a);
+      const f = el("span", "tl-fondo-anio");
       m.setAttribute("aria-hidden", "true");
+      f.setAttribute("aria-hidden", "true");
+      f.dataset.anio = a; // el número se dibuja con CSS (decorativo)
       lienzo.append(m);
-      return { anio: a, m };
+      lienzo.prepend(f);
+      return { anio: a, m, f, medio: 0 };
     });
 
     // ---- Geometría: cada torneo ocupa un «paso» del eje; las tarjetas alternan arriba y abajo
     let xs: number[] = [];
     let yEje = 0;
+    let salto = 30;
     function disponer() {
       const angosto = pista.clientWidth < 700;
       const paso = angosto ? 150 : 190;
       const ancho = angosto ? 250 : 290;
+      salto = angosto ? 22 : 30;
       // Medio ancho de pantalla en cada extremo: el primer y el último torneo pueden quedar al centro.
       const margen = Math.max(angosto ? 40 : 90, pista.clientWidth / 2);
       const rama = angosto ? 46 : 58;
@@ -189,22 +207,23 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
       const W = x - paso + Math.max(ancho * 0.72 + 30, margen);
       lienzo.style.width = `${W}px`;
       lienzo.style.height = `${H}px`;
-      eje.style.top = `${yEje - 7}px`;
+      eje.style.top = luz.style.top = `${yEje - 7}px`;
       tarjetas.forEach((t, k) => {
-        const izq = xs[k] - ancho * 0.28;
-        t.style.left = `${Math.round(izq)}px`;
+        t.style.left = `${Math.round(xs[k] - ancho * 0.28)}px`;
         t.style.top = `${Math.round(k % 2 === 0 ? yEje - rama - t.offsetHeight : yEje + rama)}px`;
         puntos[k].style.left = `${xs[k]}px`;
         puntos[k].style.top = `${yEje}px`;
       });
-      for (const { anio, m } of marcasAnio) {
-        const primero = datos.findIndex((e) => e.anio === anio);
+      for (const a of anios) {
+        const ks = datos.flatMap((e, k) => (e.anio === a.anio ? [k] : []));
         // Lejos del punto: el caballo (58 px) no debe tapar el año
-        m.style.left = `${xs[primero] - Math.max(82, paso * 0.5)}px`;
-        m.style.top = `${yEje}px`;
+        a.m.style.left = `${xs[ks[0]] - Math.max(82, paso * 0.5)}px`;
+        a.m.style.top = `${yEje}px`;
+        a.medio = (xs[ks[0]] + xs[ks[ks.length - 1]]) / 2;
+        a.f.style.left = `${a.medio}px`;
+        a.f.style.top = `${yEje}px`;
       }
       ramas(ancho);
-      moverCaballo(true);
     }
 
     function ramas(ancho: number) {
@@ -216,57 +235,144 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
       svg.replaceChildren();
       tarjetas.forEach((t, k) => {
         const x0 = xs[k];
-        const arriba = k % 2 === 0;
         const x1 = t.offsetLeft + ancho * 0.28 + 30;
-        const y1 = arriba ? t.offsetTop + t.offsetHeight : t.offsetTop;
+        const y1 = k % 2 === 0 ? t.offsetTop + t.offsetHeight : t.offsetTop;
         const yMedio = (yEje + y1) / 2;
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         path.setAttribute("d", `M${x0},${yEje} C${x0},${yMedio} ${x1},${yMedio} ${x1},${y1}`);
         path.dataset.k = String(k);
+        if (t.classList.contains("vista")) path.classList.add("vista");
         svg.append(path);
       });
     }
 
-    // ---- El torneo del centro: el caballo va hasta él y su tarjeta se destaca
+    // ---- Movimiento: un solo bucle (requestAnimationFrame) mueve la pista y el caballo.
+    // El caballo sigue el centro de la pista con suavidad y, entre torneo y torneo, salta en arco
+    // como un caballo de ajedrez. El eje se enciende por donde ya pasó.
+    let kx = 0;
     let actual = -1;
-    function centroVisible() {
-      const c = pista.scrollLeft + pista.clientWidth / 2;
-      let mejor = 0;
-      xs.forEach((x, k) => {
-        if (Math.abs(x - c) < Math.abs(xs[mejor] - c)) mejor = k;
-      });
-      return mejor;
+    let animacion: { desde: number; hasta: number; t0: number; dur: number; fin?: () => void } | null = null;
+    let inercia = 0;
+    let corriendo = false;
+    const centro = () => pista.scrollLeft + pista.clientWidth / 2;
+    const maxScroll = () => pista.scrollWidth - pista.clientWidth;
+    const masCercano = (x: number) => xs.reduce((m, v, k) => (Math.abs(v - x) < Math.abs(xs[m] - x) ? k : m), 0);
+
+    function despertar() {
+      if (corriendo) return;
+      corriendo = true;
+      requestAnimationFrame(cuadro);
     }
-    function moverCaballo(inmediato = false) {
-      const k = centroVisible();
-      if (k === actual && !inmediato) return;
+    function cuadro(t: number) {
+      if (animacion) {
+        const a = animacion;
+        if (!a.t0) a.t0 = t;
+        const p = a.dur ? Math.min(1, (t - a.t0) / a.dur) : 1;
+        pista.scrollLeft = a.desde + (a.hasta - a.desde) * suave(p);
+        if (p >= 1) {
+          animacion = null;
+          a.fin?.();
+        }
+      } else if (inercia) {
+        const antes = pista.scrollLeft;
+        pista.scrollLeft += inercia;
+        inercia *= 0.93;
+        if (Math.abs(inercia) < 0.5 || pista.scrollLeft === antes) {
+          inercia = 0;
+          programarIman();
+        }
+      }
+      const destino = limitar(centro(), xs[0], xs[n - 1]);
+      const previo = kx;
+      kx += (destino - kx) * 0.2;
+      if (Math.abs(destino - kx) < 0.3) kx = destino;
+      pintar(kx - previo);
+      if (animacion || inercia || kx !== destino) requestAnimationFrame(cuadro);
+      else {
+        corriendo = false;
+        pintar(0);
+      }
+    }
+    function pintar(velocidad: number) {
+      let i = 0;
+      while (i < n - 2 && kx > xs[i + 1]) i++;
+      const tramo = n > 1 ? limitar((kx - xs[i]) / (xs[i + 1] - xs[i]), 0, 1) : 0;
+      const alto = Math.sin(Math.PI * tramo) * salto;
+      const giro = limitar(velocidad * 1.1, -16, 16);
+      caballo.style.transform = `translate3d(${kx.toFixed(1)}px, ${(yEje - alto).toFixed(1)}px, 0) rotate(${giro.toFixed(1)}deg)`;
+      luz.style.width = `${kx.toFixed(1)}px`;
+      const c = centro();
+      for (const a of anios) a.f.style.transform = `translate(-50%, -50%) translateX(${((c - a.medio) * 0.3).toFixed(1)}px)`;
+      marco.classList.toggle("al-inicio", pista.scrollLeft < 4);
+      marco.classList.toggle("al-final", pista.scrollLeft > maxScroll() - 4);
+      const k = masCercano(kx);
+      if (k !== actual) activar(k);
+    }
+    function activar(k: number) {
       actual = k;
-      caballo.style.left = `${xs[k]}px`;
-      caballo.style.top = `${yEje}px`;
       tarjetas.forEach((t, i) => t.classList.toggle("activa", i === k));
-      puntos.forEach((p, i) => p.classList.toggle("activo", i === k));
+      puntos.forEach((p, i) => {
+        p.classList.toggle("activo", i === k);
+        p.classList.toggle("pasado", i < k);
+      });
       svg.querySelectorAll("path").forEach((p) => p.classList.toggle("activa", p.dataset.k === String(k)));
-      botonesAnio.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.ir === datos[k].anio)));
+      const anio = datos[k].anio;
+      botonesAnio.forEach((b) => {
+        const si = b.dataset.ir === anio;
+        b.setAttribute("aria-pressed", String(si));
+        if (si) {
+          pildora.style.width = `${b.offsetWidth}px`;
+          pildora.style.height = `${b.offsetHeight}px`;
+          pildora.style.transform = `translate(${b.offsetLeft}px, ${b.offsetTop}px)`;
+        }
+      });
+      play.style.setProperty("--avance", String(n > 1 ? k / (n - 1) : 1));
     }
-    let pendiente = false;
+
+    // Desplazamiento animado propio: también es fluido en equipos con «reducir animaciones»
+    function irA(k: number, dur?: number, fin?: () => void) {
+      k = limitar(k, 0, n - 1);
+      inercia = 0;
+      const desde = pista.scrollLeft;
+      const hasta = limitar(xs[k] - pista.clientWidth / 2, 0, maxScroll());
+      const d = Math.abs(hasta - desde);
+      if (d < 2) {
+        animacion = null;
+        fin?.();
+        return;
+      }
+      animacion = { desde, hasta, t0: 0, dur: dur ?? limitar(320 + d * 0.4, 420, 1500), fin };
+      despertar();
+    }
+    const fijar = (k: number) => {
+      animacion = null;
+      pista.scrollLeft = limitar(xs[k] - pista.clientWidth / 2, 0, maxScroll());
+      kx = limitar(centro(), xs[0], xs[n - 1]);
+      pintar(0);
+    };
+
+    // Imán: al soltar, la línea se acomoda en el torneo más cercano
+    let espera = 0;
+    let dedo = false;
+    let jugando = false;
+    let arrastre: { x: number; s: number; ux: number; t: number; v: number } | null = null;
+    function programarIman() {
+      clearTimeout(espera);
+      if (animacion || inercia || arrastre || dedo || jugando) return;
+      espera = window.setTimeout(() => {
+        if (!animacion && !inercia && !arrastre && !dedo && !jugando) irA(masCercano(centro()), 380);
+      }, 170);
+    }
     pista.addEventListener(
       "scroll",
       () => {
-        if (pendiente) return;
-        pendiente = true;
-        requestAnimationFrame(() => {
-          pendiente = false;
-          moverCaballo();
-        });
+        despertar();
+        programarIman();
       },
       { passive: true },
     );
 
     // ---- Navegación
-    const irA = (k: number, suave = true) => {
-      k = Math.max(0, Math.min(datos.length - 1, k));
-      pista.scrollTo({ left: xs[k] - pista.clientWidth / 2, behavior: suave ? "smooth" : "auto" });
-    };
     botonesAnio.forEach((b) =>
       b.addEventListener("click", () => {
         detener();
@@ -276,62 +382,100 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     raiz.querySelectorAll<HTMLElement>("[data-paso]").forEach((b) =>
       b.addEventListener("click", () => {
         detener();
-        irA(centroVisible() + Number(b.dataset.paso));
+        irA(actual + Number(b.dataset.paso));
       }),
     );
+    pista.addEventListener("keydown", (ev) => {
+      const paso = ({ ArrowRight: 1, ArrowLeft: -1 } as Record<string, number>)[ev.key];
+      if (paso || ev.key === "Home" || ev.key === "End") {
+        ev.preventDefault();
+        detener();
+        irA(paso ? actual + paso : ev.key === "Home" ? 0 : n - 1);
+      }
+    });
 
-    // Recorrer la historia: de 2022 a hoy, torneo por torneo
+    // Recorrer la historia: de 2022 a hoy, torneo por torneo (la barra del botón muestra el avance)
     let reloj = 0;
+    let introduccion = true;
     function detener() {
-      if (!reloj) return;
-      clearInterval(reloj);
-      reloj = 0;
+      introduccion = false;
+      if (!jugando) return;
+      jugando = false;
+      clearTimeout(reloj);
       play.setAttribute("aria-pressed", "false");
       play.innerHTML = '<span aria-hidden="true">▶</span> Recorrer la historia';
     }
+    function siguiente(k: number) {
+      if (!jugando) return;
+      irA(k, 900, () => {
+        if (!jugando) return;
+        if (k >= n - 1) return detener();
+        reloj = window.setTimeout(() => siguiente(k + 1), 750);
+      });
+    }
     play.addEventListener("click", () => {
-      if (reloj) return detener();
+      if (jugando) return detener();
+      detener();
+      jugando = true;
       play.setAttribute("aria-pressed", "true");
       play.innerHTML = '<span aria-hidden="true">❚❚</span> Pausar';
-      let k = centroVisible() >= datos.length - 1 ? 0 : centroVisible();
-      irA(k);
-      reloj = window.setInterval(() => {
-        k += 1;
-        if (k >= datos.length) return detener();
-        irA(k);
-      }, 1700);
+      if (actual >= n - 1) irA(0, 1300, () => (reloj = window.setTimeout(() => siguiente(1), 600)));
+      else siguiente(actual + 1);
     });
 
-    // Arrastrar con el mouse (en celular ya se desliza con el dedo)
-    let arrastre: { x: number; s: number } | null = null;
+    // Arrastrar con el mouse, con inercia al soltar (en celular el dedo ya la tiene)
     pista.addEventListener("pointerdown", (ev) => {
-      if ((ev.target as HTMLElement).closest("button, a")) return;
       detener();
-      if (ev.pointerType !== "mouse") return;
-      arrastre = { x: ev.clientX, s: pista.scrollLeft };
+      animacion = null;
+      inercia = 0;
+      if (ev.pointerType !== "mouse") {
+        dedo = true;
+        return;
+      }
+      if ((ev.target as HTMLElement).closest("button, a")) return;
+      arrastre = { x: ev.clientX, s: pista.scrollLeft, ux: ev.clientX, t: ev.timeStamp, v: 0 };
       pista.classList.add("arrastrando");
     });
     window.addEventListener("pointermove", (ev) => {
-      if (arrastre) pista.scrollLeft = arrastre.s - (ev.clientX - arrastre.x);
-    });
-    window.addEventListener("pointerup", () => {
       if (!arrastre) return;
+      pista.scrollLeft = arrastre.s - (ev.clientX - arrastre.x);
+      const dt = ev.timeStamp - arrastre.t;
+      if (dt > 0) arrastre.v = 0.75 * ((arrastre.ux - ev.clientX) / dt) + 0.25 * arrastre.v;
+      arrastre.ux = ev.clientX;
+      arrastre.t = ev.timeStamp;
+    });
+    const soltar = (ev: PointerEvent) => {
+      if (ev.pointerType !== "mouse") {
+        if (!dedo) return;
+        dedo = false;
+        programarIman();
+        return;
+      }
+      if (!arrastre) return;
+      const v = ev.timeStamp - arrastre.t > 80 ? 0 : arrastre.v; // se detuvo antes de soltar: sin inercia
       arrastre = null;
       pista.classList.remove("arrastrando");
-    });
+      if (Math.abs(v) > 0.12) {
+        inercia = limitar(v * 16, -60, 60);
+        despertar();
+      } else programarIman();
+    };
+    window.addEventListener("pointerup", soltar);
+    window.addEventListener("pointercancel", soltar);
+    pista.addEventListener("wheel", () => detener(), { passive: true });
 
     // ---- Seguir a un campeón por toda la historia
     let nombre = "";
-    function seguir(n: string) {
-      nombre = nombre === n ? "" : n;
+    function seguir(nuevo: string) {
+      nombre = nombre === nuevo ? "" : nuevo;
       let total = 0;
-      const anios = new Set<string>();
+      const suyos = new Set<string>();
       tarjetas.forEach((t, k) => {
-        const suyos = datos[k].campeones.filter((c) => c.nombre === nombre).length;
-        total += suyos;
-        if (suyos) anios.add(datos[k].anio);
-        t.classList.toggle("atenuada", !!nombre && !suyos);
-        puntos[k].classList.toggle("con-titulo", !!nombre && suyos > 0);
+        const s = datos[k].campeones.filter((c) => c.nombre === nombre).length;
+        total += s;
+        if (s) suyos.add(datos[k].anio);
+        t.classList.toggle("atenuada", !!nombre && !s);
+        puntos[k].classList.toggle("con-titulo", !!nombre && s > 0);
       });
       raiz.querySelectorAll<HTMLElement>(".tl-medalla").forEach((m) => m.setAttribute("aria-pressed", String(!!nombre && m.dataset.nombre === nombre)));
       estado.replaceChildren();
@@ -339,30 +483,49 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
         const quitar = el("button", "quitar", "Dejar de seguir");
         quitar.type = "button";
         quitar.addEventListener("click", () => seguir(nombre));
-        estado.append(`${nombre}: ${plural(total, "título", "títulos")} (${[...anios].join(", ")}). Sus torneos brillan en el eje. `, quitar);
+        estado.append(`${nombre}: ${plural(total, "título", "títulos")} (${[...suyos].join(", ")}). Sus torneos brillan en el eje. `, quitar);
       }
     }
 
-    // ---- Arranque: se abre en lo más reciente; si cambia el ancho, se vuelve a medir
+    // ---- Las tarjetas aparecen al entrar en la pista y su rama se dibuja
+    const aparecer = new IntersectionObserver(
+      (entradas) => {
+        for (const e of entradas) {
+          if (!e.isIntersecting) continue;
+          const t = e.target as HTMLLIElement;
+          t.classList.add("vista");
+          svg.querySelector(`path[data-k="${tarjetas.indexOf(t)}"]`)?.classList.add("vista");
+          aparecer.unobserve(t);
+        }
+      },
+      { root: pista, rootMargin: "0px -4% 0px -4%", threshold: 0.12 },
+    );
+
+    // ---- Arranque: la línea espera en 2022 y, al verse por primera vez, el caballo viaja hasta hoy.
+    // Cualquier toque, rueda o tecla corta el viaje.
     disponer();
-    irA(datos.length - 1, false);
-    moverCaballo(true);
+    fijar(0);
+    tarjetas.forEach((t) => aparecer.observe(t));
+    const entrar = new IntersectionObserver(
+      (en) => {
+        if (!en.some((x) => x.isIntersecting)) return;
+        entrar.disconnect();
+        window.setTimeout(() => {
+          if (introduccion) irA(n - 1, limitar(n * 170, 1800, 3400), () => (introduccion = false));
+        }, 350);
+      },
+      { threshold: 0.35 },
+    );
+    entrar.observe(pista);
     let anchoPrevio = pista.clientWidth;
     new ResizeObserver(() => {
       if (pista.clientWidth === anchoPrevio) return;
       anchoPrevio = pista.clientWidth;
-      const k = centroVisible();
+      const k = Math.max(0, actual);
       disponer();
-      irA(k, false);
+      fijar(k);
+      activar(actual);
     }).observe(pista);
-    // Al aparecer en pantalla, las ramas se dibujan
-    const obs = new IntersectionObserver((en) => {
-      if (en.some((x) => x.isIntersecting)) {
-        obs.disconnect();
-        pista.classList.add("dibuja");
-      }
-    });
-    obs.observe(pista);
   }
 </script>
 
@@ -385,6 +548,7 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     margin: 18px 0 0;
   }
   .tl-anios {
+    position: relative;
     display: inline-flex;
     flex-wrap: wrap;
     gap: 4px;
@@ -392,7 +556,21 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     border-radius: 14px;
     background: var(--a);
   }
+  /* La píldora naranja se desliza hasta el año del torneo activo */
+  .tl-pildora {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 10px;
+    background: var(--b);
+    box-shadow: 0 4px 14px rgb(242 138 30 / 0.45);
+    transition:
+      transform 0.5s cubic-bezier(0.34, 1.3, 0.64, 1),
+      width 0.5s cubic-bezier(0.34, 1.3, 0.64, 1);
+  }
   .tl-anios button {
+    position: relative;
+    z-index: 1;
     min-height: 44px;
     min-width: 60px;
     padding: 0 12px;
@@ -413,7 +591,7 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     background: rgb(255 255 255 / 0.08);
   }
   .tl-anios button[aria-pressed="true"] {
-    background: var(--b);
+    background: transparent;
     color: var(--a);
   }
   .tl-navegar {
@@ -435,14 +613,20 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     width: 44px;
     font-size: 1.1rem;
   }
+  /* La barra del botón muestra cuánto de la historia se ha recorrido */
   .tl-play {
     padding: 0 18px;
-    background: var(--b);
+    background:
+      linear-gradient(var(--a), var(--a)) 0 100% / calc(var(--avance, 0) * 100%) 4px no-repeat,
+      var(--b);
     border-color: var(--b);
     color: var(--a);
+    transition: background-size 0.5s;
   }
   .tl-play[aria-pressed="true"] {
-    background: var(--a);
+    background:
+      linear-gradient(var(--b), var(--b)) 0 100% / calc(var(--avance, 0) * 100%) 4px no-repeat,
+      var(--a);
     border-color: var(--a);
     color: #fff;
   }
@@ -474,9 +658,38 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
   }
 
   /* ---------- Pista con desplazamiento horizontal ---------- */
-  .tl-pista {
+  /* Bordes que se desvanecen: indican que hay más historia a los lados */
+  .tl-marco {
     position: relative;
     margin: 16px 0 0;
+  }
+  .tl-marco::before,
+  .tl-marco::after {
+    content: "";
+    position: absolute;
+    top: 1px;
+    bottom: 1px;
+    z-index: 4;
+    width: 48px;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .tl-marco::before {
+    left: 1px;
+    border-radius: 24px 0 0 24px;
+    background: linear-gradient(90deg, #fffaf4, rgb(255 250 244 / 0));
+  }
+  .tl-marco::after {
+    right: 1px;
+    border-radius: 0 24px 24px 0;
+    background: linear-gradient(270deg, #fffaf4, rgb(255 250 244 / 0));
+  }
+  .tl-marco.al-inicio::before,
+  .tl-marco.al-final::after {
+    opacity: 0;
+  }
+  .tl-pista {
+    position: relative;
     overflow-x: auto;
     overflow-y: hidden;
     border-radius: 24px;
@@ -506,13 +719,40 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     color: var(--suave);
   }
 
-  /* Eje: una fila de casillas de tablero */
-  .tl-eje {
+  /* Eje: una fila de casillas de tablero. Apagada por delante del caballo, encendida por detrás. */
+  .tl-eje,
+  .tl-eje-luz {
     position: absolute;
     left: 0;
-    right: 0;
     height: 14px;
     background: repeating-linear-gradient(90deg, var(--a) 0 14px, var(--b) 14px 28px);
+  }
+  .tl-eje {
+    right: 0;
+    opacity: 0.28;
+  }
+  .tl-eje-luz {
+    z-index: 1;
+    width: 0;
+    box-shadow: 0 0 16px rgb(242 138 30 / 0.55);
+  }
+  /* Año gigante de fondo, con paralaje (decorativo: el número sale del CSS) */
+  .tl-lienzo :global(.tl-fondo-anio) {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .tl-lienzo :global(.tl-fondo-anio)::before {
+    content: attr(data-anio);
+    display: block;
+    font-family: var(--titulo);
+    font-stretch: 70%;
+    font-weight: 900;
+    font-size: clamp(140px, 22vw, 280px);
+    line-height: 1;
+    color: rgb(166 75 8 / 0.07);
+    white-space: nowrap;
   }
   .tl-ramas {
     position: absolute;
@@ -527,11 +767,11 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     stroke-dasharray: 600;
     stroke-dashoffset: 600;
     transition:
-      stroke-dashoffset 1.1s cubic-bezier(0.3, 0.7, 0.2, 1),
+      stroke-dashoffset 0.9s cubic-bezier(0.3, 0.7, 0.2, 1),
       stroke 0.3s,
       stroke-width 0.3s;
   }
-  .tl-pista.dibuja .tl-ramas :global(path) {
+  .tl-ramas :global(path.vista) {
     stroke-dashoffset: 0;
   }
   .tl-ramas :global(path.activa) {
@@ -552,6 +792,9 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     transition:
       transform 0.3s,
       border-color 0.3s;
+  }
+  .tl-lienzo :global(.tl-punto.pasado) {
+    background: var(--b);
   }
   .tl-lienzo :global(.tl-punto.activo) {
     border-color: var(--b);
@@ -586,6 +829,8 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
   /* El caballo que recorre el eje */
   .tl-caballo {
     position: absolute;
+    left: 0;
+    top: 0;
     z-index: 3;
     width: 58px;
     height: 58px;
@@ -596,9 +841,7 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     box-shadow:
       0 0 0 4px var(--b),
       0 10px 22px rgb(90 42 6 / 0.3);
-    transition:
-      left 0.55s cubic-bezier(0.3, 0.7, 0.2, 1),
-      top 0.55s;
+    will-change: transform;
     pointer-events: none;
   }
   .tl-caballo :global(svg) {
@@ -625,15 +868,24 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
     background: #fff;
     border: 1px solid var(--linea);
     box-shadow: 0 8px 20px rgb(90 42 6 / 0.08);
+    /* Aparece desde el eje al entrar en la pista */
+    opacity: 0;
+    transform: translateY(var(--desde, 0)) scale(0.94);
     transition:
-      transform 0.35s cubic-bezier(0.3, 0.7, 0.2, 1),
+      transform 0.55s cubic-bezier(0.34, 1.35, 0.64, 1),
       box-shadow 0.35s,
-      opacity 0.3s;
+      opacity 0.45s;
+  }
+  .tl-lienzo :global(.tl-tarjeta.vista) {
+    opacity: 1;
+    transform: none;
   }
   .tl-lienzo :global(.tl-tarjeta.arriba) {
+    --desde: 22px;
     border-bottom: 4px solid var(--b);
   }
   .tl-lienzo :global(.tl-tarjeta.abajo) {
+    --desde: -22px;
     border-top: 4px solid var(--b);
   }
   .tl-lienzo :global(.tl-tarjeta.activa) {
@@ -641,11 +893,11 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
       0 0 0 3px var(--b),
       0 16px 30px rgb(90 42 6 / 0.2);
   }
-  .tl-lienzo :global(.tl-tarjeta.arriba.activa) {
-    transform: translateY(-6px);
+  .tl-lienzo :global(.tl-tarjeta.arriba.activa.vista) {
+    transform: translateY(-8px) scale(1.03);
   }
-  .tl-lienzo :global(.tl-tarjeta.abajo.activa) {
-    transform: translateY(6px);
+  .tl-lienzo :global(.tl-tarjeta.abajo.activa.vista) {
+    transform: translateY(8px) scale(1.03);
   }
   /* Tarjetas sin el campeón seguido: en gris (sin bajar el contraste del texto) */
   .tl-lienzo :global(.tl-tarjeta.atenuada) {

@@ -1,26 +1,70 @@
 ---
-import Dato from "../components/Dato.astro";
 import Base from "../layouts/Base.astro";
 import BotonContacto from "../components/BotonContacto.astro";
 import club from "../data/club.json";
 import NivelTarjeta from "../components/NivelTarjeta.astro";
 import { NIVELES } from "../lib/niveles.js";
-import { valor, esProduccion } from "../lib/contenido.js";
+import { valor, esProduccion, indexar } from "../lib/contenido.js";
+import { hayBaseDeDatos } from "../lib/backend.js";
 
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-// Preguntas frecuentes. Las que dependen de un dato del club se ocultan en producción si falta.
-const preguntas = [
-  { p: "¿Desde qué edad pueden empezar?", campo: "edad_minima" },
-  { p: "¿Cuánto cuesta?", antes: "Mensualidad: ", campo: "precio_mensual", despues: ". Se paga por Yape o Plin." },
-  { p: "¿Dónde son las clases?", antes: "En la sede del club: ", campo: "sede", despues: "." },
-  { p: "¿Cómo sé en qué nivel inscribir a mi hijo o hija?", r: "Si nunca ha jugado, en básico. Si ya juega o compite, escríbenos y el club te recomienda el nivel." },
-  { p: "¿Pueden practicar en casa?", r: "Sí: el club tiene un equipo gratuito en Lichess donde se juegan torneos en línea desde el celular." },
-  { p: "¿Hay torneos para alumnos?", r: "Sí: torneos presenciales a lo largo del año, también oficiales con rating FIDE." },
-].filter((q) => !q.campo || valor(q.campo) || !esProduccion);
+// Preguntas frecuentes, por tema. Solo respuestas verificadas: si falta un dato del club (edad, precio),
+// la respuesta invita a pedirlo en vez de inventarlo o de mostrar «por confirmar».
+type Pregunta = { p: string; r: string; enlace?: { href: string; texto: string; externo?: boolean } };
+const contacto = { href: `${b}/contacto/`, texto: "Ir a contacto" };
+const enLinea = !esProduccion || hayBaseDeDatos;
+const edad = valor("edad_minima");
+const precio = valor("precio_mensual");
+const sede = valor("sede");
+const mapa = valor("mapa");
+const grupos: { titulo: string; preguntas: Pregunta[] }[] = [
+  {
+    titulo: "Clases",
+    preguntas: [
+      { p: "¿Hace falta saber jugar para empezar?", r: "No. Básico es para quien empieza desde cero o recién aprende a mover las piezas." },
+      { p: "¿Cómo sé por dónde empezar?", r: "Si nunca ha jugado, por básico. Si ya juega o compite, cuéntanos su experiencia y el club te recomienda dónde empezar." },
+      edad
+        ? { p: "¿Desde qué edad pueden empezar?", r: `Desde ${edad}.` }
+        : { p: "¿Desde qué edad pueden empezar?", r: "Cuéntanos la edad de tu hijo o hija y te decimos con qué grupo empezaría.", enlace: contacto },
+      precio
+        ? { p: "¿Cuánto cuesta y cuáles son los horarios?", r: `Mensualidad: ${precio}. Los horarios de cada grupo están en sus tarjetas.` }
+        : { p: "¿Cuánto cuesta y cuáles son los horarios?", r: "Pídenos los horarios y precios vigentes y te los enviamos.", enlace: contacto },
+      ...(sede ? [{ p: "¿Dónde queda el club?", r: `En ${sede}.`, enlace: mapa ? { href: mapa, texto: "Ver en Google Maps", externo: true } : undefined }] : []),
+      { p: "¿Se puede practicar en casa?", r: "Sí: el club tiene un equipo gratuito en Lichess donde se juegan torneos en línea desde el celular.", enlace: { href: club.equipo.url, texto: "Equipo en Lichess", externo: true } },
+    ],
+  },
+  {
+    titulo: "Torneos",
+    preguntas: [
+      { p: "¿Hay torneos para alumnos?", r: "Sí: torneos presenciales a lo largo del año, también oficiales con rating FIDE." },
+      { p: "¿Cómo me entero de los próximos torneos?", r: "Se anuncian en la página Torneos de esta web y en el Facebook del club.", enlace: { href: `${b}/torneos/`, texto: "Ver torneos" } },
+      enLinea
+        ? { p: "¿Cómo se inscribe a un torneo?", r: "En línea, desde la página de cada torneo: la categoría se calcula sola con la fecha de nacimiento." }
+        : { p: "¿Cómo se inscribe a un torneo?", r: "Pídenos las bases del torneo y te enviamos los pasos para inscribirte.", enlace: contacto },
+      { p: "¿Qué es el rating FIDE?", r: "Es la puntuación internacional de la Federación Internacional de Ajedrez. Se obtiene jugando torneos oficiales, como los que el club organiza con rating FIDE." },
+    ],
+  },
+  {
+    titulo: "Familias",
+    preguntas: [
+      { p: "¿Publican nombres o fotos de los alumnos?", r: "Solo de los campeones de cada torneo, con el nombre y la inicial del apellido. Fotos de menores, solo con autorización escrita del padre, madre o tutor.", enlace: { href: `${b}/privacidad/`, texto: "Cómo cuidamos los datos" } },
+      { p: "¿Puedo pedir que retiren un nombre?", r: "Sí. Pídelo y se retira de «Nuestra historia»; en la web queda solo la categoría.", enlace: contacto },
+    ],
+  },
+];
+// Para Google (solo si la web se indexa): las mismas preguntas como FAQPage.
+const fichaPreguntas = indexar
+  ? JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: grupos.flatMap((g) => g.preguntas).map((q) => ({ "@type": "Question", name: q.p, acceptedAnswer: { "@type": "Answer", text: q.r } })),
+    })
+  : null;
 ---
 
 <Base titulo="Academia" seccion="academia" descripcion="Clases de ajedrez en Moquegua: básico, intermedio y avanzado. Horarios, precios e inscripción.">
+  {fichaPreguntas && <script type="application/ld+json" slot="head" set:html={fichaPreguntas} />}
   <section class="seccion cabeza">
     <div class="contenedor">
       <p class="antetitulo">Academia</p>
@@ -29,7 +73,7 @@ const preguntas = [
         Básico, intermedio y avanzado: cada alumno aprende y compite a su ritmo.
       </p>
       <div class="grupo-botones">
-        <BotonContacto accion="Escríbenos" mensaje="Hola, quisiera inscribir a mi hijo/a en la academia de ajedrez. ¿Qué horarios tienen?" />
+        <BotonContacto accion="Quiero inscribirme" mensaje="Hola, quisiera inscribir a mi hijo/a en la academia de ajedrez. ¿Qué horarios tienen?" />
         <a class="boton boton-secundario" href="#preguntas">Preguntas frecuentes</a>
       </div>
     </div>
@@ -46,13 +90,27 @@ const preguntas = [
     <div class="contenedor">
       <h2>Preguntas frecuentes</h2>
       <div class="faq">
-        {preguntas.map((q) => (
-          <details class="tarjeta">
-            <summary>{q.p}</summary>
-            <p>{q.r ?? <>{q.antes}<Dato campo={q.campo} />{q.despues}</>}</p>
-          </details>
+        {grupos.map((g) => (
+          <div class="faq-grupo">
+            <h3>{g.titulo}</h3>
+            {g.preguntas.map((q) => (
+              <details class="tarjeta">
+                <summary>{q.p}</summary>
+                <p>
+                  {q.r}
+                  {q.enlace && (
+                    <>
+                      {" "}
+                      <a href={q.enlace.href} {...(q.enlace.externo ? { rel: "noopener", target: "_blank" } : {})}>{q.enlace.texto} →</a>
+                    </>
+                  )}
+                </p>
+              </details>
+            ))}
+          </div>
         ))}
       </div>
+      <p class="faq-otra">¿Otra duda? <BotonContacto variante="texto" accion="Pregúntanos" mensaje="Hola, tengo una pregunta sobre la academia de ajedrez." /></p>
     </div>
   </section>
 </Base>
@@ -63,8 +121,38 @@ const preguntas = [
   }
   .faq {
     display: grid;
+    gap: 28px;
+  }
+  @media (min-width: 980px) {
+    .faq {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: start;
+    }
+  }
+  .faq-grupo {
+    display: grid;
     gap: 10px;
-    max-width: 780px;
+  }
+  .faq-grupo h3 {
+    margin: 0 0 2px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .faq-grupo h3::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    background: conic-gradient(#f28a1e 25%, #1a1714 0 50%, #f28a1e 0 75%, #1a1714 0) 0 0 / 10px 10px;
+  }
+  .faq-otra {
+    margin: 22px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    color: var(--suave);
   }
   .faq details {
     padding: 0;

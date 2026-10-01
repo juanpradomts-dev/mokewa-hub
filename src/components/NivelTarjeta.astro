@@ -1,14 +1,14 @@
 ---
 // Tarjeta de un nivel de la academia.
 // Si el horario o el precio no están confirmados, en vez de repetir «por confirmar» muestra
-// UN solo botón «Consultar horario». Cuando el club los carga (panel o contenido.json), aparecen.
+// UN solo botón, con texto propio en cada nivel («Quiero empezar»…). Cuando el club los carga (panel o contenido.json), aparecen.
 import Dato from "./Dato.astro";
 import BotonContacto from "./BotonContacto.astro";
 import contenido from "../data/contenido.json";
 import { valor, lista, esProduccion } from "../lib/contenido.js";
 
 interface Props {
-  nivel: { id: string; nombre: string; pieza: string; horario: string; edad: string; para: string };
+  nivel: { id: string; nombre: string; pieza: string; horario: string; edad: string; para: string; accion: string };
   titulo?: "h2" | "h3";
 }
 const { nivel: n, titulo = "h3" } = Astro.props;
@@ -44,12 +44,12 @@ const mensaje = `Hola, quisiera saber el horario y el precio del nivel ${n.nombr
     </div>
     <BotonContacto
       variante="secundario"
-      accion={hayHorario ? "Inscribirme" : "Consultar horario"}
+      accion={hayHorario ? `Inscribirme en ${n.nombre}` : n.accion}
       mensaje={mensaje}
       clase="nivel-boton"
       data-segun={`${n.horario} precio_mensual`}
-      data-accion-con="Inscribirme"
-      data-accion-sin="Consultar horario"
+      data-accion-con={`Inscribirme en ${n.nombre}`}
+      data-accion-sin={n.accion}
     />
   </div>
 </article>

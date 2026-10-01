@@ -97,11 +97,11 @@ test("ocultos: no aparecen en listados pero siguen contando", () => {
   assert.equal(club.records.mas_torneos.sensible, true);
 });
 
-test("contacto: sin número dice «Escríbenos» y abre Facebook; con número, WhatsApp", () => {
+test("contacto: sin número dice «Enviar mensaje» y abre Facebook; con número, WhatsApp", () => {
   const sin = enlaceContacto(null, "Hola");
   assert.equal(sin.tipo, "facebook");
   assert.equal(sin.href, FACEBOOK);
-  assert.equal(sin.texto, "Escríbenos");
+  assert.equal(sin.texto, "Enviar mensaje");
   assert.doesNotMatch(sin.texto + sin.aria, /whatsapp/i);
   assert.equal(enlaceContacto("12345", "Hola").tipo, "facebook");
   const con = enlaceContacto("987 654 321", "Hola, ¿horarios?");
@@ -119,7 +119,7 @@ test("contacto: el Gmail del club es el canal principal cuando está cargado", (
   assert.match(g.href, /^https:\/\/mail\.google\.com\/mail\/\?view=cm&fs=1&to=club\.mokewa%40gmail\.com&su=Consultar%20horario/);
   assert.match(g.href, /body=Hola%2C%20%C2%BFhorarios%3F$/);
   assert.equal(g.texto, "Consultar horario");
-  assert.equal(enlaceContacto({ correo: "club@gmail.com" }, "x").texto, "Escríbenos por Gmail");
+  assert.equal(enlaceContacto({ correo: "club@gmail.com" }, "x").texto, "Enviar correo");
   assert.equal(enlaceContacto({ correo: "no-es-correo", whatsapp: "987654321" }, "x").tipo, "whatsapp");
   assert.equal(enlaceContacto({ correo: null, whatsapp: null }, "x").tipo, "facebook");
 });
@@ -131,4 +131,11 @@ test("nuestra historia: de cada campeón solo el nombre y la inicial del apellid
   assert.ok(nombres.length > 0);
   for (const n of nombres) assert.match(n, /^(Equipo .+|[\p{Lu}][\p{Ll}]+ [\p{Lu}]\.)$/u, n);
   for (const t of historia.torneos) assert.ok(t.fuentes.every((u) => u.startsWith("https://")), t.torneo);
+});
+
+test("contenido: la sede publicada cita su fuente y el mapa es de Google Maps", async () => {
+  const { campos } = JSON.parse(await readFile(new URL("../src/data/contenido.json", import.meta.url), "utf-8"));
+  // La sede no se inventa: si tiene valor, cita de dónde salió (p. ej. Chess-Results) hasta que el club la confirme.
+  if (campos.sede.valor) assert.match(campos.sede.fuente ?? "", /^https:\/\//, "la sede necesita fuente");
+  if (campos.mapa.valor) assert.match(campos.mapa.valor, /^https:\/\/www\.google\.com\/maps\//);
 });
