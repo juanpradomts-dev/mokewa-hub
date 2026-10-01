@@ -42,7 +42,8 @@
     },
     "mapa": {
       "etiqueta": "Enlace de Google Maps de la sede",
-      "valor": "https://www.google.com/maps/search/?api=1&query=Villa%20Magisterial%20E-1%2C%20Moquegua%2C%20Per%C3%BA",
+      "valor": "https://www.google.com/maps/search/?api=1&query=Ajedrez%20Club%20Mokewa%2C%20Moquegua",
+      "nota": "Lleva a la ficha «Ajedrez Club Mokewa» que ya existe en Google Maps (Villa Magisterial, Moquegua). Si el club da otro enlace, el mapa de Contacto lo sigue.",
       "tipo": "url",
       "grupo": "Contacto"
     },

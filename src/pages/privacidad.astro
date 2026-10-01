@@ -18,7 +18,7 @@ const recoge = !esProduccion || hayBaseDeDatos;
       {!recoge && (
         <>
           <h2>Qué datos recoge esta web</h2>
-          <p>Ninguno. No tiene formularios, cuentas ni cookies: las consultas e inscripciones se hacen por los canales del club, en la <a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/contacto/`}>página de contacto</a>.</p>
+          <p>Ninguno. No tiene formularios, cuentas ni cookies propias: las consultas e inscripciones se hacen por los canales del club, en la <a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/contacto/`}>página de contacto</a>.</p>
         </>
       )}
 
@@ -48,9 +48,12 @@ const recoge = !esProduccion || hayBaseDeDatos;
       <ul>
         <li>Los comprobantes se guardan en un almacenamiento privado; solo los ve el organizador, con enlaces que caducan.</li>
         <li>Cada tabla con datos personales tiene reglas de acceso por fila (solo el administrador lee datos de contacto).</li>
-        <li>El sitio no usa cookies ni analítica de seguimiento.</li>
+        <li>El sitio no usa cookies propias ni analítica de seguimiento.</li>
       </ul>
       </>)}
+
+      <h2>El mapa de Contacto</h2>
+      <p>Lo muestra Google Maps directamente desde Google, que aplica su propia política de privacidad y puede usar sus cookies.</p>
 
       <h2>Tus derechos</h2>
       <p>Puedes pedir ver, corregir o borrar los datos tuyos o de tu hijo o hija, o que retiremos un nombre de «Nuestra historia» (derecho de supresión). Pídelo por los canales de la <a href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/contacto/`}>página de contacto</a>.{recoge && " El organizador lo borra desde el panel."}</p>

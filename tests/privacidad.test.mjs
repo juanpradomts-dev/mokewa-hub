@@ -139,3 +139,14 @@ test("contenido: la sede publicada cita su fuente y el mapa es de Google Maps", 
   if (campos.sede.valor) assert.match(campos.sede.fuente ?? "", /^https:\/\//, "la sede necesita fuente");
   if (campos.mapa.valor) assert.match(campos.mapa.valor, /^https:\/\/www\.google\.com\/maps\//);
 });
+
+test("mapa: el mapa incrustado y «Cómo llegar» siguen al enlace de Google Maps del club", async () => {
+  const { lugarDelMapa, mapaIncrustado, comoLlegar } = await import("../src/lib/mapa.js");
+  assert.equal(lugarDelMapa("https://www.google.com/maps/search/?api=1&query=Ajedrez%20Club%20Mokewa%2C%20Moquegua", null), "Ajedrez Club Mokewa, Moquegua");
+  assert.equal(lugarDelMapa("https://www.google.com/maps/place/Ajedrez+Club+Mokewa/@-17.19,-70.93,17z", null), "-17.19,-70.93");
+  assert.equal(lugarDelMapa("https://www.google.com/maps/place/Ajedrez+Club+Mokewa/data=x", null), "Ajedrez Club Mokewa");
+  assert.equal(lugarDelMapa(null, "Villa Magisterial E-1, Moquegua"), "Villa Magisterial E-1, Moquegua, Perú");
+  assert.equal(lugarDelMapa(null, null), null);
+  assert.match(mapaIncrustado("Ajedrez Club Mokewa, Moquegua"), /^https:\/\/maps\.google\.com\/maps\?q=Ajedrez%20Club%20Mokewa%2C%20Moquegua&z=16&output=embed$/);
+  assert.match(comoLlegar("A, B"), /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=A%2C%20B$/);
+});
