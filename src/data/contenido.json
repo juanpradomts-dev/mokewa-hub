@@ -46,6 +46,27 @@
       "tipo": "url",
       "grupo": "Contacto"
     },
+    "instagram": {
+      "etiqueta": "Instagram del club (enlace)",
+      "valor": null,
+      "tipo": "url",
+      "grupo": "Redes",
+      "ayuda": "Enlace completo, p. ej. https://www.instagram.com/usuario. Activa su ícono en Contacto y en el pie."
+    },
+    "tiktok": {
+      "etiqueta": "TikTok del club (enlace)",
+      "valor": null,
+      "tipo": "url",
+      "grupo": "Redes",
+      "ayuda": "Enlace completo, p. ej. https://www.tiktok.com/@usuario. Activa su ícono en Contacto y en el pie."
+    },
+    "youtube": {
+      "etiqueta": "YouTube del club (enlace)",
+      "valor": null,
+      "tipo": "url",
+      "grupo": "Redes",
+      "ayuda": "Enlace completo al canal. Activa su ícono en Contacto y en el pie."
+    },
     "atencion": {
       "etiqueta": "Horario de atención",
       "valor": null,

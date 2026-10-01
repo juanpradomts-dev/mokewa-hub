@@ -1,0 +1,178 @@
+---
+// Fila de canales del club con su ícono (Gmail, WhatsApp, Facebook, Instagram, TikTok, YouTube, Lichess).
+// - Con dato: ícono enlazado.
+// - Sin dato: en la web oficial no aparece; en la demo se ve atenuado («por confirmar») y el panel
+//   lo activa en vivo.
+// variante «contacto»: ícono grande con su nombre debajo. «pie»: solo íconos (con nombre accesible).
+import club from "../data/club.json";
+import { valor, esProduccion } from "../lib/contenido.js";
+import { ICONOS, canales } from "../lib/redes.js";
+
+interface Props {
+  variante?: "contacto" | "pie";
+  ocultar?: string; // canal que ya es el botón principal de la página (no se repite)
+}
+const { variante = "contacto", ocultar } = Astro.props;
+const lista = canales(valor, club.equipo.url).filter((c) => c.href || !esProduccion);
+---
+
+<ul class={`redes redes-${variante}`} aria-label="Canales del club" data-redes>
+  {lista.map((c) => (
+    <li data-red={c.id} data-canal={c.id} data-campo-red={c.campo ?? undefined} hidden={c.id === ocultar}>
+      <a class="red" href={c.href || "#"} hidden={!c.href} rel="noopener" target="_blank" aria-label={variante === "pie" ? c.nombre : undefined} title={c.nombre}>
+        <span class="red-ico"><svg viewBox="0 0 24 24" aria-hidden="true" set:html={ICONOS[c.id as keyof typeof ICONOS]} /></span>
+        {variante === "contacto" && <span class="red-nombre">{c.nombre}</span>}
+      </a>
+      {!esProduccion && c.campo && (
+        <span class="red red-pendiente" hidden={!!c.href} title={`${c.nombre}: por confirmar`}>
+          <span class="red-ico"><svg viewBox="0 0 24 24" aria-hidden="true" set:html={ICONOS[c.id as keyof typeof ICONOS]} /></span>
+          <span class={variante === "contacto" ? "red-nombre" : "visually-hidden"}>{c.nombre}<span class="red-pc"> · por confirmar</span></span>
+        </span>
+      )}
+    </li>
+  ))}
+</ul>
+
+<script>
+  // En la demo, el panel puede cargar Gmail, WhatsApp o redes y los íconos se activan al instante.
+  import { contenido, alCambiar } from "../lib/store.js";
+  import { canales } from "../lib/redes.js";
+  const listas = document.querySelectorAll<HTMLElement>("[data-redes]");
+  const pintar = () => {
+    const porId = Object.fromEntries(canales(contenido, "").map((c) => [c.id, c.href]));
+    for (const ul of listas)
+      for (const li of ul.querySelectorAll<HTMLElement>("[data-campo-red]")) {
+        const href = porId[li.dataset.red!];
+        const a = li.querySelector<HTMLAnchorElement>("a.red")!;
+        const pendiente = li.querySelector<HTMLElement>(".red-pendiente");
+        if (href) a.href = href;
+        a.hidden = !href;
+        if (pendiente) pendiente.hidden = !!href;
+      }
+  };
+  if (listas.length) {
+    pintar();
+    alCambiar(pintar);
+  }
+</script>
+
+<style>
+  .redes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  /* Lo oculto se oculta siempre, aunque otra regla le dé «display» */
+  .redes [hidden] {
+    display: none !important;
+  }
+  .red {
+    text-decoration: none;
+    color: inherit;
+  }
+  .red-ico {
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    transition:
+      transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1),
+      background-color 0.25s,
+      color 0.25s;
+  }
+  .red-ico svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* En Contacto: círculos con el nombre debajo */
+  .redes-contacto {
+    justify-content: center;
+    gap: 10px 14px;
+  }
+  .redes-contacto .red {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    min-width: 64px;
+    padding: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--suave);
+  }
+  .redes-contacto .red-ico {
+    width: 48px;
+    height: 48px;
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    color: #a64b08;
+    box-shadow: 0 4px 12px rgb(90 42 6 / 0.08);
+  }
+  .redes-contacto a.red:hover .red-ico,
+  .redes-contacto a.red:focus-visible .red-ico {
+    transform: translateY(-3px) scale(1.06);
+    background: #f28a1e;
+    color: #1a1714;
+  }
+  .redes-contacto a.red:hover .red-nombre {
+    color: var(--tinta);
+  }
+
+  /* En el pie: solo íconos claros sobre el café */
+  .redes-pie {
+    gap: 4px;
+  }
+  .redes-pie .red {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+  }
+  .redes-pie .red-ico {
+    width: 36px;
+    height: 36px;
+    background: rgb(255 255 255 / 0.08);
+    color: #fde7d1;
+  }
+  .redes-pie .red-ico svg {
+    width: 19px;
+    height: 19px;
+  }
+  .redes-pie a.red:hover .red-ico,
+  .redes-pie a.red:focus-visible .red-ico {
+    transform: translateY(-2px);
+    background: #f28a1e;
+    color: #1a1714;
+  }
+
+  /* Demo: canal aún sin dato */
+  .red-pendiente {
+    cursor: help;
+  }
+  .red-pendiente .red-ico {
+    border-style: dashed;
+    opacity: 0.55;
+  }
+  .redes-contacto .red-pendiente {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    min-width: 64px;
+    padding: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--suave);
+  }
+  .redes-pie .red-pendiente {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+  }
+  .red-pc {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 500;
+  }
+</style>

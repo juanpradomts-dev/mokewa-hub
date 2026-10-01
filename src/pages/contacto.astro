@@ -4,7 +4,7 @@
 import Dato from "../components/Dato.astro";
 import Base from "../layouts/Base.astro";
 import BotonContacto from "../components/BotonContacto.astro";
-import club from "../data/club.json";
+import Redes from "../components/Redes.astro";
 import { valor, esProduccion } from "../lib/contenido.js";
 import { enlaceContacto } from "../lib/contacto.js";
 
@@ -69,12 +69,11 @@ const conSede = !!valor("sede") || !esProduccion;
         </p>
       </div>
 
-      <ul class="otros">
-        <li data-canal="whatsapp" hidden={canal === "whatsapp"}><Dato etiqueta="WhatsApp" campo="whatsapp" /></li>
-        <li data-canal="facebook" hidden={canal === "facebook"}><a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook</a></li>
-        <li><a href={club.equipo.url} rel="noopener" target="_blank">Equipo en Lichess</a></li>
-        <li><Dato etiqueta="Atención" campo="atencion" /></li>
-      </ul>
+      <div class="otros" data-otros>
+        <p class="otros-titulo">También estamos en</p>
+        <Redes variante="contacto" ocultar={canal} />
+        <Dato como="p" clase="atencion" etiqueta="Horario de atención" campo="atencion" />
+      </div>
     </div>
   </section>
 </Base>
@@ -90,7 +89,7 @@ const conSede = !!valor("sede") || !esProduccion;
     const { tipo } = enlaceContacto({ correo: contenido("correo"), whatsapp: contenido("whatsapp") });
     document.querySelector("[data-por]")!.textContent = POR[tipo];
     document.querySelector("[data-titulo-canal]")!.textContent = TITULO[tipo];
-    for (const li of document.querySelectorAll<HTMLElement>("[data-canal]")) li.hidden = li.dataset.canal === tipo;
+    for (const li of document.querySelectorAll<HTMLElement>("[data-otros] [data-canal]")) li.hidden = li.dataset.canal === tipo;
     if (!mapa) return;
     const m = contenido("mapa");
     if (m && /^https:\/\//.test(m)) mapa.href = m;
@@ -258,29 +257,32 @@ const conSede = !!valor("sede") || !esProduccion;
     font-size: 0.92rem;
     color: var(--suave);
   }
-  /* El resto de canales, en pequeño */
+  /* El resto de canales: una fila de íconos */
   .otros {
-    list-style: none;
     max-width: 820px;
-    margin: 18px auto 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px 18px;
-    font-size: 0.88rem;
+    margin: 26px auto 0;
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    text-align: center;
+  }
+  .otros-titulo {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--suave);
   }
-  .otros :global(.dato) {
+  .otros :global(.atencion) {
+    margin: 0;
     display: inline-flex;
     gap: 6px;
     align-items: baseline;
+    font-size: 0.88rem;
+    color: var(--suave);
   }
-  .otros :global(.dt) {
+  .otros :global(.atencion .dt) {
     font-size: 0.72rem;
-  }
-  .otros li[hidden],
-  .otros li:empty {
-    display: none;
   }
 </style>

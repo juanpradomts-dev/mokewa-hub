@@ -3,6 +3,7 @@ import "@fontsource-variable/archivo/wdth.css";
 import archivoLatin from "@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2?url";
 import "../styles/global.css";
 import Logo from "../components/Logo.astro";
+import Redes from "../components/Redes.astro";
 import club from "../data/club.json";
 import { MODO, esProduccion, indexar, valor } from "../lib/contenido.js";
 import { LEMA, NOMBRE } from "../lib/club.js";
@@ -43,7 +44,7 @@ const fichaClub = indexable && seccion === "inicio"
       address: { "@type": "PostalAddress", addressLocality: "Moquegua", addressCountry: "PE", ...(valor("sede") ? { streetAddress: valor("sede") } : {}) },
       ...(whatsapp ? { telephone: `+${whatsapp}` } : {}),
       ...(valor("correo") ? { email: valor("correo") } : {}),
-      sameAs: [FACEBOOK, club.equipo.url],
+      sameAs: [FACEBOOK, club.equipo.url, ...["instagram", "tiktok", "youtube"].map((c) => valor(c)).filter((v): v is string => !!v && v.startsWith("https://"))],
     })
   : null;
 // «Iniciar sesión» (personal del club) va en la cabecera; sin base de datos, la web oficial no tiene panel.
@@ -154,9 +155,8 @@ const tituloCompleto = seccion === "inicio" ? `Ajedrez Club Mokewa · ${LEMA}` :
             <li><a href={url("/el-club/#historia")}>Campeones</a></li>
             <li><a href={url("/contacto/")}>Contacto</a></li>
             <li><a href={url("/privacidad/")}>Privacidad</a></li>
-            <li><a href="https://www.facebook.com/ACMokewa/" rel="noopener" target="_blank">Facebook</a></li>
-            <li><a href={club.equipo.url} rel="noopener" target="_blank">Lichess</a></li>
           </ul>
+          <Redes variante="pie" />
         </div>
         {!esProduccion && <p class="legal">
           Demo privada, no indexada, sin costo para el club; no es la web oficial hasta que el club la apruebe. Lo marcado <span class="pc">por confirmar</span> se completa desde el panel. De los campeones solo se muestra el nombre y la inicial del apellido.
