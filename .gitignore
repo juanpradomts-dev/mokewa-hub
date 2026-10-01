@@ -5,3 +5,6 @@ dist/
 .env.*
 *.log
 .claude/
+
+# deepsec: estado y hallazgos de seguridad. El repositorio es público: nunca se suben.
+.deepsec/

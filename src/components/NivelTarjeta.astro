@@ -3,6 +3,7 @@
 // Si el horario o el precio no están confirmados, en vez de repetir «por confirmar» muestra
 // UN solo botón, con texto propio en cada nivel («Quiero empezar»…). Cuando el club los carga (panel o contenido.json), aparecen.
 import Dato from "./Dato.astro";
+import { svgPieza } from "../lib/piezas.js";
 import BotonContacto from "./BotonContacto.astro";
 import contenido from "../data/contenido.json";
 import { valor, lista, esProduccion } from "../lib/contenido.js";
@@ -24,7 +25,7 @@ const mensaje = `Hola, quisiera saber el horario y el precio del nivel ${n.nombr
 
 <article class={`tarjeta nivel nivel-${n.id}`} id={n.id}>
   <div class="nivel-cabeza">
-    <span class="nivel-pieza glifo" aria-hidden="true">{n.pieza}</span>
+    <span class="nivel-pieza" aria-hidden="true" set:html={svgPieza(n.pieza, "claro")} />
     <div>
       <Titulo class="nivel-nombre">{n.nombre}</Titulo>
       <Dato clase="nivel-edad" etiqueta="Edad sugerida" campo={n.edad} />

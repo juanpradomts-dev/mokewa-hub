@@ -162,7 +162,7 @@ p {
   position: absolute;
   left: 16px;
   top: -60px;
-  z-index: 50;
+  z-index: 1000; /* por encima de la cabecera fija: el foco nunca queda tapado */
   background: var(--oro);
   color: #111;
   padding: 10px 16px;
@@ -172,6 +172,18 @@ p {
 }
 .saltar:focus {
   top: 0;
+}
+
+/* Toques sin la demora de 300 ms del doble toque (zoom con dos dedos sigue funcionando) */
+a,
+button,
+summary,
+[role="button"],
+[role="tab"],
+input,
+select,
+textarea {
+  touch-action: manipulation;
 }
 main:focus {
   outline: none;
@@ -255,6 +267,9 @@ main:focus {
   font-size: 0.97rem;
   padding: 0 12px;
   border-radius: 8px;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 .nav a:hover {
   background: var(--casilla);
@@ -274,6 +289,13 @@ main:focus {
   color: var(--tinta);
   border-radius: 10px;
   cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.boton-menu:hover {
+  background: var(--casilla);
+  border-color: #f7c08a;
 }
 .menu-movil {
   display: none;
@@ -328,7 +350,7 @@ main:focus {
   }
   .nav {
     display: flex;
-    gap: 2px;
+    gap: 8px;
   }
   .boton-menu,
   .menu-movil,
@@ -560,7 +582,7 @@ span.dato {
 }
 .etiqueta {
   display: inline-block;
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   font-weight: 650;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -702,6 +724,7 @@ textarea[aria-invalid="true"] {
   }
 }
 .nota {
+  max-width: 68ch; /* línea de lectura cómoda */
   border-left: 4px solid var(--oro);
   background: var(--papel);
   padding: 12px 16px;
@@ -986,8 +1009,8 @@ textarea[aria-invalid="true"] {
   }
 }
 
-/* Piezas de ajedrez Unicode: forzar glifo de texto (Windows las pinta como emoji). */
-.glifo {
-  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", "Apple Symbols", serif;
-  font-variant-emoji: text;
+/* Piezas de ajedrez en SVG (src/lib/piezas.js): se ven igual en todos los equipos */
+.pieza {
+  display: block;
+  flex: none;
 }

@@ -5,7 +5,7 @@ export const NIVELES = [
   {
     id: "basico",
     nombre: "Básico",
-    pieza: "♙︎",
+    pieza: "peon", // ícono SVG (src/lib/piezas.js)
     horario: "horario_basico",
     edad: "edad_basico",
     para: "Para quien empieza desde cero o recién aprende a mover las piezas.",
@@ -14,7 +14,7 @@ export const NIVELES = [
   {
     id: "intermedio",
     nombre: "Intermedio",
-    pieza: "♘︎",
+    pieza: "caballo",
     horario: "horario_intermedio",
     edad: "edad_intermedio",
     para: "Para quien ya juega y quiere empezar a competir.",
@@ -23,7 +23,7 @@ export const NIVELES = [
   {
     id: "avanzado",
     nombre: "Avanzado",
-    pieza: "♕︎",
+    pieza: "dama",
     horario: "horario_avanzado",
     edad: "edad_avanzado",
     para: "Para quien se prepara para torneos regionales, nacionales o con rating FIDE.",

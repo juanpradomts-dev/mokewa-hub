@@ -1,6 +1,7 @@
 ---
 // Portada: el público principal es el padre de familia. Máximo 5 secciones:
 // héroe · quiénes somos · academia · por qué Mokewa · cierre.
+import { svgPieza } from "../lib/piezas.js";
 import Base from "../layouts/Base.astro";
 import Caballo from "../components/Caballo.astro";
 import BotonContacto from "../components/BotonContacto.astro";
@@ -29,9 +30,9 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
   <!-- 1. HÉROE -->
   <section class="heroe">
     <div class="piezas-fondo" aria-hidden="true">
-      <span class="pieza-deco glifo" style="--x:46%;--y:8%;--t:1.8rem;--p:1.1;--r:10deg">♝&#xfe0e;</span>
-      <span class="pieza-deco glifo" style="--x:92%;--y:78%;--t:2.2rem;--p:0.8;--r:14deg">♜&#xfe0e;</span>
-      <span class="pieza-deco glifo" style="--x:56%;--y:88%;--t:1.6rem;--p:1.4;--r:-8deg">♞&#xfe0e;</span>
+      <span class="pieza-deco" style="--x:46%;--y:8%;--t:1.8rem;--p:1.1;--r:10deg" set:html={svgPieza("alfil", "oscuro")} />
+      <span class="pieza-deco" style="--x:92%;--y:78%;--t:2.2rem;--p:0.8;--r:14deg" set:html={svgPieza("torre", "oscuro")} />
+      <span class="pieza-deco" style="--x:56%;--y:88%;--t:1.6rem;--p:1.4;--r:-8deg" set:html={svgPieza("caballo", "oscuro")} />
       <span class="aro-fondo" style="--x:84%;--y:40%;--p:0.5"></span>
     </div>
     <div class="contenedor heroe-grid">
@@ -115,7 +116,7 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
         </div>
       <ol class="camino">
         <li class="paso">
-          <span class="paso-pieza glifo" aria-hidden="true">♙&#xfe0e;</span>
+          <span class="paso-pieza" aria-hidden="true" set:html={svgPieza("peon", "claro")} />
           <div>
             <span class="paso-n">Paso 1</span>
             <h3>Aprende a tu ritmo</h3>
@@ -123,7 +124,7 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
           </div>
         </li>
         <li class="paso">
-          <span class="paso-pieza glifo" aria-hidden="true">♘&#xfe0e;</span>
+          <span class="paso-pieza" aria-hidden="true" set:html={svgPieza("caballo", "claro")} />
           <div>
             <span class="paso-n">Paso 2</span>
             <h3>Compite de verdad</h3>
@@ -131,7 +132,7 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
           </div>
         </li>
         <li class="paso paso-final">
-          <span class="paso-pieza glifo" aria-hidden="true">♛&#xfe0e;</span>
+          <span class="paso-pieza" aria-hidden="true" set:html={svgPieza("dama", "oscuro")} />
           <div>
             <span class="paso-n">Paso 3</span>
             <h3>Llega al podio</h3>
@@ -570,11 +571,12 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
     box-shadow: 0 6px 16px rgb(90 42 6 / 0.18);
   }
   .paso-final .paso-pieza {
+    --pd: #141211;
     background: #141211;
     color: #f7a54a;
   }
   .paso-n {
-    font-size: 0.74rem;
+    font-size: 0.78rem;
     font-weight: 700;
     font-stretch: 88%;
     letter-spacing: 0.08em;
@@ -746,6 +748,7 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
     animation-delay: calc(var(--p) * -4s);
   }
   .pieza-deco {
+    --pd: transparent; /* silueta, sin detalles */
     font-size: var(--t);
     line-height: 1;
     color: rgb(166 75 8 / 0.2);

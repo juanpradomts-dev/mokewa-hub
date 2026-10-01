@@ -68,6 +68,11 @@ const recoge = !esProduccion || hayBaseDeDatos;
   .texto {
     max-width: 780px;
   }
+  /* Líneas de lectura cómoda: hasta ~70 caracteres */
+  .texto p,
+  .texto li {
+    max-width: 70ch;
+  }
   h2 {
     font-size: 1.4rem;
     margin-top: 1.6em;
