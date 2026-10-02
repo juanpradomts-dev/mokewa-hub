@@ -90,7 +90,7 @@ const tituloCompleto = seccion === "inicio" ? `Ajedrez Club Mokewa · ${LEMA}` :
       if ("IntersectionObserver" in window) document.documentElement.classList.add("con-aparicion");
     </script>
   </head>
-  <body data-base={b} data-modo={MODO}>
+  <body data-base={b} data-modo={MODO} data-contar={seccion === "panel" ? undefined : ""}>
     <a class="saltar" href="#contenido">Saltar al contenido</a>
     {!esProduccion && (
       <div class="aviso-demo">
@@ -171,6 +171,16 @@ const tituloCompleto = seccion === "inicio" ? `Ajedrez Club Mokewa · ${LEMA}` :
     <script>
       import { pintarCampos, alCambiar, contenido } from "../lib/store.js";
       import { enlaceContacto } from "../lib/contacto.js";
+      import { contarVista, contar, eventoDeEnlace } from "../lib/conteo.js";
+      // Conteo anónimo (src/lib/conteo.js): visitas y clics que llevan a escribir al club. El panel no se cuenta.
+      if (document.body.dataset.contar !== undefined) {
+        contarVista();
+        document.addEventListener("click", (e) => {
+          const a = (e.target as HTMLElement).closest<HTMLAnchorElement>("a[href]");
+          const evento = a && eventoDeEnlace(a.href);
+          if (evento) contar(evento);
+        });
+      }
       const alterno = document.querySelector<HTMLAnchorElement>("[data-alterno]");
       const pintar = () => {
         pintarCampos();

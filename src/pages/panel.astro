@@ -17,6 +17,7 @@ const PERMISOS: [string, boolean, boolean][] = [
 import Base from "../layouts/Base.astro";
 import club from "../data/club.json";
 import { miles } from "../lib/formato.js";
+import { PERIODOS } from "../lib/metricas.js";
 
 const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 // Indicadores internos (no se publican en páginas públicas).
@@ -52,6 +53,20 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
           <button class="boton boton-primario" type="submit">Entrar</button>
           <p class="suave" id="acceso-aviso" role="alert"></p>
         </form>
+        <!-- Primer ingreso del dueño (web oficial): su cuenta aún no tiene rol y el club no tiene administrador. -->
+        <form id="reclamar" class="acceso" hidden novalidate>
+          <h2 class="h-bloque">Primer ingreso: activa tu cuenta</h2>
+          <p class="suave">El club aún no tiene administrador. Tu cuenta (<strong id="reclamar-correo"></strong>) es la primera creada, así que puedes quedarte con el panel completo. Esto se hace una sola vez.</p>
+          <div class="campo">
+            <label for="reclamar-nombre">Tu nombre, como lo verá el personal</label>
+            <input id="reclamar-nombre" name="nombre" type="text" maxlength="80" autocomplete="name" required />
+          </div>
+          <div class="grupo-botones">
+            <button class="boton boton-primario" type="submit">Activar como administrador</button>
+            <button class="boton boton-secundario" type="button" id="reclamar-salir">Usar otra cuenta</button>
+          </div>
+          <p class="suave" id="reclamar-aviso" role="alert"></p>
+        </form>
         {!hayBaseDeDatos && (
           <div class="cuentas-prueba">
             <p><strong>Demo:</strong> cuentas de prueba. El acceso se simula en este navegador; en la web oficial la contraseña se verifica en el servidor.</p>
@@ -76,12 +91,14 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
           </div>
           <div class="grupo-botones">
             <a class="boton boton-secundario boton-chico" href={`${b}/`} target="_blank">Ver la web ↗</a>
+            <button class="boton boton-secundario boton-chico" type="button" id="abrir-clave">Cambiar contraseña</button>
             <button class="boton boton-secundario boton-chico" type="button" id="salir">Salir</button>
           </div>
         </div>
 
         <div class="pestanas" role="tablist" aria-label="Secciones del panel">
           <button role="tab" aria-selected="true" aria-controls="p-resumen" id="t-resumen" data-roles="admin">Resumen</button>
+          <button role="tab" aria-selected="false" aria-controls="p-metricas" id="t-metricas" data-roles="admin">Métricas</button>
           <button role="tab" aria-selected="false" aria-controls="p-inscripciones" id="t-inscripciones" data-roles="admin">Inscripciones <span class="globo" id="globo-pendientes"></span></button>
           <button role="tab" aria-selected="false" aria-controls="p-torneos" id="t-torneos" data-roles="admin entrenador">Torneos</button>
           <button role="tab" aria-selected="false" aria-controls="p-resultados" id="t-resultados" data-roles="admin entrenador">Resultados</button>
@@ -93,6 +110,11 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
         <!-- RESUMEN -->
         <div role="tabpanel" id="p-resumen" aria-labelledby="t-resumen" class="pestana">
           <div class="cifras" id="kpis"></div>
+          <div class="tarjeta resumen-bloques">
+            <h2 class="h-bloque">Qué hacer hoy</h2>
+            <ul class="acciones-hoy" id="resumen-acciones"></ul>
+            <p class="suave"><a href="#metricas" data-ir="metricas">Ver todas las métricas →</a></p>
+          </div>
           <div class="rejilla rejilla-2 resumen-bloques">
             <div class="tarjeta">
               <h2 class="h-bloque">Para publicar la web oficial</h2>
@@ -108,6 +130,65 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
               </p>
             </div>
           </div>
+        </div>
+
+        <!-- MÉTRICAS (solo admin): src/lib/metricas.js -->
+        <div role="tabpanel" id="p-metricas" aria-labelledby="t-metricas" class="pestana" hidden>
+          <div class="barra barra-metricas">
+            <div class="campo">
+              <label for="m-periodo">Periodo</label>
+              <select id="m-periodo">{PERIODOS.map(([d, t]) => <option value={d} selected={d === 30}>{t}</option>)}</select>
+            </div>
+            <div class="barra-acciones">
+              <button class="boton boton-secundario" type="button" id="m-csv">Descargar informe (Excel)</button>
+            </div>
+          </div>
+          {!hayBaseDeDatos && <p class="nota-demo">Demo: las cifras salen de las inscripciones de prueba y de tus propias visitas en este navegador.</p>}
+          <div class="cifras cifras-metricas" id="m-kpis"></div>
+
+          <div class="rejilla rejilla-2 bloque-metricas">
+            <section class="tarjeta" aria-labelledby="m-h-acciones">
+              <h2 class="h-bloque" id="m-h-acciones">Qué hacer hoy</h2>
+              <ul class="acciones-hoy" id="m-acciones"></ul>
+            </section>
+            <section class="tarjeta" aria-labelledby="m-h-semanas">
+              <h2 class="h-bloque" id="m-h-semanas">Inscripciones por semana</h2>
+              <p class="suave">Las últimas 12 semanas. Sirve para ver si la difusión de un torneo funcionó.</p>
+              <div id="m-semanas"></div>
+            </section>
+          </div>
+
+          <section class="tarjeta bloque-metricas" aria-labelledby="m-h-torneos">
+            <h2 class="h-bloque" id="m-h-torneos">Torneos: cupo y cobranza</h2>
+            <div id="m-torneos"></div>
+          </section>
+
+          <div class="rejilla rejilla-3 bloque-metricas">
+            <section class="tarjeta" aria-labelledby="m-h-cat">
+              <h2 class="h-bloque" id="m-h-cat">Por categoría</h2>
+              <p class="suave">Para armar grupos y premios.</p>
+              <div id="m-categorias"></div>
+            </section>
+            <section class="tarjeta" aria-labelledby="m-h-niv">
+              <h2 class="h-bloque" id="m-h-niv">Por nivel</h2>
+              <p class="suave">Cuántos profesores necesita cada nivel.</p>
+              <div id="m-niveles"></div>
+            </section>
+            <section class="tarjeta" aria-labelledby="m-h-ori">
+              <h2 class="h-bloque" id="m-h-ori">De dónde vienen</h2>
+              <p class="suave">Del club, de otros clubes o colegios, o sin club.</p>
+              <div id="m-origen"></div>
+            </section>
+          </div>
+
+          <section class="tarjeta bloque-metricas" aria-labelledby="m-h-web">
+            <h2 class="h-bloque" id="m-h-web">¿La web trae inscritos?</h2>
+            <p class="suave">Conteo anónimo: sin cookies ni datos de quién visita. Solo totales por día y página.</p>
+            <div class="rejilla rejilla-2">
+              <div id="m-embudo"></div>
+              <div id="m-paginas"></div>
+            </div>
+          </section>
         </div>
 
         <!-- INSCRIPCIONES -->
@@ -278,6 +359,19 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
     </div>
   </section>
 
+  <dialog id="dlg-clave" aria-labelledby="clave-titulo">
+    <form id="form-clave" class="acceso" novalidate>
+      <div class="visor-cabeza">
+        <h2 id="clave-titulo" class="h-bloque">Cambiar contraseña</h2>
+        <button class="boton boton-secundario boton-chico" type="button" id="clave-cerrar">Cerrar</button>
+      </div>
+      <div class="campo"><label for="clave-nueva">Nueva contraseña (mín. 8)</label><input id="clave-nueva" name="nueva" type="password" autocomplete="new-password" minlength="8" required /></div>
+      <div class="campo"><label for="clave-repetir">Repítela</label><input id="clave-repetir" name="repetida" type="password" autocomplete="new-password" minlength="8" required /></div>
+      <button class="boton boton-primario" type="submit">Guardar contraseña</button>
+      <p class="suave" id="clave-aviso" role="alert"></p>
+    </form>
+  </dialog>
+
   <dialog id="visor" aria-labelledby="visor-titulo">
     <div class="visor-cabeza">
       <h2 id="visor-titulo" class="h-bloque">Comprobante</h2>
@@ -351,6 +445,163 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
   }
   .resumen-bloques {
     margin-top: 16px;
+  }
+  /* ---- Métricas */
+  .bloque-metricas {
+    margin-top: 16px;
+  }
+  @media (min-width: 820px) {
+    .cifras-metricas {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (min-width: 760px) {
+    .barra.barra-metricas {
+      grid-template-columns: minmax(0, 260px) auto;
+      justify-content: space-between;
+    }
+  }
+  .nota-demo {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--pc-fondo);
+    color: var(--pc-texto);
+  }
+  :global(.cifra small) {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.82rem;
+    color: var(--suave);
+    line-height: 1.35;
+  }
+  :global(.cifra .sube) {
+    color: var(--ok);
+    font-weight: 700;
+  }
+  :global(.cifra .baja) {
+    color: var(--error);
+    font-weight: 700;
+  }
+  :global(.acciones-hoy) {
+    list-style: none;
+    margin: 0 0 8px;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+  :global(.acciones-hoy li) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--casilla);
+  }
+  :global(.acciones-hoy a) {
+    font-weight: 600;
+  }
+  /* Barras horizontales: el número siempre visible (no depende del color ni del largo) */
+  :global(.barras) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  :global(.barras li) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 2.6rem;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.92rem;
+  }
+  :global(.barras .nombre) {
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+  :global(.pista) {
+    height: 12px;
+    border-radius: 999px;
+    background: var(--casilla);
+    overflow: hidden;
+  }
+  :global(.relleno) {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--oro);
+    transition: width var(--t-lento) var(--curva);
+  }
+  :global(.relleno.lleno) {
+    background: var(--error);
+  }
+  :global(.barras .valor) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  /* Columnas por semana */
+  :global(.semanas) {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 6px;
+    height: 170px;
+    margin: 8px 0 0;
+  }
+  :global(.semana) {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    gap: 4px;
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--suave);
+    min-width: 0;
+  }
+  :global(.semana .col) {
+    border-radius: 6px 6px 2px 2px;
+    background: var(--ambar);
+    min-height: 2px;
+    transition: height var(--t-lento) var(--curva);
+  }
+  :global(.semana.actual .col) {
+    background: var(--oro);
+  }
+  :global(.semana b) {
+    color: var(--tinta);
+    font-size: 0.8rem;
+  }
+  :global(.ocupacion) {
+    display: grid;
+    gap: 4px;
+    min-width: 7rem;
+  }
+  :global(.ocupacion .pista) {
+    height: 8px;
+  }
+  :global(.embudo) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+  }
+  :global(.embudo li) {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--durazno);
+    margin-inline: calc(var(--n) * 3%);
+  }
+  :global(.embudo strong) {
+    font-variant-numeric: tabular-nums;
   }
   .dato-grande strong {
     font-family: var(--titulo);

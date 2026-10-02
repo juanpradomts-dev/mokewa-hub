@@ -15,6 +15,8 @@ import { enlaceContacto, numeroWhatsapp } from "./contacto.js";
 import { hayBaseDeDatos } from "./backend.js";
 import { esProduccion } from "./contenido.js";
 import personalDemo from "../data/personal-demo.json";
+import { claveJugador } from "./metricas.js";
+import { visitasDemo, borrarVisitasDemo } from "./conteo.js";
 
 const CLAVE = "mokewa-demo-v1";
 const EVENTO = "mokewa:cambio";
@@ -205,6 +207,9 @@ export function inscribir(datos) {
     return ins;
   });
   const e = leer();
+  // Igual que la base de datos: la misma persona no se inscribe dos veces en un torneo.
+  if (e.inscripciones.some((i) => i.torneo_id === datos.torneo_id && claveJugador(i) === claveJugador(datos)))
+    throw new Error("Este jugador ya está inscrito en este torneo.");
   const ins = { id: nuevoId(), estado_pago: "pendiente", creado_en: ahora(), ...datos };
   guardar({ ...e, inscripciones: [...e.inscripciones, ins] });
   return ins;
@@ -221,15 +226,17 @@ export function cambiarEstadoPago(id, estado, motivo = "") {
     ),
   });
 }
-// Derecho de supresión (Ley 29733): borra la inscripción y su voucher.
+// Derecho de supresión (Ley 29733): borra al jugador en todos los torneos, con sus comprobantes.
 export async function suprimirInscripcion(id) {
   if (NUBE) {
-    await (await nube()).suprimirInscripcion(id);
-    return cambiar((e) => (e.inscripciones = e.inscripciones.filter((i) => i.id !== id)));
+    const borradas = await (await nube()).suprimirInscripcion(id);
+    return cambiar((e) => (e.inscripciones = e.inscripciones.filter((i) => !borradas.includes(i.id))));
   }
   const e = leer();
-  guardar({ ...e, inscripciones: e.inscripciones.filter((i) => i.id !== id) });
-  await borrarVoucher(id);
+  const elegida = e.inscripciones.find((i) => i.id === id);
+  const borradas = elegida ? e.inscripciones.filter((i) => claveJugador(i) === claveJugador(elegida)).map((i) => i.id) : [id];
+  guardar({ ...e, inscripciones: e.inscripciones.filter((i) => !borradas.includes(i.id)) });
+  for (const x of borradas) await borrarVoucher(x);
 }
 // Lista pública: solo nombre, categoría y club (sección 9.2 de la guía).
 export const listaPublica = (torneoId) =>
@@ -359,6 +366,7 @@ export async function sembrarDemo({ forzar = false } = {}) {
     ["Sebastián", "Mendoza Laura", "2014-12-03", "Avanzado", "Ajedrez Club Mokewa"],
   ];
   const estados = ["pendiente", "pendiente", "validado", "pendiente", "validado", "rechazado"];
+  const DIAS_PRUEBA = [26, 3, 17, 0.2, 9, 5];
   const nuevas = base.map(([nombres, apellidos, fecha, nivel, club], k) => ({
     id: nuevoId(),
     torneo_id: TORNEO_VERANO.id,
@@ -376,7 +384,9 @@ export async function sembrarDemo({ forzar = false } = {}) {
     consentimiento_fecha: ahora(),
     estado_pago: estados[k],
     motivo: estados[k] === "rechazado" ? "El monto no coincide con la inscripción" : "",
-    creado_en: new Date(Date.now() - (6 - k) * 3600_000).toISOString(),
+    // Repartidas en las últimas semanas, para que las métricas del panel tengan una tendencia que mostrar.
+    creado_en: new Date(Date.now() - DIAS_PRUEBA[k] * 864e5).toISOString(),
+    ...(estados[k] !== "pendiente" ? { validado_por: "organizador (demo)", validado_en: new Date(Date.now() - DIAS_PRUEBA[k] * 864e5 + (k + 2) * 36e5).toISOString() } : {}),
   }));
   // Primero los comprobantes y después el estado: así ninguna inscripción queda sin imagen
   // si el usuario cambia de página a mitad del guardado.
@@ -389,6 +399,7 @@ export async function sembrarDemo({ forzar = false } = {}) {
 export async function reiniciarDemo() {
   if (NUBE || FIJO) return;
   for (const i of leer().inscripciones) await borrarVoucher(i.id);
+  borrarVisitasDemo();
   cache = null;
   try {
     localStorage.removeItem(CLAVE);
@@ -424,6 +435,28 @@ export async function entrarPanel(correo, clave) {
     sessionStorage.setItem(SESION, c.correo);
   } catch {}
   return sinClave(c);
+}
+// Primer ingreso del dueño en la web oficial: activa su cuenta como administrador (supabase/migrations).
+export async function reclamarAdmin(nombre) {
+  nombre = String(nombre ?? "").trim();
+  if (!nombre) throw new Error("Escribe tu nombre.");
+  if (!NUBE) throw new Error("En la demo el administrador ya existe.");
+  return (await nube()).reclamarAdmin(nombre);
+}
+export async function cambiarClave(nueva, repetida) {
+  if (String(nueva ?? "").length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
+  if (nueva !== repetida) throw new Error("Las dos contraseñas no coinciden.");
+  if (NUBE) return (await nube()).cambiarClave(nueva);
+  let correo = null;
+  try {
+    correo = sessionStorage.getItem(SESION);
+  } catch {}
+  guardarCuentasDemo(cuentasDemo().map((x) => (x.correo === correo ? { ...x, clave: nueva } : x)));
+}
+// Visitas de la web desde un día («AAAA-MM-DD»; vacío = todas). En la demo, las de este navegador.
+export async function cargarVisitas(desde = "") {
+  if (NUBE) return (await nube()).cargarVisitas(desde);
+  return visitasDemo().filter((f) => !desde || f.dia >= desde);
 }
 export async function salirPanel() {
   if (NUBE) return (await nube()).salir();

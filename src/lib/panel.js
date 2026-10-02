@@ -5,7 +5,9 @@ import {
   inscripciones, cambiarEstadoPago, suprimirInscripcion, leerVoucher, csvInscritos, noticias, crearNoticia, borrarNoticia,
   resultadosPublicados, publicarResultados, borrarResultados, leerCsvResultados, sembrarDemo, reiniciarDemo, alCambiar,
   TORNEO_VERANO, hayNube, listo, sesionPanel, entrarPanel, salirPanel, cargarPanel, ROLES, listaPersonal, darAcceso, quitarAcceso,
+  reclamarAdmin, cambiarClave, cargarVisitas,
 } from "./store.js";
+import { calcularMetricas, csvMetricas, PERIODOS } from "./metricas.js";
 import { esc } from "./html.js";
 import contenidoBaseCompleto from "../data/contenido.json";
 
@@ -25,6 +27,7 @@ async function conAviso(accion) {
 // ------------------------------------------------------------------ entrada y rol
 let perfilActual = null;
 async function entrar(perfil) {
+  if (perfil.reclamar) return pedirActivacion(perfil);
   perfilActual = perfil;
   $("puerta").hidden = true;
   $("panel").hidden = false;
@@ -51,6 +54,51 @@ $("acceso").addEventListener("submit", async (e) => {
     aviso.textContent = err.message;
   }
 });
+// Primer ingreso del dueño: su cuenta no tiene rol y el club aún no tiene administrador.
+function pedirActivacion(perfil) {
+  $("acceso").hidden = true;
+  $("reclamar").hidden = false;
+  $("reclamar-correo").textContent = perfil.correo;
+  $("reclamar-nombre").focus();
+}
+$("reclamar").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const aviso = $("reclamar-aviso");
+  aviso.textContent = "Activando…";
+  try {
+    const perfil = await reclamarAdmin($("reclamar-nombre").value);
+    aviso.textContent = "";
+    $("reclamar").hidden = true;
+    $("acceso").hidden = false;
+    entrar(perfil);
+  } catch (err) {
+    aviso.textContent = err.message;
+  }
+});
+$("reclamar-salir").addEventListener("click", async () => {
+  await salirPanel();
+  location.reload();
+});
+
+// Cambiar la contraseña propia (cualquier rol).
+$("abrir-clave").addEventListener("click", () => {
+  $("form-clave").reset();
+  $("clave-aviso").textContent = "";
+  $("dlg-clave").showModal();
+});
+$("clave-cerrar").addEventListener("click", () => $("dlg-clave").close());
+$("form-clave").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  try {
+    await cambiarClave(String(f.get("nueva") ?? ""), String(f.get("repetida") ?? ""));
+    e.target.reset();
+    $("clave-aviso").textContent = "Listo: la próxima vez entra con la contraseña nueva.";
+  } catch (err) {
+    $("clave-aviso").textContent = err.message;
+  }
+});
+
 // Demo: «Usar esta cuenta» llena el formulario con una cuenta de prueba.
 document.querySelectorAll("[data-cuenta]").forEach((b) =>
   b.addEventListener("click", () => {
@@ -125,10 +173,174 @@ function pintarResumen() {
     ["Fotos del club (con autorización escrita de los padres)", !faltan.includes("fotos")],
     ["¿Ofrecen clase de prueba? (si la hay, el botón principal lo dice)", !faltan.includes("clase_prueba")],
   ];
+  pintarAcciones($("resumen-acciones"), metricasActuales(30).acciones);
+
   $("checklist").innerHTML = items
     .map(([t, ok]) => `<li class="${ok ? "hecho" : ""}"><span aria-hidden="true">${ok ? "✓" : "○"}</span> ${esc(t)}${ok ? '<span class="visually-hidden"> (listo)</span>' : ""}</li>`)
     .join("");
 }
+
+// ------------------------------------------------------------------ métricas (solo admin)
+// Los cálculos están en metricas.js (probados en tests/metricas.test.mjs); aquí solo se dibujan.
+const soles = (n) => `S/ ${n.toLocaleString("es-PE", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+const pct = (x) => (x == null ? "—" : `${Math.round(x * 100)} %`);
+const dia = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString("es-PE", { day: "numeric", month: "short" });
+let visitas = { desde: null, filas: [], hora: 0 };
+
+// El torneo de verano toma costo, cupo y fecha de «Datos del club» (si el club los confirmó).
+function torneosParaMetricas() {
+  return todosLosTorneos().map((t) =>
+    t.id === TORNEO_VERANO.id
+      ? { ...t, costo: contenido("verano_costo") ?? "", cupo: contenido("verano_cupo") ?? "", fecha: /^\d{4}-\d{2}-\d{2}$/.test(contenido("verano_fecha") ?? "") ? contenido("verano_fecha") : "" }
+      : t,
+  );
+}
+function metricasActuales(dias) {
+  return calcularMetricas({ inscripciones: inscripciones(), torneos: torneosParaMetricas(), web: visitas.filas, dias });
+}
+// Las visitas se piden a la base de datos como mucho una vez por minuto.
+async function traerVisitas() {
+  if (Date.now() - visitas.hora < 60_000) return;
+  visitas.hora = Date.now();
+  try {
+    visitas.filas = await cargarVisitas();
+  } catch {
+    visitas.filas = [];
+  }
+}
+
+const NIVEL_ACCION = { urgente: ["Urgente", "etiqueta-error"], atencion: ["Atención", "etiqueta-ejemplo"], idea: ["Idea", "etiqueta-ok"] };
+function pintarAcciones(ul, lista) {
+  ul.innerHTML = lista.length
+    ? lista
+        .map((a) => {
+          const [t, cls] = NIVEL_ACCION[a.nivel];
+          const ir = a.ir ? ` <a href="#${a.ir}" data-ir="${a.ir}">Ir a ${a.ir === "inscripciones" ? "Inscripciones" : "Torneos"} →</a>` : "";
+          return `<li><span class="etiqueta ${cls}">${t}</span><span>${esc(a.texto)}${ir}</span></li>`;
+        })
+        .join("")
+    : `<li><span class="etiqueta etiqueta-ok">Al día</span><span>Nada pendiente: no hay pagos por validar ni torneos que necesiten atención.</span></li>`;
+}
+
+function barras(lista, total) {
+  if (!lista.length) return `<p class="suave">Sin inscripciones en este periodo.</p>`;
+  const max = Math.max(...lista.map(([, n]) => n));
+  return `<ul class="barras">${lista
+    .map(
+      ([nombre, n]) => `<li><span class="nombre" title="${esc(nombre)}">${esc(nombre)}</span>
+        <span class="pista" aria-hidden="true"><span class="relleno" style="width:${(n / max) * 100}%"></span></span>
+        <span class="valor">${n}<span class="visually-hidden"> de ${total}</span></span></li>`,
+    )
+    .join("")}</ul>`;
+}
+
+function cifra(valor, etiqueta, detalle = "") {
+  return `<div class="cifra"><strong>${valor}</strong><span>${etiqueta}</span>${detalle ? `<small>${detalle}</small>` : ""}</div>`;
+}
+function variacion(actual, anterior, formato = (n) => n) {
+  if (!anterior && !actual) return "Igual que en el periodo anterior.";
+  if (!anterior) return `El periodo anterior: ${formato(0)}.`;
+  const v = (actual - anterior) / anterior;
+  const clase = v > 0 ? "sube" : v < 0 ? "baja" : "";
+  return `<b class="${clase}">${v > 0 ? "▲" : v < 0 ? "▼" : "="} ${Math.abs(Math.round(v * 100))} %</b> frente al periodo anterior (${formato(anterior)}).`;
+}
+
+async function pintarMetricas() {
+  if (perfilActual?.rol !== "admin") return;
+  await traerVisitas();
+  const dias = Number($("m-periodo").value);
+  const m = metricasActuales(dias);
+  const conPeriodo = dias !== 0;
+
+  const ingresosDetalle = [
+    conPeriodo ? variacion(m.ingresos.total, m.ingresos.anterior, soles) : `${m.ingresos.validadas} pagos validados.`,
+    m.ingresos.sinPrecio ? `${m.ingresos.sinPrecio} sin costo cargado no suman.` : "",
+  ].join(" ");
+  $("m-kpis").innerHTML = [
+    cifra(soles(m.ingresos.total), "cobrado y validado", ingresosDetalle),
+    cifra(soles(m.porCobrar.total), "por cobrar hoy", `${m.porCobrar.pagos} ${m.porCobrar.pagos === 1 ? "pago espera" : "pagos esperan"} validación.${m.porCobrar.sinPrecio ? ` ${m.porCobrar.sinPrecio} sin costo cargado.` : ""}`),
+    cifra(m.inscripciones.total, "inscripciones", conPeriodo ? variacion(m.inscripciones.total, m.inscripciones.anterior) : "Desde la primera inscripción."),
+    cifra(pct(m.jugadores.retencion), "jugadores que vuelven", m.jugadores.unicos ? `${m.jugadores.vuelven} de ${m.jugadores.unicos} jugadores jugaron 2 torneos o más. ${m.jugadores.nuevos} nuevos en el periodo.` : "Aún no hay jugadores."),
+    cifra(m.pagos.medianaHoras == null ? "—" : m.pagos.medianaHoras < 1 ? "< 1 h" : `${Math.round(m.pagos.medianaHoras)} h`, "para validar un pago", `Lo normal (mediana). ${m.pagos.atrasados ? `<b class="baja">${m.pagos.atrasados} esperan más de 2 días.</b>` : "Ninguno espera más de 2 días."}`),
+    cifra(
+      pct(m.web.conversion),
+      "de las visitas se inscribe",
+      m.web.conversion != null
+        ? `${m.web.inscripciones} inscripciones de ${m.web.sesiones} visitas a la web.`
+        : m.web.sesiones
+          ? `Aún hay pocas visitas contadas (${m.web.sesiones}) para calcularlo bien.`
+          : "Aún no hay visitas registradas.",
+    ),
+  ].join("");
+
+  pintarAcciones($("m-acciones"), m.acciones);
+
+  const maxSemana = Math.max(1, ...m.semanas.map((s) => s.total));
+  $("m-semanas").innerHTML = `<ol class="semanas" aria-label="Inscripciones por semana">${m.semanas
+    .map(
+      (s, k) => `<li class="semana${k === 11 ? " actual" : ""}"><b>${s.total || ""}</b>
+        <span class="col" style="height:${(s.total / maxSemana) * 120}px" aria-hidden="true"></span>
+        <span>${dia(s.desde)}</span><span class="visually-hidden">: ${s.total} inscripciones</span></li>`,
+    )
+    .join("")}</ol>`;
+
+  const filasT = m.torneos.filter((t) => !t.ejemplo || t.inscritos);
+  $("m-torneos").innerHTML = filasT.length
+    ? `<div class="tabla-envoltura" tabindex="0" role="region" aria-label="Tabla de torneos"><table>
+        <thead><tr><th>Torneo</th><th>Fecha</th><th>Cupo</th><th class="num">Validados</th><th class="num">Cobrado</th><th class="num">Por cobrar</th></tr></thead>
+        <tbody>${filasT
+          .map((t) => {
+            const ocup = t.cupo
+              ? `<div class="ocupacion"><span>${t.inscritos} de ${t.cupo} · ${pct(t.ocupacion)}</span><span class="pista" aria-hidden="true"><span class="relleno${t.ocupacion >= 0.9 ? " lleno" : ""}" style="width:${Math.min(100, t.ocupacion * 100)}%"></span></span></div>`
+              : `${t.inscritos} inscritos <span class="suave">(sin cupo)</span>`;
+            return `<tr><td><strong>${esc(t.nombre)}</strong>${t.ejemplo ? ' <span class="etiqueta etiqueta-ejemplo">ejemplo</span>' : ""}</td><td>${t.fecha ? dia(t.fecha) : "—"}</td><td>${ocup}</td>
+              <td class="num">${t.validados}</td><td class="num">${t.precio == null ? '<span class="suave">sin costo</span>' : soles(t.cobrado)}</td><td class="num">${t.precio == null ? "—" : soles(t.porCobrar)}</td></tr>`;
+          })
+          .join("")}</tbody></table></div>`
+    : `<p class="suave">Aún no hay torneos con inscripciones.</p>`;
+
+  const total = m.inscripciones.total;
+  $("m-categorias").innerHTML = barras(m.categorias, total);
+  $("m-niveles").innerHTML = barras(m.niveles, total);
+  $("m-origen").innerHTML =
+    barras(
+      [["Ajedrez Club Mokewa", m.origen.mokewa], ["Otros clubes o colegios", m.origen.otros], ["Sin club", m.origen.sinClub]].filter(([, n]) => n),
+      total,
+    ) + (m.origen.clubes.length ? `<p class="suave" style="margin-top:10px">Los que más traen: ${m.origen.clubes.map(([c, n]) => `${esc(c)} (${n})`).join(", ")}.</p>` : "");
+
+  const w = m.web;
+  const pasos = [
+    ["Visitas a la web", w.sesiones],
+    ["Clics para escribir al club", w.contactos],
+    ["Empezaron una inscripción", w.inicios],
+    ["Terminaron la inscripción", w.inscripciones],
+  ];
+  $("m-embudo").innerHTML = w.hayDatos
+    ? `<h3 class="h-bloque" style="font-size:1.05rem">Del interés a la inscripción</h3><ol class="embudo">${pasos
+        .map(([t, n], k) => `<li style="--n:${k}"><span>${t}</span><strong>${n.toLocaleString("es-PE")}</strong></li>`)
+        .join("")}</ol>${w.comoLlegar ? `<p class="suave" style="margin-top:8px">Además, ${w.comoLlegar} ${w.comoLlegar === 1 ? "persona pidió" : "personas pidieron"} cómo llegar a la sede.</p>` : ""}`
+    : `<p class="suave">Todavía no hay visitas registradas. Se empiezan a contar cuando la web oficial esté conectada a la base de datos.</p>`;
+  $("m-paginas").innerHTML = w.paginas.length
+    ? `<h3 class="h-bloque" style="font-size:1.05rem">Páginas más vistas</h3>${barras(w.paginas.map(([p, n]) => [p === "/" ? "Inicio" : p, n]), w.vistas)}`
+    : "";
+}
+$("m-periodo").addEventListener("change", pintarMetricas);
+$("m-csv").addEventListener("click", () => {
+  const dias = Number($("m-periodo").value);
+  const etiqueta = PERIODOS.find(([d]) => d === dias)?.[1] ?? "";
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csvMetricas(metricasActuales(dias), etiqueta)], { type: "text/csv;charset=utf-8" }));
+  a.download = `metricas-mokewa-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+// Enlaces internos «Ir a…» de las recomendaciones: abren la pestaña.
+document.addEventListener("click", (e) => {
+  const ir = e.target.closest("[data-ir]")?.dataset.ir;
+  if (!ir) return;
+  e.preventDefault();
+  abrir($(`t-${ir}`), true);
+});
 
 // ------------------------------------------------------------------ inscripciones
 const ESTADOS = {
@@ -208,7 +420,7 @@ $("i-lista").addEventListener("click", async (e) => {
   if (accion === "pendiente") await conAviso(() => cambiarEstadoPago(id, "pendiente")).catch(() => {});
   if (accion === "rechazar") await conAviso(() => cambiarEstadoPago(id, "rechazado", tarjeta.querySelector(".motivo").value)).catch(() => {});
   if (accion === "suprimir") {
-    if (!confirm("¿Borrar todos los datos de esta inscripción y su comprobante? (derecho de supresión, Ley 29733)")) return;
+    if (!confirm("¿Borrar todos los datos de este jugador? Se borran sus inscripciones en todos los torneos, sus tutores y sus comprobantes (derecho de supresión, Ley 29733).")) return;
     await conAviso(() => suprimirInscripcion(id)).catch(() => {});
   }
   if (accion === "ver") verVoucher(id);
@@ -527,6 +739,7 @@ $("form-personal").addEventListener("submit", async (e) => {
 function pintarTodo() {
   if (perfilActual?.rol === "admin") pintarPersonal();
   pintarResumen();
+  pintarMetricas();
   pintarInscripciones();
   pintarTorneos();
   pintarResultados();

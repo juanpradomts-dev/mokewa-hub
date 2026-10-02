@@ -4,6 +4,7 @@ import {
   alCambiar, sembrarDemo, TIPOS_VOUCHER, MAX_VOUCHER, pintarCampos, listo, hayNube,
 } from "./store.js";
 import { esc } from "./html.js";
+import { contar } from "./conteo.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -99,6 +100,9 @@ function marcarErrores(errores) {
   $("errores").textContent = `${n > 1 ? "Faltan" : "Falta"} ${n} ${n > 1 ? "datos" : "dato"}: revisa lo marcado en rojo.`;
   $(errores[0][0]).focus();
 }
+
+// Empezar a llenar el formulario cuenta una vez (anónimo): así el panel ve cuántos empiezan y no terminan.
+form.addEventListener("input", () => contar("inscripcion_inicio"), { once: true });
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();

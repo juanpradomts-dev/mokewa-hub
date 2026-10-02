@@ -34,6 +34,9 @@ const MENSAJES = {
   correo_invalido: "Revisa el correo.",
   fecha_invalida: "Revisa la fecha de nacimiento.",
   sin_categoria: "La fecha de nacimiento no corresponde a ninguna categoría del torneo.",
+  ya_inscrito: "Este jugador ya está inscrito en este torneo.",
+  ya_hay_admin: "El club ya tiene administrador: pídele que te dé acceso desde la pestaña Personal.",
+  no_es_primera_cuenta: "Solo la primera cuenta creada en Supabase puede activarse como administrador. Pide acceso al administrador.",
 };
 function error(e, porDefecto = "No se pudo conectar con la base de datos del club. Intenta de nuevo.") {
   const clave = Object.keys(MENSAJES).find((k) => String(e?.message ?? "").includes(k));
@@ -82,6 +85,7 @@ const aInscripcion = (r) => {
   return {
     id: r.id,
     torneo_id: r.torneo_id,
+    jugador_id: r.jugador_id,
     nombres: j.nombres ?? "",
     apellidos: j.apellidos ?? "",
     fecha_nacimiento: j.fecha_nacimiento ?? "",
@@ -97,6 +101,8 @@ const aInscripcion = (r) => {
     consentimiento_fecha: t.consentimiento_fecha ?? "",
     estado_pago: r.estado_pago,
     motivo: r.motivo ?? "",
+    monto: r.monto,
+    validado_en: r.validado_en,
     voucher_url: r.voucher_url,
     creado_en: r.creado_en,
   };
@@ -154,12 +160,15 @@ export async function subirVoucher(id, archivo) {
 }
 
 // ---------------------------------------------------------------- panel (personal del club)
+// Una cuenta sin rol: si el club aún no tiene administrador, puede activarse (primer ingreso del dueño).
 export async function sesion() {
   const { data } = await sb.auth.getSession();
   const usuario = data.session?.user;
   if (!usuario) return null;
   const perfil = (await sb.from("perfiles").select("nombre, rol").eq("id", usuario.id).maybeSingle()).data;
-  return perfil ? { ...perfil, correo: usuario.email } : null;
+  if (perfil) return { ...perfil, correo: usuario.email };
+  const { data: hay } = await sb.rpc("hay_admin");
+  return hay === false ? { reclamar: true, correo: usuario.email } : null;
 }
 export async function entrar(correo, clave) {
   const { error: e } = await sb.auth.signInWithPassword({ email: correo, password: clave });
@@ -171,14 +180,29 @@ export async function entrar(correo, clave) {
   }
   return s;
 }
+export async function reclamarAdmin(nombre) {
+  revisar(await sb.rpc("reclamar_admin", { p_nombre: nombre }), "No se pudo activar la cuenta.");
+  return sesion();
+}
+export async function cambiarClave(nueva) {
+  const { error: e } = await sb.auth.updateUser({ password: nueva });
+  if (e) throw new Error(/weak|short|characters/i.test(e.message) ? "Esa contraseña es muy débil: usa al menos 8 caracteres." : "No se pudo cambiar la contraseña.");
+}
 export const salir = () => sb.auth.signOut();
+
+// Visitas de la web por día (solo el admin: RLS).
+export async function cargarVisitas(desde) {
+  let q = sb.from("visitas_diarias").select("dia, pagina, evento, total");
+  if (desde) q = q.gte("dia", desde);
+  return revisar(await q);
+}
 
 export async function cargarPanel() {
   const filas = revisar(
     await sb
       .from("inscripciones")
       .select(
-        "id, torneo_id, categoria, nivel, club, estado_pago, motivo, voucher_url, creado_en, jugador:jugadores(nombres, apellidos, fecha_nacimiento, usuario_lichess, fide_id, tutores(nombre, telefono, correo, consentimiento, consentimiento_fecha))",
+        "id, torneo_id, jugador_id, categoria, nivel, club, estado_pago, motivo, monto, validado_en, voucher_url, creado_en, jugador:jugadores(nombres, apellidos, fecha_nacimiento, usuario_lichess, fide_id, tutores(nombre, telefono, correo, consentimiento, consentimiento_fecha))",
       )
       .order("creado_en"),
   );
@@ -198,11 +222,15 @@ export async function leerVoucher(id) {
   const { data, error: e } = await sb.storage.from("vouchers").download(`inscripciones/${id}`);
   return e ? null : data;
 }
-// Derecho de supresión: borra el comprobante, el jugador y (en cascada) su tutor e inscripciones.
+// Derecho de supresión: borra al jugador con sus comprobantes y (en cascada) sus tutores e inscripciones
+// en todos los torneos. Devuelve los ids de inscripción borrados.
 export async function suprimirInscripcion(id) {
   const fila = revisar(await sb.from("inscripciones").select("jugador_id").eq("id", id).maybeSingle());
-  await sb.storage.from("vouchers").remove([`inscripciones/${id}`]);
-  if (fila) revisar(await sb.from("jugadores").delete().eq("id", fila.jugador_id));
+  if (!fila) return [id];
+  const suyas = revisar(await sb.from("inscripciones").select("id").eq("jugador_id", fila.jugador_id)).map((x) => x.id);
+  await sb.storage.from("vouchers").remove(suyas.map((x) => `inscripciones/${x}`));
+  revisar(await sb.from("jugadores").delete().eq("id", fila.jugador_id));
+  return suyas;
 }
 
 export const crearTorneo = async (t) => aTorneo(revisar(await sb.from("torneos").insert(deTorneo(t)).select().single()));
