@@ -81,7 +81,7 @@ const fichaPreguntas = indexar
 
   <section class="seccion">
     <div class="contenedor rejilla rejilla-3">
-      {NIVELES.map((n) => <NivelTarjeta nivel={n} titulo="h2" />)}
+      {NIVELES.map((n, i) => <NivelTarjeta nivel={n} titulo="h2" orden={i} />)}
     </div>
   </section>
 
@@ -90,8 +90,8 @@ const fichaPreguntas = indexar
     <div class="contenedor">
       <h2>Preguntas frecuentes</h2>
       <div class="faq">
-        {grupos.map((g) => (
-          <div class="faq-grupo">
+        {grupos.map((g, i) => (
+          <div class="faq-grupo" data-aparece style={`--i:${i}`}>
             <h3>{g.titulo}</h3>
             {g.preguntas.map((q) => (
               <details class="tarjeta">

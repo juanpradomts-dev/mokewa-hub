@@ -32,6 +32,12 @@
   --sans: "Archivo Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
   --angosto: 80%; /* ancho de los títulos (eje wdth de Archivo: 62–125 %) */
   --ancho: 1120px;
+  /* Movimiento: los mismos tiempos y curvas en toda la web */
+  --t-rapido: 0.15s;
+  --t-medio: 0.25s;
+  --t-lento: 0.5s;
+  --curva: cubic-bezier(0.2, 0.8, 0.2, 1); /* desacelera al llegar */
+  --curva-resorte: cubic-bezier(0.34, 1.4, 0.64, 1);
   color-scheme: light;
 }
 
@@ -43,6 +49,7 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-padding-top: 5rem;
+  scroll-behavior: smooth; /* responde a un clic: va para todos (también con «reducir animaciones») */
 }
 body {
   margin: 0;
@@ -96,6 +103,7 @@ h3 {
 }
 p {
   margin: 0 0 1em;
+  text-wrap: pretty; /* sin palabras huérfanas al final del párrafo */
 }
 .contenedor {
   width: 100%;
@@ -374,7 +382,23 @@ main:focus {
   cursor: pointer;
   white-space: nowrap;
   max-width: 100%;
-  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background-color var(--t-rapido),
+    color var(--t-rapido),
+    border-color var(--t-rapido),
+    box-shadow var(--t-medio),
+    transform var(--t-medio) var(--curva-resorte);
+}
+.boton:hover {
+  transform: translateY(-1px);
+}
+/* Al presionar: se hunde un poco (respuesta inmediata al toque) */
+.boton:active {
+  transform: scale(0.97);
+  transition-duration: 0.08s;
+}
+.boton-primario:hover {
+  box-shadow: 0 6px 16px rgb(242 138 30 / 0.35);
 }
 /* En celulares chicos un botón largo parte su texto en dos líneas antes que desbordar */
 @media (max-width: 380px) {
@@ -978,16 +1002,62 @@ textarea[aria-invalid="true"] {
   background-size: 64px 64px;
 }
 
-/* Con «reducir movimiento» solo se quita el desplazamiento suave: los fundidos y el caballo
-   flotante (suave, de poca amplitud) se mantienen para todos. */
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
+/* Movimiento para todos, también con «reducir animaciones» de Windows: fundidos, desplazamientos cortos
+   y lo que responde a un clic. Nada se mueve solo en bucle salvo el caballo flotante (pedido del club). */
+
+/* Aparición escalonada: las tarjetas suben 18 px y se funden al entrar en pantalla, de a una (--i).
+   Solo con JavaScript (la clase la pone Base.astro); sin él, todo se ve de inmediato. */
+.con-aparicion [data-aparece] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity var(--t-lento) var(--curva),
+    transform 0.6s var(--curva);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.con-aparicion [data-aparece].visto {
+  opacity: 1;
+  transform: none;
+}
+
+/* Cambio de página suave (Chrome, Edge y Safari recientes; el resto cambia como siempre).
+   La cabecera, el pie y el botón de WhatsApp quedan fijos; solo el contenido se funde. */
+@view-transition {
+  navigation: auto;
+}
+.cabecera {
+  view-transition-name: cabecera;
+}
+.pie {
+  view-transition-name: pie;
+}
+.wsp {
+  view-transition-name: wsp;
+}
+::view-transition-old(root) {
+  animation: 0.18s var(--curva) both salir-pagina;
+}
+::view-transition-new(root) {
+  animation: 0.32s var(--curva) both entrar-pagina;
+}
+@keyframes salir-pagina {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes entrar-pagina {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
 }
 
 /* ---------- Impresión (constancia en PDF) ---------- */
 @media print {
+  [data-aparece] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
   .aviso-demo,
   .cabecera,
   .pie,

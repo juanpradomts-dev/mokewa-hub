@@ -27,7 +27,7 @@ const conSede = !!lugar || !esProduccion;
         <p class="bajada">Pregúntanos por horarios, precios o cómo empezar.</p>
 
         <div class:list={["accesos", { solo: !conSede }]}>
-          <article class="acceso">
+          <article class="acceso" data-aparece style="--i:0">
             <span class="portada portada-correo" aria-hidden="true">
               <span class="acceso-ico">
                 <svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M3 5.5h18v13H3z M3.5 6l8.5 7 8.5-7"></path></svg>
@@ -40,7 +40,7 @@ const conSede = !!lugar || !esProduccion;
           </article>
 
           {conSede && (
-            <article class="acceso">
+            <article class="acceso" data-aparece style="--i:1">
               <div class="portada portada-mapa" data-mapa-vivo hidden={!lugar}>
                 <iframe
                   src={lugar ? mapaIncrustado(lugar) : undefined}

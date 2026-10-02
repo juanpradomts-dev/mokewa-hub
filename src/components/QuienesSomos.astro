@@ -26,8 +26,8 @@ const bloques = (["mision", "vision"] as const)
   </div>
   {bloques.length > 0 && (
     <div class="mv">
-      {bloques.map((x, i) => (
-        <article class:list={["mv-tarjeta", i === 0 ? "mv-mision" : "mv-vision"]}>
+      {bloques.map((x) => (
+        <article class:list={["mv-tarjeta", x.campo === "mision" ? "mv-mision" : "mv-vision"]}>
           <h3>{x.titulo}</h3>
           <p data-campo={x.campo} data-vacio={x.texto} class:list={{ confirmado: x.confirmado }}>{x.texto}</p>
           {!x.confirmado && <span class="chip-propuesta" data-sin-campo={x.campo}>Propuesta · por confirmar</span>}

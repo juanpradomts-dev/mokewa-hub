@@ -85,6 +85,10 @@ const tituloCompleto = seccion === "inicio" ? `Ajedrez Club Mokewa · ${LEMA}` :
     <link rel="apple-touch-icon" href={url("/apple-touch-icon.png")} />
     <meta name="color-scheme" content="light" />
     <slot name="head" />
+    <script is:inline>
+      // Aparición escalonada de tarjetas: solo si el navegador sabe observarlas (si no, todo visible)
+      if ("IntersectionObserver" in window) document.documentElement.classList.add("con-aparicion");
+    </script>
   </head>
   <body data-base={b} data-modo={MODO}>
     <a class="saltar" href="#contenido">Saltar al contenido</a>
@@ -174,6 +178,22 @@ const tituloCompleto = seccion === "inicio" ? `Ajedrez Club Mokewa · ${LEMA}` :
       };
       pintar();
       alCambiar(pintar);
+
+      // Las tarjetas marcadas con data-aparece se funden al entrar en pantalla, una sola vez
+      const aparecer = document.querySelectorAll<HTMLElement>("[data-aparece]");
+      if ("IntersectionObserver" in window) {
+        const vista = new IntersectionObserver(
+          (entradas) => {
+            for (const e of entradas) {
+              if (!e.isIntersecting) continue;
+              e.target.classList.add("visto");
+              vista.unobserve(e.target);
+            }
+          },
+          { rootMargin: "0px 0px -6% 0px", threshold: 0.12 },
+        );
+        aparecer.forEach((el) => vista.observe(el));
+      }
 
       const boton = document.querySelector(".boton-menu");
       const menu = document.getElementById("menu-movil");

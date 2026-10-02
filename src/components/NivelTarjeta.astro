@@ -10,9 +10,10 @@ import { valor, lista, esProduccion } from "../lib/contenido.js";
 
 interface Props {
   nivel: { id: string; nombre: string; pieza: string; horario: string; edad: string; para: string; accion: string };
+  orden?: number; // posición en la fila: escalona la aparición
   titulo?: "h2" | "h3";
 }
-const { nivel: n, titulo = "h3" } = Astro.props;
+const { nivel: n, titulo = "h3", orden = 0 } = Astro.props;
 const Titulo = titulo;
 const hayHorario = !!(valor(n.horario) && valor("precio_mensual"));
 // Qué aprende: lo confirmado por el club; si no, en la demo la propuesta (marcada) y en producción nada.
@@ -23,7 +24,7 @@ const aprende = confirmado.length ? confirmado : esProduccion ? [] : propuesta;
 const mensaje = `Hola, quisiera saber el horario y el precio del nivel ${n.nombre.toLowerCase()} de la academia.`;
 ---
 
-<article class={`tarjeta nivel nivel-${n.id}`} id={n.id}>
+<article class={`tarjeta nivel nivel-${n.id}`} id={n.id} data-aparece style={`--i:${orden}`}>
   <div class="nivel-cabeza">
     <span class="nivel-pieza" aria-hidden="true" set:html={svgPieza(n.pieza, "claro")} />
     <div>

@@ -24,6 +24,13 @@ const mapa = valor("mapa");
 const torneosPresenciales = historia.torneos.reduce((n, e) => n + e.fuentes.length, 0);
 const campeones = new Set(historia.torneos.flatMap((e) => e.campeones.map((c) => c.nombre)).filter((n) => !n.startsWith("Equipo"))).size;
 const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : String(n));
+// Prueba social real: los tres últimos campeones distintos (sin equipos ni nombres retirados)
+const ocultos = new Set<string>(historia.ocultar ?? []);
+const ultimos: { nombre: string; torneo: string }[] = [];
+for (const e of [...historia.torneos].sort((x, y) => y.fecha.localeCompare(x.fecha)))
+  for (const c of e.campeones)
+    if (ultimos.length < 3 && !c.nombre.startsWith("Equipo") && !ocultos.has(c.nombre) && !ultimos.some((u) => u.nombre === c.nombre))
+      ultimos.push({ nombre: c.nombre, torneo: e.torneo });
 ---
 
 <Base titulo="Inicio" seccion="inicio" descripcion="Ajedrez Club Mokewa, donde el ajedrez nunca descansa: academia en Moquegua con clases y torneos presenciales para niños, jóvenes y adultos.">
@@ -88,7 +95,7 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
       </div>
       <p class="deslizar" aria-hidden="true">Desliza para ver más →</p>
       <div class="carrusel" tabindex="0" aria-label="Niveles de la academia">
-        {NIVELES.map((n) => <NivelTarjeta nivel={n} />)}
+        {NIVELES.map((n, i) => <NivelTarjeta nivel={n} orden={i} />)}
       </div>
     </div>
   </section>
@@ -115,7 +122,7 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
           </svg>
         </div>
       <ol class="camino">
-        <li class="paso">
+        <li class="paso" data-aparece style="--i:0">
           <span class="paso-pieza" aria-hidden="true" set:html={svgPieza("peon", "claro")} />
           <div>
             <span class="paso-n">Paso 1</span>
@@ -123,7 +130,7 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
             <p>Desde la primera jugada, sin apuros.</p>
           </div>
         </li>
-        <li class="paso">
+        <li class="paso" data-aparece style="--i:1">
           <span class="paso-pieza" aria-hidden="true" set:html={svgPieza("caballo", "claro")} />
           <div>
             <span class="paso-n">Paso 2</span>
@@ -131,12 +138,20 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
             <p>Torneos presenciales todo el año, también con rating FIDE.</p>
           </div>
         </li>
-        <li class="paso paso-final">
+        <li class="paso paso-final" data-aparece style="--i:2">
           <span class="paso-pieza" aria-hidden="true" set:html={svgPieza("dama", "oscuro")} />
           <div>
             <span class="paso-n">Paso 3</span>
             <h3>Llega al podio</h3>
             <p>{campeones} campeones ya están en la historia del club. <a href={`${b}/el-club/#historia`}>Conócelos</a></p>
+            <ul class="ultimos" aria-label="Últimos campeones">
+              {ultimos.map((c) => (
+                <li>
+                  <span class="ultimos-corona" aria-hidden="true" set:html={svgPieza("dama", "oscuro")} />
+                  <span><strong>{c.nombre}</strong> {c.torneo}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </li>
       </ol>
@@ -582,6 +597,39 @@ const redondeo = (n: number) => (n >= 20 ? `+${Math.floor(n / 10) * 10}` : Strin
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #3d2412;
+  }
+  /* Últimos campeones: tres chips con corona */
+  .ultimos {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .ultimos li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px 5px 5px;
+    border-radius: 18px; /* también se ve bien si el nombre del torneo baja de línea */
+    background: rgb(255 255 255 / 0.85);
+    font-size: 0.86rem;
+    color: var(--tinta);
+  }
+  .ultimos-corona {
+    --pd: #f7a54a;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #141211;
+    color: #141211;
+    font-size: 0.9rem;
+  }
+  .ultimos-corona :global(.pieza) {
+    color: #f28a1e;
   }
   .paso h3 {
     margin: 2px 0 4px;
