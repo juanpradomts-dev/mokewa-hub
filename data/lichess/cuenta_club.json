@@ -19,7 +19,7 @@
   "rapid": {
    "games": 8,
    "rating": 1824,
-   "rd": 152,
+   "rd": 153,
    "prog": 0,
    "prov": true
   },
@@ -47,7 +47,7 @@
   "puzzle": {
    "games": 1071,
    "rating": 1888,
-   "rd": 91,
+   "rd": 92,
    "prog": 0
   },
   "racer": {
