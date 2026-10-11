@@ -123,7 +123,7 @@ test("qué hacer hoy: avisa del pago atrasado primero y del torneo sin precio", 
 test("qué hacer hoy: torneo casi lleno y torneo cercano con poco cupo", () => {
   const lleno = Array.from({ length: 9 }, (_, k) => ins({ nombres: `J${k}`, estado_pago: "validado", validado_en: hace(0) }));
   let m = calcularMetricas({ inscripciones: lleno, torneos, hoy: HOY, dias: 30 });
-  assert.ok(m.acciones.some((x) => /90 % del cupo/.test(x.texto)));
+  assert.ok(m.acciones.some((x) => /90 % del cupo.*lista de espera/.test(x.texto)));
   m = calcularMetricas({ inscripciones: lleno.slice(0, 2), torneos, hoy: HOY, dias: 30 });
   assert.ok(m.acciones.some((x) => /empieza en 8 días y va al 20 %/.test(x.texto)));
 });
@@ -136,4 +136,61 @@ test("sin datos no se rompe ni inventa", () => {
   assert.equal(m.web.conversion, null);
   assert.deepEqual(m.acciones, []);
   assert.match(csvMetricas(m, "Últimos 30 días"), /Inscripciones/);
+});
+
+import { calcularAcademia, mesTexto, juntarAcciones } from "../src/lib/metricas.js";
+
+test("lista de espera: no es deuda ni ocupa cupo, y genera un aviso", () => {
+  const espera = [
+    ...Array.from({ length: 3 }, (_, k) => ins({ nombres: `E${k}`, estado_pago: "validado", validado_en: hace(0) })),
+    ins({ nombres: "Wait", en_espera: true }),
+  ];
+  const chico = [{ ...torneos[0], cupo: "3" }];
+  const m = calcularMetricas({ inscripciones: espera, torneos: chico, hoy: HOY, dias: 30 });
+  const t = m.torneos[0];
+  assert.deepEqual([t.inscritos, t.enEspera, t.ocupacion], [3, 1, 1]);
+  assert.equal(m.porCobrar.pagos, 0);
+  assert.ok(m.acciones.some((x) => /«Relámpago» está lleno y 1 persona espera un lugar/.test(x.texto)));
+  assert.ok(!m.acciones.some((x) => /% del cupo/.test(x.texto)), "un solo aviso por torneo lleno");
+});
+
+const alumnos = [
+  { id: "a1", nombres: "Ana", apellidos: "Ríos", nivel: "Básico", mensualidad: 80, inicio: "2026-03-01" },
+  { id: "a2", nombres: "Bruno", apellidos: "Paz", nivel: "Intermedio", mensualidad: 100, inicio: "2026-06-15" },
+  { id: "a3", nombres: "Ciro", apellidos: "Luna", nivel: "Básico", mensualidad: null, inicio: "2026-10-03" }, // alta de octubre, sin precio
+  { id: "a4", nombres: "Dora", apellidos: "Sol", nivel: "Avanzado", mensualidad: 80, inicio: "2026-01-10", baja: "2026-10-01", motivo_baja: "Horario" },
+  { id: "a5", nombres: "Eli", apellidos: "Mar", nivel: "Básico", mensualidad: 80, inicio: "2026-02-01", baja: "2026-08-20", motivo_baja: "Horario" },
+];
+const pagos = [
+  { alumno_id: "a1", mes: "2026-10-01", monto: 80, medio: "Yape" },
+  { alumno_id: "a4", mes: "2026-10-01", monto: null, medio: "Efectivo" },
+  { alumno_id: "a1", mes: "2026-09-01", monto: 80, medio: "Yape" }, // otro mes: no cuenta
+];
+
+test("academia: quién pagó el mes, cuánto falta, altas, bajas y motivos", () => {
+  const ac = calcularAcademia({ alumnos, pagos, mes: "2026-10", hoy: HOY });
+  assert.equal(ac.mesTexto, "octubre de 2026");
+  assert.equal(ac.activos, 3); // Eli se fue en agosto y Dora el 1 de octubre
+  assert.equal(ac.lista.length, 4, "Dora sigue en la lista del mes: pagó octubre");
+  assert.equal(ac.pagaron, 2);
+  assert.equal(ac.cobrado, 80);
+  assert.equal(ac.pagosSinMonto, 1);
+  assert.equal(ac.faltan, 2); // Bruno y Ciro (Dora ya se fue)
+  assert.equal(ac.porCobrar, 100);
+  assert.equal(ac.sinMensualidad, 1);
+  assert.deepEqual([ac.altas, ac.bajas], [1, 1]);
+  assert.deepEqual(ac.motivos[0], ["Horario", 2]);
+  assert.equal(ac.lista[0].pago, null, "primero los que no pagaron");
+});
+
+test("academia: retención a 3 meses y recordatorio solo desde el día 10", () => {
+  const ac = calcularAcademia({ alumnos, pagos, mes: "2026-10", hoy: HOY }); // hoy: 2 de octubre
+  assert.equal(ac.base3m, 4); // Ana, Bruno, Dora y Eli estaban a inicios de julio
+  assert.equal(ac.retencion3m, 0.5); // siguen Ana y Bruno
+  assert.ok(!ac.acciones.some((x) => /no pagaron/.test(x.texto)), "el 2 del mes aún no se recuerda");
+  const tarde = calcularAcademia({ alumnos, pagos, mes: "2026-10", hoy: new Date("2026-10-12T12:00:00") });
+  assert.ok(tarde.acciones.some((x) => /2 alumnos no pagaron octubre de 2026/.test(x.texto)));
+  assert.ok(tarde.acciones.some((x) => /motivo más común hasta hoy: «Horario»/.test(x.texto)));
+  assert.equal(mesTexto("2027-01"), "enero de 2027");
+  assert.equal(juntarAcciones([{ nivel: "idea" }], [{ nivel: "urgente" }])[0].nivel, "urgente");
 });

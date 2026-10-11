@@ -5,9 +5,11 @@ import {
   inscripciones, cambiarEstadoPago, suprimirInscripcion, leerVoucher, csvInscritos, noticias, crearNoticia, borrarNoticia,
   resultadosPublicados, publicarResultados, borrarResultados, leerCsvResultados, sembrarDemo, reiniciarDemo, alCambiar,
   TORNEO_VERANO, hayNube, listo, sesionPanel, entrarPanel, salirPanel, cargarPanel, ROLES, listaPersonal, darAcceso, quitarAcceso,
-  reclamarAdmin, cambiarClave, cargarVisitas,
+  reclamarAdmin, cambiarClave, cargarVisitas, confirmarLugar, alumnosAcademia, pagosMensuales, crearAlumno, darDeBaja, reactivarAlumno,
+  borrarAlumno, registrarPago, anularPago, csvAlumnos, sembrarAcademiaDemo, MOTIVOS_BAJA, MEDIOS_PAGO,
 } from "./store.js";
-import { calcularMetricas, csvMetricas, PERIODOS } from "./metricas.js";
+import { calcularMetricas, csvMetricas, PERIODOS, calcularAcademia, juntarAcciones, mesDe } from "./metricas.js";
+import { numeroWhatsapp } from "./contacto.js";
 import { esc } from "./html.js";
 import contenidoBaseCompleto from "../data/contenido.json";
 
@@ -37,7 +39,10 @@ async function entrar(perfil) {
     await listo();
     // Los contactos y pagos solo los carga el admin (la base de datos igual se los niega al resto).
     if (perfil.rol === "admin") await conAviso(cargarPanel).catch(() => {});
-  } else await sembrarDemo();
+  } else {
+    await sembrarDemo();
+    sembrarAcademiaDemo();
+  }
   pintarTodo();
 }
 $("acceso").addEventListener("submit", async (e) => {
@@ -148,7 +153,7 @@ function aplicarRol(perfil) {
 const CINCO = ["horario_basico", "precio_mensual", "sede", "whatsapp"];
 function pintarResumen() {
   const todas = inscripciones();
-  const pend = todas.filter((i) => i.estado_pago === "pendiente").length;
+  const pend = todas.filter((i) => i.estado_pago === "pendiente" && !i.en_espera).length;
   const val = todas.filter((i) => i.estado_pago === "validado").length;
   const faltan = pendientesDeConfirmar();
   const total = Object.keys(CAMPOS).length;
@@ -173,7 +178,7 @@ function pintarResumen() {
     ["Fotos del club (con autorización escrita de los padres)", !faltan.includes("fotos")],
     ["¿Ofrecen clase de prueba? (si la hay, el botón principal lo dice)", !faltan.includes("clase_prueba")],
   ];
-  pintarAcciones($("resumen-acciones"), metricasActuales(30).acciones);
+  pintarAcciones($("resumen-acciones"), juntarAcciones(metricasActuales(30).acciones, academiaActual(mesDe()).acciones));
 
   $("checklist").innerHTML = items
     .map(([t, ok]) => `<li class="${ok ? "hecho" : ""}"><span aria-hidden="true">${ok ? "✓" : "○"}</span> ${esc(t)}${ok ? '<span class="visually-hidden"> (listo)</span>' : ""}</li>`)
@@ -195,6 +200,7 @@ function torneosParaMetricas() {
       : t,
   );
 }
+const academiaActual = (mes) => calcularAcademia({ alumnos: alumnosAcademia(), pagos: pagosMensuales(), mes });
 function metricasActuales(dias) {
   return calcularMetricas({ inscripciones: inscripciones(), torneos: torneosParaMetricas(), web: visitas.filas, dias });
 }
@@ -215,11 +221,11 @@ function pintarAcciones(ul, lista) {
     ? lista
         .map((a) => {
           const [t, cls] = NIVEL_ACCION[a.nivel];
-          const ir = a.ir ? ` <a href="#${a.ir}" data-ir="${a.ir}">Ir a ${a.ir === "inscripciones" ? "Inscripciones" : "Torneos"} →</a>` : "";
+          const ir = a.ir ? ` <a href="#${a.ir}" data-ir="${a.ir}">Ir a ${{ inscripciones: "Inscripciones", academia: "Academia", torneos: "Torneos" }[a.ir]} →</a>` : "";
           return `<li><span class="etiqueta ${cls}">${t}</span><span>${esc(a.texto)}${ir}</span></li>`;
         })
         .join("")
-    : `<li><span class="etiqueta etiqueta-ok">Al día</span><span>Nada pendiente: no hay pagos por validar ni torneos que necesiten atención.</span></li>`;
+    : `<li><span class="etiqueta etiqueta-ok">Al día</span><span>Nada pendiente: no hay pagos por validar, mensualidades atrasadas ni torneos que necesiten atención.</span></li>`;
 }
 
 function barras(lista, total) {
@@ -273,7 +279,15 @@ async function pintarMetricas() {
     ),
   ].join("");
 
-  pintarAcciones($("m-acciones"), m.acciones);
+  const ac = academiaActual(mesDe());
+  pintarAcciones($("m-acciones"), juntarAcciones(m.acciones, ac.acciones));
+  $("m-academia-mes").textContent = ac.mesTexto;
+  $("m-academia").innerHTML = [
+    cifra(ac.activos, "alumnos activos", `${ac.altas} ${ac.altas === 1 ? "entró" : "entraron"} y ${ac.bajas} ${ac.bajas === 1 ? "se fue" : "se fueron"} este mes.`),
+    cifra(ac.pagaron, ac.pagaron === 1 ? "pagó el mes" : "pagaron el mes", ac.pagosSinMonto ? `${soles(ac.cobrado)} cobrados · ${ac.pagosSinMonto} sin monto registrado.` : `${soles(ac.cobrado)} cobrados.`),
+    cifra(soles(ac.porCobrar), "faltan por cobrar", `${ac.faltan} ${ac.faltan === 1 ? "alumno" : "alumnos"}.${ac.sinMensualidad ? ` ${ac.sinMensualidad} sin mensualidad cargada.` : ""}`),
+    cifra(pct(ac.retencion3m), "siguen a los 3 meses", ac.base3m ? `De los ${ac.base3m} que estudiaban hace 3 meses.` : "Aún no hay alumnos con 3 meses."),
+  ].join("");
 
   const maxSemana = Math.max(1, ...m.semanas.map((s) => s.total));
   $("m-semanas").innerHTML = `<ol class="semanas" aria-label="Inscripciones por semana">${m.semanas
@@ -329,7 +343,7 @@ $("m-csv").addEventListener("click", () => {
   const dias = Number($("m-periodo").value);
   const etiqueta = PERIODOS.find(([d]) => d === dias)?.[1] ?? "";
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csvMetricas(metricasActuales(dias), etiqueta)], { type: "text/csv;charset=utf-8" }));
+  a.href = URL.createObjectURL(new Blob([csvMetricas(metricasActuales(dias), etiqueta, academiaActual(mesDe()))], { type: "text/csv;charset=utf-8" }));
   a.download = `metricas-mokewa-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
@@ -340,6 +354,115 @@ document.addEventListener("click", (e) => {
   if (!ir) return;
   e.preventDefault();
   abrir($(`t-${ir}`), true);
+});
+
+// ------------------------------------------------------------------ academia (solo admin)
+$("a-mes").value = mesDe();
+const mesElegido = () => $("a-mes").value || mesDe();
+// «12 oct.» este año; «25 nov. 2025» si es de otro año.
+const fechaCorta = (iso) => {
+  if (!iso) return "";
+  const d = new Date(`${String(iso).slice(0, 10)}T12:00:00`);
+  return d.toLocaleDateString("es-PE", { day: "numeric", month: "short", ...(d.getFullYear() !== new Date().getFullYear() ? { year: "numeric" } : {}) });
+};
+
+// El recordatorio va redactado; el administrador lo revisa y lo envía desde su WhatsApp.
+function recordatorio(a, ac) {
+  const tel = numeroWhatsapp(a.tutor_telefono);
+  if (!tel) return "";
+  const monto = a.mensualidad != null && a.mensualidad !== "" ? ` (${soles(Number(a.mensualidad))})` : "";
+  const texto = `Hola${a.tutor_nombre ? `, ${a.tutor_nombre}` : ""}. Le recordamos la mensualidad de ${ac.mesTexto}${monto} de ${a.nombres} en la academia del Ajedrez Club Mokewa. Si ya la pagó, por favor ignore este mensaje. ¡Gracias!`;
+  return `<a class="boton boton-secundario boton-chico" href="https://wa.me/${tel}?text=${encodeURIComponent(texto)}" target="_blank" rel="noopener">Recordar por WhatsApp</a>`;
+}
+
+function pintarAcademia() {
+  if (perfilActual?.rol !== "admin") return;
+  const mes = mesElegido();
+  const ac = academiaActual(mes);
+  $("a-mes-texto").textContent = ac.mesTexto;
+  $("globo-academia").textContent = mes === mesDe() && ac.acciones.some((x) => x.ir === "academia" && x.nivel !== "idea") ? ac.faltan : "";
+  $("a-cifras").innerHTML = [
+    cifra(ac.activos, "alumnos activos", `${ac.altas} ${ac.altas === 1 ? "alta" : "altas"} y ${ac.bajas} ${ac.bajas === 1 ? "baja" : "bajas"} en el mes.`),
+    cifra(ac.pagaron, ac.pagaron === 1 ? "pagó el mes" : "pagaron el mes", `${soles(ac.cobrado)} cobrados.${ac.pagosSinMonto ? ` ${ac.pagosSinMonto} sin monto.` : ""}`),
+    cifra(soles(ac.porCobrar), "por cobrar", `${ac.faltan} ${ac.faltan === 1 ? "alumno falta" : "alumnos faltan"}.${ac.sinMensualidad ? ` ${ac.sinMensualidad} sin mensualidad cargada.` : ""}`),
+    cifra(pct(ac.retencion3m), "siguen a los 3 meses", ac.motivos.length ? `Motivo de baja más común: ${esc(ac.motivos[0][0])}.` : "Anota el motivo al dar de baja."),
+  ].join("");
+  $("a-resumen").textContent = ac.activos ? `Primero los que faltan pagar. ${ac.faltan ? "El botón de WhatsApp abre el recordatorio ya escrito." : "Todos pagaron este mes."}` : "Aún no hay alumnos: agrégalos con el formulario.";
+  $("a-lista").innerHTML = ac.lista
+    .map((a) => {
+      const pago = a.pago;
+      const nivel = a.nivel ? ` · ${esc(a.nivel)}` : "";
+      const precio = a.mensualidad != null && a.mensualidad !== "" ? ` · ${soles(Number(a.mensualidad))} al mes` : "";
+      const estado = pago
+        ? `<span class="etiqueta etiqueta-ok">Pagó${pago.monto != null ? ` ${soles(Number(pago.monto))}` : ""}${pago.medio ? ` · ${esc(pago.medio)}` : ""} · ${fechaCorta(pago.pagado_en)}</span>`
+        : a.baja
+          ? `<span class="etiqueta">Se fue el ${fechaCorta(a.baja)}</span>`
+          : `<span class="etiqueta etiqueta-ejemplo">Falta pagar</span>`;
+      const acciones = pago
+        ? `<button class="boton boton-secundario boton-chico" type="button" data-a="anular">Anular pago</button>`
+        : a.baja
+          ? ""
+          : `<label class="visually-hidden" for="medio-${a.id}">Medio de pago de ${esc(a.nombres)}</label><select id="medio-${a.id}" data-medio>${MEDIOS_PAGO.map((m) => `<option>${m}</option>`).join("")}</select>
+             <label class="visually-hidden" for="monto-${a.id}">Monto pagado por ${esc(a.nombres)}</label><input id="monto-${a.id}" data-monto type="number" min="0" step="0.5" placeholder="S/" value="${a.mensualidad ?? ""}" />
+             <button class="boton boton-primario boton-chico" type="button" data-a="pagar">Registrar pago</button>${recordatorio(a, ac)}`;
+      const baja = a.baja
+        ? ""
+        : `<label class="visually-hidden" for="motivo-${a.id}">Motivo de la baja de ${esc(a.nombres)}</label><select id="motivo-${a.id}" data-motivo>${MOTIVOS_BAJA.map((m) => `<option>${m}</option>`).join("")}</select>
+           <button class="boton boton-secundario boton-chico" type="button" data-a="baja">Dar de baja</button>`;
+      return `<article class="tarjeta alumno${!pago && !a.baja ? " sin-pago" : ""}" data-id="${esc(a.id)}">
+        <div class="alumno-cabeza"><strong>${esc(a.nombres)} ${esc(a.apellidos)}</strong>${estado}</div>
+        <p class="suave">${a.prueba ? '<span class="etiqueta">dato de prueba</span> ' : ""}Desde el ${fechaCorta(a.inicio)}${nivel}${precio}${a.tutor_telefono ? ` · ${esc(a.tutor_telefono)}` : ""}</p>
+        <div class="grupo-botones acciones">${acciones}</div>
+        <details><summary class="suave">Más opciones</summary><div class="grupo-botones acciones">${baja}
+          <button class="boton boton-secundario boton-chico peligro" type="button" data-a="borrar">Borrar datos</button></div></details>
+      </article>`;
+    })
+    .join("") || `<p class="tarjeta suave">No hay alumnos activos en ${esc(ac.mesTexto)}.</p>`;
+
+  const bajas = alumnosAcademia().filter((a) => a.baja).sort((x, y) => y.baja.localeCompare(x.baja));
+  $("a-n-bajas").textContent = `(${bajas.length})`;
+  $("a-bajas").innerHTML = bajas.length
+    ? bajas
+        .map((a) => `<div class="fila-simple tarjeta" data-id="${esc(a.id)}"><div><strong>${esc(a.nombres)} ${esc(a.apellidos)}</strong><br><span class="suave">Se fue el ${fechaCorta(a.baja)}${a.motivo_baja ? ` · ${esc(a.motivo_baja)}` : ""}</span></div>
+          <div class="grupo-botones"><button class="boton boton-secundario boton-chico" type="button" data-a="reactivar">Volvió</button><button class="boton boton-secundario boton-chico peligro" type="button" data-a="borrar">Borrar datos</button></div></div>`)
+        .join("")
+    : `<p class="suave">Nadie se ha ido. Cuando des de baja a un alumno, anota el motivo: es la mejor pista para no perder a otros.</p>`;
+}
+$("a-mes").addEventListener("change", pintarAcademia);
+for (const lista of ["a-lista", "a-bajas"])
+  $(lista).addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-a]");
+    if (!b) return;
+    const caja = b.closest("[data-id]");
+    const id = caja.dataset.id;
+    const a = alumnosAcademia().find((x) => x.id === id);
+    const accion = b.dataset.a;
+    if (accion === "pagar")
+      await conAviso(() => registrarPago({ alumno_id: id, mes: mesElegido(), monto: caja.querySelector("[data-monto]").value, medio: caja.querySelector("[data-medio]").value })).catch(() => {});
+    if (accion === "anular" && confirm(`¿Anular el pago de ${a.nombres} de este mes?`)) await conAviso(() => anularPago(id, mesElegido())).catch(() => {});
+    if (accion === "baja" && confirm(`¿Dar de baja a ${a.nombres} ${a.apellidos}? Seguirá en «Exalumnos» y podrás reactivarlo.`))
+      await conAviso(() => darDeBaja(id, caja.querySelector("[data-motivo]").value)).catch(() => {});
+    if (accion === "reactivar") await conAviso(() => reactivarAlumno(id)).catch(() => {});
+    if (accion === "borrar" && confirm(`¿Borrar todos los datos de ${a.nombres} ${a.apellidos} y sus pagos? No se puede deshacer (derecho de supresión, Ley 29733).`))
+      await conAviso(() => borrarAlumno(id)).catch(() => {});
+  });
+$("form-alumno").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  try {
+    await crearAlumno({ ...Object.fromEntries(f), consentimiento: f.get("consentimiento") === "on" });
+    $("al-aviso").textContent = `Listo: ${String(f.get("nombres")).trim()} ya está en la lista.`;
+    e.target.reset();
+  } catch (err) {
+    $("al-aviso").textContent = err.message;
+  }
+});
+$("a-csv").addEventListener("click", () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csvAlumnos()], { type: "text/csv;charset=utf-8" }));
+  a.download = `alumnos-mokewa-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 });
 
 // ------------------------------------------------------------------ inscripciones
@@ -374,10 +497,11 @@ async function pintarInscripciones() {
   const tid = $("i-torneo").value;
   const estado = $("i-estado").value;
   const lista = inscripciones(tid)
-    .filter((i) => !estado || i.estado_pago === estado)
+    .filter((i) => !estado || (estado === "espera" ? i.en_espera : i.estado_pago === estado && !i.en_espera))
     .sort((a, b) => (a.estado_pago === "pendiente" ? -1 : 0) - (b.estado_pago === "pendiente" ? -1 : 0) || b.creado_en.localeCompare(a.creado_en));
   const todas = inscripciones(tid);
-  $("i-resumen").textContent = `${todas.length} inscritos · ${todas.filter((i) => i.estado_pago === "pendiente").length} por validar · ${todas.filter((i) => i.estado_pago === "validado").length} validados`;
+  const espera = todas.filter((i) => i.en_espera).length;
+  $("i-resumen").textContent = `${todas.length - espera} inscritos · ${todas.filter((i) => i.estado_pago === "pendiente" && !i.en_espera).length} por validar · ${todas.filter((i) => i.estado_pago === "validado").length} validados${espera ? ` · ${espera} en lista de espera` : ""}`;
   if (!lista.length) {
     $("i-lista").innerHTML = `<p class="tarjeta suave">No hay inscripciones con ese filtro.</p>`;
     return;
@@ -395,13 +519,14 @@ async function pintarInscripciones() {
     html.push(`<article class="tarjeta inscripcion" data-id="${esc(i.id)}">
       <button class="voucher" type="button" data-accion="ver" aria-label="Ver comprobante de ${esc(i.nombres)} ${esc(i.apellidos)}">${img}</button>
       <div class="ins-datos">
-        <div class="ins-titulo"><strong>${esc(i.nombres)} ${esc(i.apellidos)}</strong> <span class="etiqueta ${cls}">${txt}</span>${i.prueba ? ' <span class="etiqueta">dato de prueba</span>' : ""}</div>
+        <div class="ins-titulo"><strong>${esc(i.nombres)} ${esc(i.apellidos)}</strong> ${i.en_espera ? '<span class="etiqueta etiqueta-vino">Lista de espera</span>' : `<span class="etiqueta ${cls}">${txt}</span>`}${i.prueba ? ' <span class="etiqueta">dato de prueba</span>' : ""}</div>
         <p>${esc(i.categoria)} · ${esc(i.nivel)} · ${esc(i.club || "sin club")}</p>
         <p class="suave">Tutor: ${esc(i.tutor_nombre)} · ${esc(i.tutor_telefono)} · ${esc(i.tutor_correo)}</p>
         <p class="suave">Recibida: ${hora} · consentimiento ${i.consentimiento ? "✓" : "✗"}${i.motivo ? ` · Motivo: ${esc(i.motivo)}` : ""}</p>
         <div class="grupo-botones acciones">
-          ${i.estado_pago !== "validado" ? `<button class="boton boton-primario boton-chico" type="button" data-accion="validar">Validar pago</button>` : ""}
-          ${i.estado_pago !== "rechazado" ? `<label class="visually-hidden" for="m-${esc(i.id)}">Motivo del rechazo</label><select id="m-${esc(i.id)}" class="motivo">${MOTIVOS.map((m) => `<option>${esc(m)}</option>`).join("")}</select><button class="boton boton-secundario boton-chico" type="button" data-accion="rechazar">Rechazar</button>` : ""}
+          ${i.en_espera ? `<button class="boton boton-primario boton-chico" type="button" data-accion="confirmar">Darle un lugar</button>` : ""}
+          ${i.estado_pago !== "validado" && !i.en_espera ? `<button class="boton boton-primario boton-chico" type="button" data-accion="validar">Validar pago</button>` : ""}
+          ${i.estado_pago !== "rechazado" && !i.en_espera ? `<label class="visually-hidden" for="m-${esc(i.id)}">Motivo del rechazo</label><select id="m-${esc(i.id)}" class="motivo">${MOTIVOS.map((m) => `<option>${esc(m)}</option>`).join("")}</select><button class="boton boton-secundario boton-chico" type="button" data-accion="rechazar">Rechazar</button>` : ""}
           ${i.estado_pago !== "pendiente" ? `<button class="boton boton-secundario boton-chico" type="button" data-accion="pendiente">Volver a pendiente</button>` : ""}
           <button class="boton boton-secundario boton-chico peligro" type="button" data-accion="suprimir">Borrar datos</button>
         </div>
@@ -416,6 +541,7 @@ $("i-lista").addEventListener("click", async (e) => {
   const tarjeta = boton.closest("[data-id]");
   const id = tarjeta.dataset.id;
   const accion = boton.dataset.accion;
+  if (accion === "confirmar" && confirm("¿Darle un lugar? Pasa a la lista de inscritos aunque el cupo esté lleno. Avísale a la familia para que pague.")) await conAviso(() => confirmarLugar(id)).catch(() => {});
   if (accion === "validar") await conAviso(() => cambiarEstadoPago(id, "validado")).catch(() => {});
   if (accion === "pendiente") await conAviso(() => cambiarEstadoPago(id, "pendiente")).catch(() => {});
   if (accion === "rechazar") await conAviso(() => cambiarEstadoPago(id, "rechazado", tarjeta.querySelector(".motivo").value)).catch(() => {});
@@ -673,6 +799,7 @@ $("reiniciar")?.addEventListener("click", async () => {
   urlsVoucher.clear();
   await reiniciarDemo();
   await sembrarDemo({ forzar: true });
+  sembrarAcademiaDemo({ forzar: true });
   pintarTodo();
 });
 
@@ -740,6 +867,7 @@ function pintarTodo() {
   if (perfilActual?.rol === "admin") pintarPersonal();
   pintarResumen();
   pintarMetricas();
+  pintarAcademia();
   pintarInscripciones();
   pintarTorneos();
   pintarResultados();

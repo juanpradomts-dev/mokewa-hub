@@ -15,7 +15,7 @@ import { enlaceContacto, numeroWhatsapp } from "./contacto.js";
 import { hayBaseDeDatos } from "./backend.js";
 import { esProduccion } from "./contenido.js";
 import personalDemo from "../data/personal-demo.json";
-import { claveJugador } from "./metricas.js";
+import { claveJugador, cupoDe } from "./metricas.js";
 import { visitasDemo, borrarVisitasDemo } from "./conteo.js";
 
 const CLAVE = "mokewa-demo-v1";
@@ -34,7 +34,7 @@ export const TORNEO_VERANO = {
 };
 
 // ---------------------------------------------------------------- estado
-const vacio = () => ({ version: 1, contenido: {}, torneos: [], inscripciones: [], noticias: [], resultados: {}, personal: null, sembrado: false });
+const vacio = () => ({ version: 1, contenido: {}, torneos: [], inscripciones: [], noticias: [], resultados: {}, personal: null, sembrado: false, alumnos: [], pagos: [], academiaSembrada: false });
 
 // ---------------------------------------------------------------- motor «nube» (web oficial)
 const NUBE = hayBaseDeDatos;
@@ -201,8 +201,8 @@ export const inscripciones = (torneoId) =>
 export function inscribir(datos) {
   if (NUBE) return nube().then((n) => n.inscribir(datos)).then((ins) => {
     cambiar((e) => {
-      e.mias.push({ id: ins.id, torneo_id: ins.torneo_id, nombres: ins.nombres, apellidos: ins.apellidos, estado_pago: "pendiente", motivo: "" });
-      e.publicos.push({ torneo_id: ins.torneo_id, nombre: `${ins.nombres} ${ins.apellidos}`, categoria: ins.categoria, club: ins.club || "—", validado: false });
+      e.mias.push({ id: ins.id, torneo_id: ins.torneo_id, nombres: ins.nombres, apellidos: ins.apellidos, estado_pago: "pendiente", motivo: "", en_espera: ins.en_espera });
+      e.publicos.push({ torneo_id: ins.torneo_id, nombre: `${ins.nombres} ${ins.apellidos}`, categoria: ins.categoria, club: ins.club || "—", validado: false, en_espera: ins.en_espera });
     });
     return ins;
   });
@@ -210,10 +210,29 @@ export function inscribir(datos) {
   // Igual que la base de datos: la misma persona no se inscribe dos veces en un torneo.
   if (e.inscripciones.some((i) => i.torneo_id === datos.torneo_id && claveJugador(i) === claveJugador(datos)))
     throw new Error("Este jugador ya está inscrito en este torneo.");
-  const ins = { id: nuevoId(), estado_pago: "pendiente", creado_en: ahora(), ...datos };
+  // Igual que la base de datos: con el cupo lleno, la inscripción queda en lista de espera.
+  const cupo = cupoTorneo(datos.torneo_id);
+  const ocupados = e.inscripciones.filter((i) => i.torneo_id === datos.torneo_id && i.estado_pago !== "rechazado" && !i.en_espera).length;
+  const ins = { id: nuevoId(), estado_pago: "pendiente", creado_en: ahora(), ...datos, en_espera: cupo != null && ocupados >= cupo };
   guardar({ ...e, inscripciones: [...e.inscripciones, ins] });
   return ins;
 }
+// Cupo del torneo (el de verano lo toma de «Datos del club»). null = sin límite.
+export function cupoTorneo(torneoId) {
+  return cupoDe(torneoId === TORNEO_VERANO.id ? contenido("verano_cupo") : torneo(torneoId)?.cupo);
+}
+// Lugares ocupados (sin rechazados ni lista de espera), según la lista pública.
+export const ocupados = (torneoId) => listaPublica(torneoId).filter((i) => !i.en_espera).length;
+
+// El club confirma un lugar a quien estaba en lista de espera.
+export function confirmarLugar(id) {
+  if (NUBE) return nube().then((n) => n.confirmarLugar(id)).then(() => cambiar((e) => {
+    e.inscripciones = e.inscripciones.map((i) => (i.id === id ? { ...i, en_espera: false } : i));
+  }));
+  const e = leer();
+  guardar({ ...e, inscripciones: e.inscripciones.map((i) => (i.id === id ? { ...i, en_espera: false } : i)) });
+}
+
 export function cambiarEstadoPago(id, estado, motivo = "") {
   if (NUBE) return nube().then((n) => n.cambiarEstadoPago(id, estado, motivo)).then(() => cambiar((e) => {
     e.inscripciones = e.inscripciones.map((i) => (i.id === id ? { ...i, estado_pago: estado, motivo } : i));
@@ -242,16 +261,16 @@ export async function suprimirInscripcion(id) {
 export const listaPublica = (torneoId) =>
   NUBE ? estadoNube.publicos.filter((i) => i.torneo_id === torneoId) : inscripciones(torneoId)
     .filter((i) => i.estado_pago !== "rechazado")
-    .map((i) => ({ nombre: `${i.nombres} ${i.apellidos}`, categoria: i.categoria, club: i.club || "—", validado: i.estado_pago === "validado" }));
+    .map((i) => ({ nombre: `${i.nombres} ${i.apellidos}`, categoria: i.categoria, club: i.club || "—", validado: i.estado_pago === "validado", en_espera: !!i.en_espera }));
 
 // Las inscripciones hechas desde este navegador (para que el padre vea el estado de su pago).
 export const misInscripciones = (torneoId) =>
   NUBE ? estadoNube.mias.filter((i) => i.torneo_id === torneoId) : inscripciones(torneoId).filter((i) => !i.prueba);
 
 export function csvInscritos(torneoId) {
-  const filas = [["Apellidos", "Nombres", "Fecha de nacimiento", "Categoría", "Nivel", "Club", "FIDE ID", "Usuario Lichess", "Estado de pago"]];
+  const filas = [["Apellidos", "Nombres", "Fecha de nacimiento", "Categoría", "Nivel", "Club", "FIDE ID", "Usuario Lichess", "Estado de pago", "Lista de espera"]];
   for (const i of inscripciones(torneoId)) {
-    filas.push([i.apellidos, i.nombres, i.fecha_nacimiento, i.categoria, i.nivel ?? "", i.club ?? "", i.fide_id ?? "", i.lichess ?? "", i.estado_pago]);
+    filas.push([i.apellidos, i.nombres, i.fecha_nacimiento, i.categoria, i.nivel ?? "", i.club ?? "", i.fide_id ?? "", i.lichess ?? "", i.estado_pago, i.en_espera ? "Sí" : ""]);
   }
   // BOM para que Excel abra bien las tildes.
   return "﻿" + filas.map((f) => f.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
@@ -467,8 +486,117 @@ export async function salirPanel() {
 // Carga las inscripciones con los datos de contacto (solo el admin; en la demo ya están).
 export async function cargarPanel() {
   if (!NUBE) return;
-  const lista = await (await nube()).cargarPanel();
-  cambiar((e) => (e.inscripciones = lista));
+  const n = await nube();
+  const [lista, academia] = await Promise.all([n.cargarPanel(), n.cargarAcademia()]);
+  cambiar((e) => {
+    e.inscripciones = lista;
+    e.alumnos = academia.alumnos;
+    e.pagos = academia.pagos;
+  });
+}
+
+// ---------------------------------------------------------------- academia: alumnos y mensualidades (solo admin)
+export const MOTIVOS_BAJA = ["Horario", "Precio", "Colegio o tareas", "Se mudó", "Perdió interés", "Pasó a otro club", "Otro"];
+export const MEDIOS_PAGO = ["Yape", "Plin", "Efectivo", "Transferencia", "Otro"];
+export const alumnosAcademia = () => leer().alumnos ?? [];
+export const pagosMensuales = () => leer().pagos ?? [];
+const hoyIso = () => new Date().toISOString().slice(0, 10);
+
+export async function crearAlumno(datos) {
+  const a = {
+    nombres: String(datos.nombres ?? "").trim(),
+    apellidos: String(datos.apellidos ?? "").trim(),
+    nivel: datos.nivel || null,
+    tutor_nombre: String(datos.tutor_nombre ?? "").trim() || null,
+    tutor_telefono: String(datos.tutor_telefono ?? "").replace(/\s/g, "") || null,
+    mensualidad: datos.mensualidad === "" || datos.mensualidad == null ? null : Number(datos.mensualidad),
+    inicio: datos.inicio || hoyIso(),
+  };
+  if (!a.nombres || !a.apellidos) throw new Error("Escribe nombres y apellidos.");
+  if (a.tutor_telefono && !/^9\d{8}$/.test(a.tutor_telefono)) throw new Error("El celular debe tener 9 dígitos y empezar con 9.");
+  if (a.mensualidad != null && !(a.mensualidad >= 0)) throw new Error("Revisa la mensualidad.");
+  if (!datos.consentimiento) throw new Error("Marca que el padre, madre o tutor autorizó guardar estos datos.");
+  if (NUBE) {
+    const nuevo = await (await nube()).crearAlumno(a);
+    return cambiar((e) => e.alumnos.push(nuevo));
+  }
+  const e = leer();
+  guardar({ ...e, alumnos: [...(e.alumnos ?? []), { id: nuevoId(), ...a, baja: null, motivo_baja: null, consentimiento_fecha: ahora(), creado_en: ahora() }] });
+}
+async function cambiarAlumno(id, cambios) {
+  if (NUBE) {
+    await (await nube()).cambiarAlumno(id, cambios);
+    return cambiar((e) => (e.alumnos = e.alumnos.map((a) => (a.id === id ? { ...a, ...cambios } : a))));
+  }
+  const e = leer();
+  guardar({ ...e, alumnos: e.alumnos.map((a) => (a.id === id ? { ...a, ...cambios } : a)) });
+}
+export const darDeBaja = (id, motivo) => cambiarAlumno(id, { baja: hoyIso(), motivo_baja: motivo || null });
+export const reactivarAlumno = (id) => cambiarAlumno(id, { baja: null, motivo_baja: null });
+// Derecho de supresión: borra al alumno y todos sus pagos.
+export async function borrarAlumno(id) {
+  if (NUBE) {
+    await (await nube()).borrarAlumno(id);
+    return cambiar((e) => {
+      e.alumnos = e.alumnos.filter((a) => a.id !== id);
+      e.pagos = e.pagos.filter((p) => p.alumno_id !== id);
+    });
+  }
+  const e = leer();
+  guardar({ ...e, alumnos: e.alumnos.filter((a) => a.id !== id), pagos: e.pagos.filter((p) => p.alumno_id !== id) });
+}
+// mes: «AAAA-MM». monto vacío = pagó, pero el club aún no cargó el precio.
+export async function registrarPago({ alumno_id, mes, monto, medio }) {
+  const pago = { alumno_id, mes: `${mes}-01`, monto: monto === "" || monto == null ? null : Number(monto), medio: medio || null, pagado_en: hoyIso() };
+  if (pago.monto != null && !(pago.monto >= 0)) throw new Error("Revisa el monto.");
+  if (NUBE) {
+    const guardado = await (await nube()).registrarPago(pago);
+    return cambiar((e) => e.pagos.push(guardado));
+  }
+  const e = leer();
+  if (e.pagos.some((p) => p.alumno_id === alumno_id && p.mes === pago.mes)) throw new Error("Ese mes ya está pagado.");
+  guardar({ ...e, pagos: [...e.pagos, { id: nuevoId(), ...pago }] });
+}
+export async function anularPago(alumno_id, mes) {
+  const m = `${mes}-01`;
+  if (NUBE) {
+    await (await nube()).anularPago(alumno_id, m);
+    return cambiar((e) => (e.pagos = e.pagos.filter((p) => !(p.alumno_id === alumno_id && p.mes === m))));
+  }
+  const e = leer();
+  guardar({ ...e, pagos: e.pagos.filter((p) => !(p.alumno_id === alumno_id && p.mes === m)) });
+}
+export function csvAlumnos() {
+  const pagos = pagosMensuales();
+  const filas = [["Apellidos", "Nombres", "Nivel", "Tutor", "Celular", "Mensualidad (S/)", "Inicio", "Baja", "Motivo de baja", "Meses pagados"]];
+  for (const a of alumnosAcademia())
+    filas.push([a.apellidos, a.nombres, a.nivel ?? "", a.tutor_nombre ?? "", a.tutor_telefono ?? "", a.mensualidad ?? "", a.inicio ?? "", a.baja ?? "", a.motivo_baja ?? "",
+      pagos.filter((p) => p.alumno_id === a.id).map((p) => String(p.mes).slice(0, 7)).sort().join(" ")]);
+  return "\ufeff" + filas.map((f) => f.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
+}
+
+// Demo: alumnos de prueba (sin celular ni precio: esos datos los pone el club).
+export function sembrarAcademiaDemo({ forzar = false } = {}) {
+  if (NUBE || FIJO) return;
+  const e = leer();
+  if (e.academiaSembrada && !forzar) return;
+  const hace = (d) => new Date(Date.now() - d * 864e5).toISOString().slice(0, 10);
+  const mes = new Date().toISOString().slice(0, 7);
+  const base = [
+    ["Valeria", "Quispe Mamani", "Básico", 200],
+    ["Mateo", "Flores Ticona", "Intermedio", 150],
+    ["Camila", "Huanca Pari", "Avanzado", 320],
+    ["Diego", "Condori Apaza", "Básico", 40],
+    ["Luciana", "Vargas Chambi", "Intermedio", 95],
+    ["Sebastián", "Mendoza Laura", "Avanzado", 260, 25, "Horario"],
+    ["Renata", "Ccama Huamán", "Básico", 9],
+  ];
+  const alumnos = base.map(([nombres, apellidos, nivel, dias, baja, motivo]) => ({
+    id: nuevoId(), prueba: true, nombres, apellidos, nivel, tutor_nombre: "Tutor de prueba", tutor_telefono: null, mensualidad: null,
+    inicio: hace(dias), baja: baja ? hace(baja) : null, motivo_baja: motivo ?? null, consentimiento_fecha: ahora(), creado_en: ahora(),
+  }));
+  const pagos = [0, 1, 2].map((k) => ({ id: nuevoId(), alumno_id: alumnos[k].id, mes: `${mes}-01`, monto: null, medio: ["Yape", "Plin", "Efectivo"][k], pagado_en: hace(k) }));
+  guardar({ ...e, alumnos: [...(e.alumnos ?? []).filter((a) => !a.prueba), ...alumnos], pagos: [...(e.pagos ?? []).filter((p) => !e.alumnos?.some((a) => a.prueba && a.id === p.alumno_id)), ...pagos], academiaSembrada: true });
 }
 
 // Personal con acceso al panel (solo el admin lo ve y lo cambia).

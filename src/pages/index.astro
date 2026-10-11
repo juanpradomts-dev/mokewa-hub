@@ -78,6 +78,20 @@ for (const e of [...historia.torneos].sort((x, y) => y.fecha.localeCompare(x.fec
     </div>
   </section>
 
+  <!-- PRÓXIMO TORNEO: solo si hay uno con fecha por delante (un motivo para volver; FORMULA-GANADORA, V1) -->
+  <section class="proximo-seccion" id="proximo" hidden aria-labelledby="proximo-titulo">
+    <div class="contenedor">
+      <a class="proximo tarjeta" id="proximo-enlace" href={`${b}/torneos/`}>
+        <span class="proximo-texto">
+          <span class="antetitulo">Próximo torneo</span>
+          <strong id="proximo-titulo"></strong>
+          <span class="proximo-datos" id="proximo-datos"></span>
+        </span>
+        <span class="boton boton-primario" id="proximo-boton">Inscribirme</span>
+      </a>
+    </div>
+  </section>
+
   <!-- 2. QUIÉNES SOMOS -->
   <section class="seccion" id="quienes-somos">
     <div class="contenedor"><QuienesSomos /></div>
@@ -180,10 +194,77 @@ for (const e of [...historia.torneos].sort((x, y) => y.fecha.localeCompare(x.fec
 <script>
   // Caballo viajero: del héroe a «Por qué Mokewa», girando con el scroll.
   import { iniciarViaje } from "../lib/viajero.js";
+  import { proximoTorneo } from "../lib/proximo.js";
+  import { todosLosTorneos, contenido, cupoTorneo, ocupados, alCambiar } from "../lib/store.js";
   iniciarViaje();
+
+  // Próximo torneo con fecha. Sin ninguno, el bloque no aparece (nada de «próximamente»).
+  const base = document.body.dataset.base ?? "";
+  const caja = document.getElementById("proximo")!;
+  function pintarProximo() {
+    const t = proximoTorneo(todosLosTorneos(), { veranoFecha: contenido("verano_fecha") });
+    caja.hidden = !t;
+    if (!t) return;
+    const cupo = cupoTorneo(t.id);
+    const libres = cupo == null ? null : Math.max(0, cupo - ocupados(t.id));
+    const fecha = t.fechaIso
+      ? new Date(`${t.fechaIso}T12:00:00`).toLocaleDateString("es-PE", { weekday: "long", day: "numeric", month: "long" })
+      : t.fechaTexto;
+    document.getElementById("proximo-titulo")!.textContent = t.nombre;
+    document.getElementById("proximo-datos")!.textContent = [
+      fecha,
+      t.sede,
+      libres == null ? "" : libres === 0 ? "cupo completo: lista de espera" : libres === 1 ? "queda 1 lugar" : `quedan ${libres} lugares`,
+    ].filter(Boolean).join(" · ");
+    document.getElementById("proximo-boton")!.textContent = libres === 0 ? "Anotarme en la lista" : "Inscribirme";
+    (document.getElementById("proximo-enlace") as HTMLAnchorElement).href = t.id === "verano-2027"
+      ? `${base}/torneos/verano-2027/#inscripcion`
+      : `${base}/torneos/torneo/?t=${encodeURIComponent(t.id)}#inscripcion`;
+  }
+  pintarProximo();
+  alCambiar(pintarProximo);
 </script>
 
 <style>
+  /* ---------- Próximo torneo ---------- */
+  .proximo-seccion {
+    padding: 20px 0 0;
+  }
+  .proximo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+    padding: 16px 20px;
+    border-left: 5px solid var(--oro);
+    color: var(--tinta);
+    text-decoration: none;
+  }
+  .proximo:hover .boton {
+    transform: translateY(-1px);
+  }
+  .proximo-texto {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .proximo-texto .antetitulo {
+    margin: 0;
+  }
+  .proximo strong {
+    font-family: var(--titulo);
+    font-stretch: var(--angosto);
+    font-size: 1.35rem;
+  }
+  .proximo-datos {
+    color: var(--suave);
+    font-size: 0.95rem;
+  }
+  .proximo-datos::first-letter {
+    text-transform: uppercase;
+  }
+
   /* ---------- 1. Héroe ---------- */
   .heroe {
     padding: 28px 0 44px;

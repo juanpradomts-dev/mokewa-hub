@@ -146,3 +146,46 @@ test("visitas: ignora eventos y páginas raros, y no deja inventar más de 40 p�
 test("visitas: el público no puede escribir directo en la tabla", async () => {
   await falla(() => como(null, "insert into visitas_diarias (dia, pagina, evento, total) values (current_date, '/', 'vista', 999)"), "row-level security");
 });
+
+// ---------------------------------------------------------------- cupo y lista de espera (migración 20261011)
+test("cupo: al llenarse, los siguientes quedan en lista de espera (sin contar rechazados)", async () => {
+  const [t] = await como(DUENO, "insert into torneos (nombre, cupo, anio) values ('Con cupo', '2 jugadores', 2026) returning id");
+  const ficha2 = (n, f) => ({ torneo_id: t.id, nombres: n, apellidos: "Cupo", fecha_nacimiento: f });
+  const a = await inscribir(ficha2("Ana", "2012-01-10"));
+  const b = await inscribir(ficha2("Beto", "2012-02-10"));
+  const c = await inscribir(ficha2("Caro", "2012-03-10"));
+  assert.deepEqual([a.en_espera, b.en_espera, c.en_espera], [false, false, true]);
+  // Si se rechaza a uno, se libera su lugar para el siguiente que se inscriba
+  await como(DUENO, "update inscripciones set estado_pago = 'rechazado' where id = $1", [b.id]);
+  const d = await inscribir(ficha2("Dani", "2012-04-10"));
+  assert.equal(d.en_espera, false);
+  const publicos = await como(null, "select nombre, en_espera from inscritos_publicos where torneo_id = $1 order by creado_en", [t.id]);
+  assert.deepEqual(publicos.map((x) => [x.nombre, x.en_espera]), [["Ana Cupo", false], ["Caro Cupo", true], ["Dani Cupo", false]]);
+  const [estado] = await como(null, "select * from estado_inscripciones($1)", [JSON.stringify([{ id: c.id, token: c.token }])]);
+  assert.equal(estado.en_espera, true);
+});
+
+test("cupo: el torneo de verano toma su cupo de «Datos del club»; sin número no hay límite", async () => {
+  assert.equal((await db.query("select cupo_de('Cupo: 32') as c")).rows[0].c, 32);
+  assert.equal((await db.query("select cupo_de('sin límite') as c")).rows[0].c, null);
+  await db.query("insert into contenido (campo, valor) values ('verano_cupo', '1')");
+  const x = await inscribir({ nombres: "Tercera", fecha_nacimiento: "2014-01-01" });
+  assert.equal(x.en_espera, true, "verano ya tiene inscritos y el cupo es 1");
+});
+
+// ---------------------------------------------------------------- academia
+test("academia: solo el admin registra alumnos y pagos; ni el público ni el entrenador los ven", async () => {
+  const [al] = await como(DUENO, "insert into alumnos (nombres, apellidos, nivel, tutor_telefono, mensualidad) values ('Luz', 'Prueba', 'Básico', '900000010', 80) returning id");
+  await como(DUENO, "insert into pagos_mensuales (alumno_id, mes, monto, medio) values ($1, '2026-10-01', 80, 'Yape')", [al.id]);
+  await falla(() => como(DUENO, "insert into pagos_mensuales (alumno_id, mes, monto) values ($1, '2026-10-01', 80)", [al.id]), "duplicate key");
+  await falla(() => como(DUENO, "insert into pagos_mensuales (alumno_id, mes) values ($1, '2026-11-15')", [al.id]), "check");
+  await falla(() => como(DUENO, "insert into alumnos (nombres, apellidos, tutor_telefono) values ('X', 'Y', '12345')"), "check");
+  for (const quien of [null, ENTRENADOR]) {
+    assert.deepEqual(await como(quien, "select * from alumnos"), []);
+    assert.deepEqual(await como(quien, "select * from pagos_mensuales"), []);
+  }
+  await falla(() => como(ENTRENADOR, "insert into alumnos (nombres, apellidos) values ('X', 'Y')"), "row-level security");
+  // Borrar al alumno borra sus pagos (derecho de supresión)
+  await como(DUENO, "delete from alumnos where id = $1", [al.id]);
+  assert.equal((await db.query("select count(*)::int as n from pagos_mensuales")).rows[0].n, 0);
+});

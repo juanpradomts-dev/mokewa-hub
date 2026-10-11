@@ -10,6 +10,7 @@ const PERMISOS: [string, boolean, boolean][] = [
   ["Crear torneos, publicar resultados y noticias", true, true],
   ["Ver inscripciones y contactos de los tutores", true, false],
   ["Ver comprobantes y validar o rechazar pagos", true, false],
+  ["Ver alumnos y mensualidades de la academia", true, false],
   ["Borrar los datos de un alumno (derecho de supresión)", true, false],
   ["Editar los datos del club", true, false],
   ["Dar o quitar acceso al personal", true, false],
@@ -100,6 +101,7 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
           <button role="tab" aria-selected="true" aria-controls="p-resumen" id="t-resumen" data-roles="admin">Resumen</button>
           <button role="tab" aria-selected="false" aria-controls="p-metricas" id="t-metricas" data-roles="admin">Métricas</button>
           <button role="tab" aria-selected="false" aria-controls="p-inscripciones" id="t-inscripciones" data-roles="admin">Inscripciones <span class="globo" id="globo-pendientes"></span></button>
+          <button role="tab" aria-selected="false" aria-controls="p-academia" id="t-academia" data-roles="admin">Academia <span class="globo" id="globo-academia"></span></button>
           <button role="tab" aria-selected="false" aria-controls="p-torneos" id="t-torneos" data-roles="admin entrenador">Torneos</button>
           <button role="tab" aria-selected="false" aria-controls="p-resultados" id="t-resultados" data-roles="admin entrenador">Resultados</button>
           <button role="tab" aria-selected="false" aria-controls="p-noticias" id="t-noticias" data-roles="admin entrenador">Noticias</button>
@@ -181,6 +183,12 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
             </section>
           </div>
 
+          <section class="tarjeta bloque-metricas" aria-labelledby="m-h-academia">
+            <h2 class="h-bloque" id="m-h-academia">Academia · <span id="m-academia-mes"></span></h2>
+            <p class="suave">Mensualidades del mes en curso. El detalle por alumno está en la pestaña Academia.</p>
+            <div class="cifras" id="m-academia"></div>
+          </section>
+
           <section class="tarjeta bloque-metricas" aria-labelledby="m-h-web">
             <h2 class="h-bloque" id="m-h-web">¿La web trae inscritos?</h2>
             <p class="suave">Conteo anónimo: sin cookies ni datos de quién visita. Solo totales por día y página.</p>
@@ -205,6 +213,7 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
                 <option value="pendiente">Pendientes</option>
                 <option value="validado">Validados</option>
                 <option value="rechazado">Rechazados</option>
+                <option value="espera">En lista de espera</option>
               </select>
             </div>
             <div class="barra-acciones">
@@ -213,6 +222,52 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
           </div>
           <p class="suave" id="i-resumen" aria-live="polite"></p>
           <div id="i-lista" class="lista-inscripciones"></div>
+        </div>
+
+        <!-- ACADEMIA (solo admin): alumnos y mensualidades -->
+        <div role="tabpanel" id="p-academia" aria-labelledby="t-academia" class="pestana" hidden>
+          <div class="barra barra-metricas">
+            <div class="campo">
+              <label for="a-mes">Mes</label>
+              <input id="a-mes" type="month" />
+            </div>
+            <div class="barra-acciones">
+              <button class="boton boton-secundario" type="button" id="a-csv">Exportar alumnos (Excel)</button>
+            </div>
+          </div>
+          {!hayBaseDeDatos && <p class="nota-demo">Demo: alumnos de prueba, sin celular ni precio. Esos datos los pone el club.</p>}
+          <div class="cifras" id="a-cifras"></div>
+          <div class="rejilla rejilla-2 bloque-metricas academia-rejilla">
+            <section aria-labelledby="a-h-lista">
+              <h2 class="h-bloque" id="a-h-lista">Mensualidades de <span id="a-mes-texto"></span></h2>
+              <p class="suave" id="a-resumen" aria-live="polite"></p>
+              <div id="a-lista" class="lista-simple"></div>
+            </section>
+            <div>
+              <form class="tarjeta" id="form-alumno" novalidate>
+                <h2 class="h-bloque">Agregar alumno</h2>
+                <div class="dos-columnas">
+                  <div class="campo"><label for="al-nombres">Nombres *</label><input id="al-nombres" name="nombres" type="text" maxlength="80" autocomplete="off" /></div>
+                  <div class="campo"><label for="al-apellidos">Apellidos *</label><input id="al-apellidos" name="apellidos" type="text" maxlength="80" autocomplete="off" /></div>
+                  <div class="campo">
+                    <label for="al-nivel">Nivel</label>
+                    <select id="al-nivel" name="nivel"><option value="">Sin definir</option><option>Básico</option><option>Intermedio</option><option>Avanzado</option></select>
+                  </div>
+                  <div class="campo"><label for="al-inicio">Empezó el</label><input id="al-inicio" name="inicio" type="date" /></div>
+                  <div class="campo"><label for="al-tutor">Padre, madre o tutor</label><input id="al-tutor" name="tutor_nombre" type="text" maxlength="80" autocomplete="off" /></div>
+                  <div class="campo"><label for="al-tel">Celular (WhatsApp)</label><input id="al-tel" name="tutor_telefono" type="tel" inputmode="numeric" placeholder="9 dígitos" autocomplete="off" /></div>
+                  <div class="campo"><label for="al-mensualidad">Mensualidad (S/)</label><input id="al-mensualidad" name="mensualidad" type="number" min="0" step="0.5" /><span class="ayuda">Lo acordado con la familia (puede tener beca o descuento).</span></div>
+                </div>
+                <label class="casilla"><input type="checkbox" name="consentimiento" /> <span>El padre, madre o tutor autorizó que el club guarde estos datos para administrar las clases (Ley N.º 29733).</span></label>
+                <button class="boton boton-primario" type="submit">Agregar alumno</button>
+                <p class="suave" id="al-aviso" role="alert"></p>
+              </form>
+              <details class="tarjeta bajas">
+                <summary><span class="h-bloque">Exalumnos</span> <span class="suave" id="a-n-bajas"></span></summary>
+                <div id="a-bajas" class="lista-simple"></div>
+              </details>
+            </div>
+          </div>
         </div>
 
         <!-- TORNEOS -->
@@ -795,6 +850,44 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
   }
   #p-personal[hidden] {
     display: none;
+  }
+  /* ---- Academia */
+  :global(.alumno) {
+    display: grid;
+    gap: 8px;
+  }
+  :global(.alumno-cabeza) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  :global(.alumno .acciones select),
+  :global(.alumno .acciones input) {
+    width: auto;
+    min-height: 38px;
+    padding: 4px 10px;
+    font-size: 0.88rem;
+  }
+  :global(.alumno .acciones input[type="number"]) {
+    width: 6.5rem;
+  }
+  :global(.alumno.sin-pago) {
+    border-left: 4px solid var(--oro);
+  }
+  .bajas {
+    margin-top: 16px;
+  }
+  .bajas summary {
+    cursor: pointer;
+    list-style-position: inside;
+  }
+  .bajas[open] summary {
+    margin-bottom: 12px;
+  }
+  .academia-rejilla {
+    align-items: start;
   }
   /* Pestañas que el rol no puede usar: fuera del todo (el CSS de los botones no las debe mostrar). */
   .pestanas button[hidden] {

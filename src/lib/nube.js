@@ -101,6 +101,7 @@ const aInscripcion = (r) => {
     consentimiento_fecha: t.consentimiento_fecha ?? "",
     estado_pago: r.estado_pago,
     motivo: r.motivo ?? "",
+    en_espera: !!r.en_espera,
     monto: r.monto,
     validado_en: r.validado_en,
     voucher_url: r.voucher_url,
@@ -134,7 +135,7 @@ export async function cargarPublico() {
     resultados: Object.fromEntries(
       (r.data ?? []).map((x) => [x.clave, { nombre: x.nombre, origen: x.origen ?? "", filas: x.filas ?? [], cronica: x.cronica ?? "", publicado_en: x.publicado_en }]),
     ),
-    publicos: (p.data ?? []).map((x) => ({ torneo_id: x.torneo_id, nombre: x.nombre, categoria: x.categoria, club: x.club, validado: x.validado })),
+    publicos: (p.data ?? []).map((x) => ({ torneo_id: x.torneo_id, nombre: x.nombre, categoria: x.categoria, club: x.club, validado: x.validado, en_espera: !!x.en_espera })),
     mias: mias
       .map((m) => ({ ...m, ...estados.find((e) => e.id === m.id) }))
       .filter((m) => m.estado_pago),
@@ -145,7 +146,7 @@ export async function inscribir(datos) {
   const r = revisar(await sb.rpc("inscribir", { p: datos }), "No se pudo enviar la inscripción. Revisa tu conexión e intenta de nuevo.");
   const mia = { id: r.id, token: r.token, torneo_id: datos.torneo_id, nombres: datos.nombres, apellidos: datos.apellidos };
   guardarMias([...leerMias(), mia]);
-  return { ...datos, id: r.id, categoria: r.categoria, estado_pago: "pendiente", motivo: "", creado_en: r.creado_en };
+  return { ...datos, id: r.id, categoria: r.categoria, estado_pago: "pendiente", motivo: "", creado_en: r.creado_en, en_espera: !!r.en_espera };
 }
 
 export async function subirVoucher(id, archivo) {
@@ -202,7 +203,7 @@ export async function cargarPanel() {
     await sb
       .from("inscripciones")
       .select(
-        "id, torneo_id, jugador_id, categoria, nivel, club, estado_pago, motivo, monto, validado_en, voucher_url, creado_en, jugador:jugadores(nombres, apellidos, fecha_nacimiento, usuario_lichess, fide_id, tutores(nombre, telefono, correo, consentimiento, consentimiento_fecha))",
+        "id, torneo_id, jugador_id, categoria, nivel, club, estado_pago, motivo, en_espera, monto, validado_en, voucher_url, creado_en, jugador:jugadores(nombres, apellidos, fecha_nacimiento, usuario_lichess, fide_id, tutores(nombre, telefono, correo, consentimiento, consentimiento_fecha))",
       )
       .order("creado_en"),
   );
@@ -218,6 +219,28 @@ export async function cambiarEstadoPago(id, estado, motivo) {
       .eq("id", id),
   );
 }
+export const confirmarLugar = async (id) => void revisar(await sb.from("inscripciones").update({ en_espera: false }).eq("id", id));
+
+// ---------------------------------------------------------------- academia (solo el admin: RLS)
+export async function cargarAcademia() {
+  const [a, p] = await Promise.all([
+    sb.from("alumnos").select("*").order("apellidos"),
+    sb.from("pagos_mensuales").select("id, alumno_id, mes, monto, medio, pagado_en"),
+  ]);
+  return { alumnos: revisar(a), pagos: revisar(p) };
+}
+export const crearAlumno = async (a) => revisar(await sb.from("alumnos").insert(a).select().single(), "No se pudo guardar al alumno.");
+export const cambiarAlumno = async (id, cambios) => void revisar(await sb.from("alumnos").update(cambios).eq("id", id));
+export const borrarAlumno = async (id) => void revisar(await sb.from("alumnos").delete().eq("id", id));
+export async function registrarPago(pago) {
+  const quien = (await sb.auth.getUser()).data.user?.id ?? null;
+  const { data, error: e } = await sb.from("pagos_mensuales").insert({ ...pago, registrado_por: quien }).select("id, alumno_id, mes, monto, medio, pagado_en").single();
+  if (e?.code === "23505") throw new Error("Ese mes ya está pagado.");
+  if (e) throw error(e, "No se pudo registrar el pago.");
+  return data;
+}
+export const anularPago = async (alumno_id, mes) => void revisar(await sb.from("pagos_mensuales").delete().eq("alumno_id", alumno_id).eq("mes", mes));
+
 export async function leerVoucher(id) {
   const { data, error: e } = await sb.storage.from("vouchers").download(`inscripciones/${id}`);
   return e ? null : data;

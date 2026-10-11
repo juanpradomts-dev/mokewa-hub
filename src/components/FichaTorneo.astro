@@ -75,6 +75,7 @@ const enLinea = !esProduccion || hayBaseDeDatos;
         <form class="tarjeta formulario" id="formulario" novalidate>
           <h2>Inscripción en línea</h2>
           <p class="ayuda-form">Toma menos de 2 minutos. Los campos con * son obligatorios.</p>
+          <p class="cupo-estado" id="cupo-estado" aria-live="polite" hidden></p>
 
           <fieldset>
             <legend>1. Jugador</legend>
@@ -127,16 +128,16 @@ const enLinea = !esProduccion || hayBaseDeDatos;
               <div class="campo">
                 <label for="tutor_correo">Correo *</label>
                 <input id="tutor_correo" name="tutor_correo" type="email" autocomplete="email" />
-                <span class="ayuda">Aquí llega la confirmación de la inscripción.</span>
+                <span class="ayuda">Para avisarte si hay cambios en el torneo.</span>
               </div>
             </div>
           </fieldset>
 
-          <fieldset>
+          <fieldset id="bloque-pago">
             <legend>3. Pago</legend>
             <div class="pago">
               <p>Paga con <strong>Yape o Plin</strong> y sube el comprobante aquí abajo.</p>
-              <div class="pago-datos"><Dato etiqueta="Número" campo="yape" /><Dato etiqueta="Monto" campo="verano_costo" /></div>
+              <div class="pago-datos"><Dato etiqueta="Número" campo="yape" /><span id="pago-monto"><Dato etiqueta="Monto" campo="verano_costo" /></span></div>
               <p class="ayuda">Luego sube una foto o captura del comprobante. El organizador lo valida y verás el estado: pendiente, validado o rechazado.</p>
             </div>
             <div class="campo">
@@ -157,7 +158,7 @@ const enLinea = !esProduccion || hayBaseDeDatos;
           </fieldset>
 
           <div class="alerta alerta-error" id="errores" hidden role="alert"></div>
-          <button class="boton boton-primario enviar" type="submit">Enviar inscripción</button>
+          <button class="boton boton-primario enviar" type="submit" id="enviar">Enviar inscripción</button>
           {!esProduccion && <p class="ayuda demo-nota">Demo: los datos se guardan solo en este navegador. Puedes usar datos inventados.</p>}
         </form>
       </div>
@@ -167,6 +168,11 @@ const enLinea = !esProduccion || hayBaseDeDatos;
           <h2 class="h-lateral">Inscritos <span class="num" id="n-inscritos"></span></h2>
           <p class="ayuda">Lista pública: solo nombre, categoría y club.{!esProduccion && " Los nombres de esta demo son de ejemplo."}</p>
           <div id="lista-inscritos"></div>
+          <div id="lista-espera" hidden>
+            <h3 class="h-lateral">Lista de espera <span class="num" id="n-espera"></span></h3>
+            <p class="ayuda">Si se libera un lugar, el club escribe a quien sigue en la lista.</p>
+            <ol id="espera-nombres"></ol>
+          </div>
         </div>
         <div class="tarjeta mis" id="mis-inscripciones" hidden>
           <h2 class="h-lateral">Mis inscripciones</h2>
@@ -313,6 +319,27 @@ const enLinea = !esProduccion || hayBaseDeDatos;
   :global(.tiempo) {
     font-weight: 650;
     color: var(--ok);
+  }
+  .cupo-estado {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--casilla);
+    font-weight: 600;
+  }
+  .cupo-estado.lleno {
+    background: var(--pc-fondo);
+    color: var(--pc-texto);
+  }
+  #lista-espera {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--linea);
+  }
+  #espera-nombres {
+    margin: 0;
+    padding-left: 1.4em;
+    font-size: 0.93rem;
   }
   .pago-datos {
     display: flex;

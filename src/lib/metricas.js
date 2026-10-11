@@ -12,7 +12,7 @@ export const PERIODOS = [
   [0, "Desde el inicio"],
 ];
 // Umbrales de las recomendaciones (explicados en el panel junto a cada una).
-export const UMBRALES = { horasPagoAtrasado: 48, cupoCasiLleno: 0.9, diasTorneoCerca: 14, cupoBajo: 0.5, rechazoAlto: 0.2, retencionBaja: 0.25, visitasMinimas: 20 };
+export const UMBRALES = { horasPagoAtrasado: 48, cupoCasiLleno: 0.9, diasTorneoCerca: 14, cupoBajo: 0.5, rechazoAlto: 0.2, retencionBaja: 0.25, visitasMinimas: 20, diaRecordatorio: 10 };
 
 // «S/ 15», «15 soles», «S/. 12.50» → 15, 15, 12.5; «Gratis» → 0; sin número → null (igual que monto_de en SQL).
 export function montoDe(costo) {
@@ -94,7 +94,8 @@ export function calcularMetricas({ inscripciones = [], torneos = [], web = [], h
   };
   const validadasPeriodo = inscripciones.filter((i) => i.estado_pago === "validado" && enRango(i.validado_en || i.creado_en, desde, ahora + DIA));
   const validadasAnterior = dias ? inscripciones.filter((i) => i.estado_pago === "validado" && enRango(i.validado_en || i.creado_en, desdeAnterior, desde)) : [];
-  const pendientes = inscripciones.filter((i) => i.estado_pago === "pendiente");
+  // Quien está en lista de espera no paga hasta tener lugar: no cuenta como deuda ni como cupo ocupado.
+  const pendientes = inscripciones.filter((i) => i.estado_pago === "pendiente" && !i.en_espera);
   const ingresos = sumar(validadasPeriodo);
   const porCobrar = sumar(pendientes);
 
@@ -121,7 +122,8 @@ export function calcularMetricas({ inscripciones = [], torneos = [], web = [], h
   // Torneos: ocupación del cupo, cobrado y por cobrar.
   const listaTorneos = torneos
     .map((t) => {
-      const ins = inscripciones.filter((i) => i.torneo_id === t.id && i.estado_pago !== "rechazado");
+      const todas = inscripciones.filter((i) => i.torneo_id === t.id && i.estado_pago !== "rechazado");
+      const ins = todas.filter((i) => !i.en_espera);
       const cupo = cupoDe(t.cupo);
       const validados = ins.filter((i) => i.estado_pago === "validado");
       return {
@@ -130,6 +132,7 @@ export function calcularMetricas({ inscripciones = [], torneos = [], web = [], h
         fecha: t.fecha || "",
         ejemplo: !!t.ejemplo,
         inscritos: ins.length,
+        enEspera: todas.length - ins.length,
         cupo,
         ocupacion: cupo ? ins.length / cupo : null,
         validados: validados.length,
@@ -206,8 +209,10 @@ export function acciones(m, ahora = Date.now()) {
     if (t.ejemplo && !t.inscritos) continue;
     const faltan = t.fecha ? Math.ceil((Date.parse(`${t.fecha}T00:00:00`) - ahora) / DIA) : null;
     const pc = t.ocupacion != null ? Math.round(t.ocupacion * 100) : null;
-    if (t.ocupacion != null && t.ocupacion >= UMBRALES.cupoCasiLleno && (faltan == null || faltan >= 0))
-      a.push({ nivel: "atencion", texto: `«${t.nombre}» está al ${pc} % del cupo (${t.inscritos} de ${t.cupo}). Decide si amplías el cupo o abres lista de espera.` });
+    if (t.enEspera && (faltan == null || faltan >= 0))
+      a.push({ nivel: "atencion", texto: `«${t.nombre}» está lleno y ${plural(t.enEspera, "persona espera", "personas esperan")} un lugar. Si amplías el cupo o alguien se retira, dales un lugar desde Inscripciones.`, ir: "inscripciones" });
+    else if (t.ocupacion != null && t.ocupacion >= UMBRALES.cupoCasiLleno && (faltan == null || faltan >= 0))
+      a.push({ nivel: "atencion", texto: `«${t.nombre}» está al ${pc} % del cupo (${t.inscritos} de ${t.cupo}). Cuando se llene, los siguientes quedarán en lista de espera; decide si amplías el cupo.` });
     else if (faltan != null && faltan >= 0 && faltan <= UMBRALES.diasTorneoCerca && t.ocupacion != null && t.ocupacion < UMBRALES.cupoBajo)
       a.push({ nivel: "atencion", texto: `«${t.nombre}» empieza en ${plural(faltan, "día", "días")} y va al ${pc} % del cupo. Es buen momento para difundirlo en los grupos del club.` });
     if (t.precio == null && t.inscritos && !t.ejemplo)
@@ -223,7 +228,7 @@ export function acciones(m, ahora = Date.now()) {
 }
 
 // CSV para el informe a la directiva (se abre en Excel).
-export function csvMetricas(m, etiquetaPeriodo) {
+export function csvMetricas(m, etiquetaPeriodo, ac = null) {
   const soles = (n) => (n == null ? "" : n.toFixed(2));
   const pct = (x) => (x == null ? "" : `${Math.round(x * 100)} %`);
   const filas = [
@@ -243,8 +248,101 @@ export function csvMetricas(m, etiquetaPeriodo) {
     ["Clics para escribir al club", m.web.contactos, etiquetaPeriodo],
     ["Visitas que terminaron en inscripción", pct(m.web.conversion), etiquetaPeriodo],
     [],
-    ["Torneo", "Fecha", "Inscritos", "Cupo", "Validados", "Cobrado (S/)", "Por cobrar (S/)"],
-    ...m.torneos.map((t) => [t.nombre, t.fecha, t.inscritos, t.cupo ?? "", t.validados, soles(t.cobrado), soles(t.porCobrar)]),
+    ["Torneo", "Fecha", "Inscritos", "Cupo", "Lista de espera", "Validados", "Cobrado (S/)", "Por cobrar (S/)"],
+    ...m.torneos.map((t) => [t.nombre, t.fecha, t.inscritos, t.cupo ?? "", t.enEspera, t.validados, soles(t.cobrado), soles(t.porCobrar)]),
+    ...(ac
+      ? [
+          [],
+          ["Academia", "Valor", ac.mesTexto],
+          ["Alumnos activos", ac.activos],
+          ["Pagaron el mes", ac.pagaron],
+          ["Cobrado en el mes (S/)", soles(ac.cobrado)],
+          ["Faltan pagar", ac.faltan],
+          ["Por cobrar del mes (S/)", soles(ac.porCobrar)],
+          ["Altas del mes", ac.altas],
+          ["Bajas del mes", ac.bajas],
+          ["Siguen después de 3 meses", pct(ac.retencion3m)],
+        ]
+      : []),
   ];
   return "﻿" + filas.map((f) => f.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
 }
+
+// ---------------------------------------------------------------- academia: alumnos y mensualidades
+const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+export const mesTexto = (mes) => `${MESES[Number(mes.slice(5, 7)) - 1]} de ${mes.slice(0, 4)}`;
+export const mesDe = (fecha = new Date()) => {
+  const d = new Date(fecha);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+};
+const finDeMes = (mes) => {
+  const [a, m] = mes.split("-").map(Number);
+  return isoDia(new Date(a, m, 0));
+};
+
+/**
+ * Quién pagó el mes, cuánto falta, altas, bajas y cuántos siguen.
+ * @param {object} p
+ * @param {object[]} p.alumnos  {id, nombres, apellidos, nivel, mensualidad, inicio, baja, motivo_baja, tutor_telefono}
+ * @param {object[]} p.pagos    {alumno_id, mes: "AAAA-MM-01", monto, medio, pagado_en}
+ * @param {string}   p.mes      «AAAA-MM»
+ */
+export function calcularAcademia({ alumnos = [], pagos = [], mes = mesDe(), hoy = new Date() }) {
+  const inicioMes = `${mes}-01`;
+  const fin = finDeMes(mes);
+  const pagoDe = new Map(pagos.filter((x) => String(x.mes).slice(0, 7) === mes).map((x) => [x.alumno_id, x]));
+  // Activo en el mes: empezó antes de que termine y no se fue antes de que empiece.
+  const activos = alumnos.filter((a) => (a.inicio || "0000") <= fin && (!a.baja || a.baja >= inicioMes));
+  const orden = (a) => (a.baja && a.baja <= fin ? 2 : a.pago ? 1 : 0);
+  const lista = activos
+    .map((a) => ({ ...a, pago: pagoDe.get(a.id) ?? null }))
+    // Primero los que faltan pagar, luego los que pagaron y al final los que se fueron en el mes.
+    .sort((x, y) => orden(x) - orden(y) || `${x.apellidos} ${x.nombres}`.localeCompare(`${y.apellidos} ${y.nombres}`, "es"));
+  const pagaron = lista.filter((a) => a.pago);
+  const faltan = lista.filter((a) => !a.pago && !a.baja);
+  const suma = (xs, f) => xs.reduce((s, x) => s + (f(x) == null || f(x) === "" ? 0 : Number(f(x))), 0);
+
+  // Retención: de los que estaban activos hace 3 meses, cuántos siguen hoy.
+  const hace3 = isoDia(new Date(+hoy - 91 * DIA));
+  const hoyIso = isoDia(hoy);
+  const base3 = alumnos.filter((a) => (a.inicio || "0000") <= hace3 && (!a.baja || a.baja > hace3));
+  const siguen = base3.filter((a) => !a.baja || a.baja > hoyIso);
+
+  const ac = {
+    mes,
+    mesTexto: mesTexto(mes),
+    activos: lista.filter((a) => !a.baja || a.baja > fin).length,
+    pagaron: pagaron.length,
+    cobrado: suma(pagaron, (a) => a.pago.monto),
+    pagosSinMonto: pagaron.filter((a) => a.pago.monto == null || a.pago.monto === "").length,
+    faltan: faltan.length,
+    porCobrar: suma(faltan, (a) => a.mensualidad),
+    sinMensualidad: faltan.filter((a) => a.mensualidad == null || a.mensualidad === "").length,
+    altas: alumnos.filter((a) => (a.inicio || "") >= inicioMes && a.inicio <= fin).length,
+    bajas: alumnos.filter((a) => a.baja && a.baja >= inicioMes && a.baja <= fin).length,
+    motivos: contar(alumnos.filter((a) => a.baja), (a) => a.motivo_baja),
+    retencion3m: porcentaje(siguen.length, base3.length),
+    base3m: base3.length,
+    niveles: contar(lista.filter((a) => !a.baja), (a) => a.nivel),
+    lista,
+  };
+  ac.acciones = accionesAcademia(ac, hoy);
+  return ac;
+}
+
+export function accionesAcademia(ac, hoy = new Date()) {
+  const a = [];
+  const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+  const esteMes = ac.mes === mesDe(hoy);
+  if (ac.faltan && (!esteMes || new Date(hoy).getDate() >= UMBRALES.diaRecordatorio))
+    a.push({ nivel: "atencion", texto: `${plural(ac.faltan, "alumno no pagó", "alumnos no pagaron")} ${ac.mesTexto}. Envía el recordatorio por WhatsApp desde Academia (ya va redactado).`, ir: "academia" });
+  if (ac.bajas) {
+    const [motivo] = ac.motivos[0] ?? [];
+    a.push({ nivel: "idea", texto: `${plural(ac.bajas, "alumno dejó", "alumnos dejaron")} la academia en ${ac.mesTexto}.${motivo && motivo !== "Sin dato" ? ` El motivo más común hasta hoy: «${motivo}».` : " Anota el motivo al dar de baja: así sabrás qué corregir."}`, ir: "academia" });
+  }
+  return a;
+}
+
+// Une y ordena las recomendaciones: primero lo urgente.
+const ORDEN = { urgente: 0, atencion: 1, idea: 2 };
+export const juntarAcciones = (...listas) => listas.flat().sort((x, y) => ORDEN[x.nivel] - ORDEN[y.nivel]);

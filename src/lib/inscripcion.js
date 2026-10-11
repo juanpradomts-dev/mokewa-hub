@@ -1,7 +1,7 @@
 // Lógica de la ficha de torneo: /torneos/verano-2027/ (fijo) y /torneos/torneo/?t=<id> (creados en el panel).
 import {
   TORNEO_VERANO, torneo, categoriaPara, esMenor, inscribir, guardarVoucher, listaPublica, misInscripciones,
-  alCambiar, sembrarDemo, TIPOS_VOUCHER, MAX_VOUCHER, pintarCampos, listo, hayNube,
+  alCambiar, sembrarDemo, TIPOS_VOUCHER, MAX_VOUCHER, pintarCampos, listo, cupoTorneo, ocupados,
 } from "./store.js";
 import { esc } from "./html.js";
 import { contar } from "./conteo.js";
@@ -32,8 +32,13 @@ if (encontrado && !fijo) {
   $("t-bajada").hidden = !T.descripcion;
   $("t-sede").textContent = T.sede ? `Sede: ${T.sede}` : "";
   const dato = (k, v) => `<div class="tarjeta"><span class="dt">${k}</span><span>${esc(v || "—")}</span></div>`;
-  $("t-datos").innerHTML = dato("Fecha", T.fecha) + dato("Ritmo de juego", T.ritmo) + dato("Inscripción", T.costo) + dato("Cupo", T.cupo);
+  const fechaLarga = /^\d{4}-\d{2}-\d{2}$/.test(T.fecha || "")
+    ? new Date(`${T.fecha}T12:00:00`).toLocaleDateString("es-PE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+    : T.fecha;
+  $("t-datos").innerHTML = dato("Fecha", fechaLarga) + dato("Ritmo de juego", T.ritmo) + dato("Inscripción", T.costo) + dato("Cupo", T.cupo);
   $("t-cats-lista").textContent = (T.categorias || []).join(", ");
+  // El monto a pagar es el de este torneo (no el del Torneo de Verano).
+  $("pago-monto").innerHTML = `<span class="dato"><span class="dt">Monto</span><span class="dato-valor confirmado">${esc(T.costo || "el que indique el club")}</span></span>`;
   pintarCampos();
 }
 const anioTorneo = Number(T.anio) || Number(String(T.fecha || "").slice(0, 4)) || new Date().getFullYear() + 1;
@@ -52,6 +57,25 @@ function alCambiarFecha() {
 }
 fecha.addEventListener("input", alCambiarFecha);
 alCambiarFecha();
+
+// ---- Cupo: cuántos lugares quedan. Con el cupo lleno, la inscripción va a lista de espera y no se paga.
+let lleno = false;
+function pintarCupo() {
+  const cupo = encontrado ? cupoTorneo(T.id) : null;
+  const caja = $("cupo-estado");
+  caja.hidden = cupo == null;
+  if (cupo == null) return void (lleno = false);
+  const libres = Math.max(0, cupo - ocupados(T.id));
+  lleno = libres === 0;
+  caja.classList.toggle("lleno", lleno);
+  caja.textContent = lleno
+    ? "Cupo completo. Puedes anotarte en la lista de espera: no pagues todavía; si se libera un lugar, el club te escribe."
+    : `${libres === 1 ? "Queda 1 lugar" : `Quedan ${libres} lugares`} de ${cupo}.`;
+  $("bloque-pago").hidden = lleno;
+  $("enviar").textContent = lleno ? "Anotarme en la lista de espera" : "Enviar inscripción";
+}
+pintarCupo();
+alCambiar(pintarCupo);
 
 const voucher = $("voucher");
 voucher.addEventListener("change", () => {
@@ -76,8 +100,10 @@ function validar(d, f) {
   if (menor) req("tutor_nombre", "Escribe el nombre del padre, madre o tutor.");
   if (!/^9\d{8}$/.test(String(d.tutor_telefono ?? "").replace(/\s/g, ""))) errores.push(["tutor_telefono", "El celular debe tener 9 dígitos y empezar con 9."]);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(d.tutor_correo ?? ""))) errores.push(["tutor_correo", "Revisa el correo."]);
-  if (!f) errores.push(["voucher", "Sube el comprobante de pago."]);
-  else if (!TIPOS_VOUCHER.includes(f.type)) errores.push(["voucher", "El comprobante debe ser JPG, PNG o PDF."]);
+  // Con el cupo lleno no se paga: el comprobante es opcional.
+  if (!f) {
+    if (!lleno) errores.push(["voucher", "Sube el comprobante de pago."]);
+  } else if (!TIPOS_VOUCHER.includes(f.type)) errores.push(["voucher", "El comprobante debe ser JPG, PNG o PDF."]);
   else if (f.size > MAX_VOUCHER) errores.push(["voucher", "El comprobante pesa más de 5 MB."]);
   if (!$("consentimiento").checked) errores.push(["consentimiento", "Marca la autorización para continuar."]);
   return { errores, cat, menor };
@@ -131,33 +157,31 @@ form.addEventListener("submit", async (e) => {
       tutor_correo: d.tutor_correo.trim(),
       consentimiento: true,
       consentimiento_fecha: new Date().toISOString(),
-      voucher_nombre: f.name,
+      voucher_nombre: f?.name ?? "",
     });
   } catch (err) {
     $("errores").hidden = false;
     $("errores").textContent = err.message;
     enviar.disabled = false;
-    enviar.textContent = "Enviar inscripción";
+    pintarCupo();
     return;
   }
   // Si la inscripción entró pero el comprobante no subió, se dice claramente qué hacer.
-  const sinVoucher = await guardarVoucher(ins.id, f).then(() => false, () => true);
+  const sinVoucher = f ? await guardarVoucher(ins.id, f).then(() => false, () => true) : false;
   const seg = Math.round((Date.now() - inicio) / 1000);
   const tiempo = seg >= 60 ? `${Math.floor(seg / 60)} min ${seg % 60} s` : `${seg} s`;
   form.hidden = true;
   const conf = $("confirmacion");
   conf.hidden = false;
   conf.innerHTML = `<div class="tarjeta exito">
-    <p class="antetitulo">Inscripción recibida</p>
-    <h2>¡Listo, ${esc(ins.nombres)}!</h2>
-    <p>Quedó registrada en <strong>${esc(T.nombre)}</strong>, categoría <strong>${esc(cat)}</strong>, nivel ${esc(ins.nivel)}.</p>
-    <p>Estado del pago: <span class="etiqueta etiqueta-ejemplo">Pendiente de validación</span></p>
+    <p class="antetitulo">${ins.en_espera ? "Lista de espera" : "Inscripción recibida"}</p>
+    <h2>${ins.en_espera ? `${esc(ins.nombres)} quedó en lista de espera` : `¡Listo, ${esc(ins.nombres)}!`}</h2>
+    <p>${ins.en_espera ? "El cupo de" : "Quedó registrada en"} <strong>${esc(T.nombre)}</strong>${ins.en_espera ? " está completo." : `, categoría <strong>${esc(cat)}</strong>, nivel ${esc(ins.nivel)}.`}</p>
+    ${ins.en_espera
+      ? `<p>Si se libera un lugar, el club te escribe al ${esc(ins.tutor_telefono)}. ${f ? "Guardamos tu comprobante: el club se comunicará contigo." : "No pagues todavía."}</p>`
+      : `<p>Estado del pago: <span class="etiqueta etiqueta-ejemplo">Pendiente de validación</span></p>`}
     ${sinVoucher ? `<p class="alerta alerta-error">La inscripción quedó registrada, pero el comprobante no se pudo subir. Envíalo al club por WhatsApp o Facebook indicando el código.</p>` : ""}
-    <p class="ayuda">Código: <code>${ins.id.slice(0, 8).toUpperCase()}</code>. ${
-      hayNube
-        ? "Guárdalo. En esta misma página, desde este celular o computadora, verás cuando el club valide tu pago."
-        : `En la versión oficial llega un correo a ${esc(ins.tutor_correo)} con esta confirmación y otro cuando se valide el pago.`
-    }</p>
+    <p class="ayuda">Código: <code>${ins.id.slice(0, 8).toUpperCase()}</code>. Guárdalo. En esta misma página, desde este celular o computadora, verás ${ins.en_espera ? "si consigues un lugar" : "cuando el club valide tu pago"}.</p>
     <p class="tiempo">Te tomó ${tiempo} inscribirte.</p>
     <div class="grupo-botones">
       ${document.body.dataset.modo === "produccion" ? "" : `<a class="boton boton-secundario" href="${document.body.dataset.base}/panel/">Demo: ver cómo lo valida el organizador →</a>`}
@@ -174,8 +198,13 @@ const ESTADOS = {
   rechazado: ["Pago rechazado", "etiqueta-error"],
 };
 function pintarListas() {
-  const lista = listaPublica(T.id);
+  const todos = listaPublica(T.id);
+  const lista = todos.filter((i) => !i.en_espera);
+  const espera = todos.filter((i) => i.en_espera);
   $("n-inscritos").textContent = `(${lista.length})`;
+  $("lista-espera").hidden = !espera.length;
+  $("n-espera").textContent = `(${espera.length})`;
+  $("espera-nombres").innerHTML = espera.map((i) => `<li>${esc(i.nombre)} · ${esc(i.categoria)}</li>`).join("");
   $("lista-inscritos").innerHTML = lista.length
     ? `<div class="tabla-envoltura" tabindex="0" role="region" aria-label="Lista de inscritos"><table><thead><tr><th>Jugador</th><th>Cat.</th><th>Club</th></tr></thead><tbody>${lista
         .map((i) => `<tr><td>${esc(i.nombre)}${i.validado ? ' <span class="ok" title="Pago validado" aria-label="Pago validado">✓</span>' : ""}</td><td>${esc(i.categoria)}</td><td>${esc(i.club)}</td></tr>`)
@@ -185,7 +214,7 @@ function pintarListas() {
   $("mis-inscripciones").hidden = !mias.length;
   $("lista-mias").innerHTML = mias
     .map((i) => {
-      const [txt, cls] = ESTADOS[i.estado_pago];
+      const [txt, cls] = i.en_espera ? ["En lista de espera", "etiqueta-vino"] : ESTADOS[i.estado_pago];
       return `<li><strong>${esc(i.nombres)} ${esc(i.apellidos)}</strong> <span class="etiqueta ${cls}">${txt}</span>${i.motivo ? `<br><small>${esc(i.motivo)}</small>` : ""}</li>`;
     })
     .join("");

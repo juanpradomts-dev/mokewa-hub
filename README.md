@@ -48,7 +48,7 @@ Qué se quitó a propósito (no generaba valor para el club): Salón de la Fama,
 ### Conectar la base de datos (cuando el club apruebe)
 
 1. Con la cuenta del club, crear un proyecto gratuito en supabase.com (región São Paulo, la más cercana).
-2. SQL Editor: pegar y ejecutar, en orden, los dos archivos de `supabase/migrations/` (o `npx supabase link` y `npx supabase db push`).
+2. SQL Editor: pegar y ejecutar, en orden, todos los archivos de `supabase/migrations/` (o `npx supabase link` y `npx supabase db push`).
 3. Authentication → Sign In / Providers: desactivar el registro de usuarios nuevos y poner 8 caracteres como mínimo de contraseña. Las cuentas del panel las crea el administrador.
 4. Authentication → Users → Add user: **primero la cuenta del dueño** (correo y contraseña). Al entrar al panel con ella, el panel ofrece «Activar como administrador»: solo funciona para la cuenta más antigua y mientras el club no tenga administrador. Las demás cuentas (entrenadores) se crean igual en Add user y el admin les da el rol desde la pestaña Personal.
 5. GitHub → Settings → Secrets and variables → Actions → Variables: `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY` (Project Settings → API; la clave «anon» es pública por diseño). El workflow ya las usa, y también mantiene activa la base de datos (el plan gratuito se pausa tras una semana sin uso).
@@ -61,6 +61,11 @@ Qué se quitó a propósito (no generaba valor para el club): Salón de la Fama,
 Cobrado y por cobrar (con el costo de cada torneo), inscripciones frente al periodo anterior, jugadores que vuelven a un segundo torneo, horas que tarda el club en validar un pago, ocupación del cupo, categorías, niveles, de qué clubes o colegios llegan, y si la web trae inscritos (visitas → clics de contacto → inscripciones). Arriba, «Qué hacer hoy» resume lo urgente con el porqué. Se descarga como CSV para la directiva. Los cálculos están en `src/lib/metricas.js` (probados en `tests/metricas.test.mjs`).
 
 Las visitas se cuentan de forma anónima (`src/lib/conteo.js`): solo totales por día, página y evento; sin cookies, sin IP y respetando «No rastrear».
+
+### Cupo, lista de espera y academia
+
+- **Cupo:** si un torneo tiene cupo (o el de verano, `verano_cupo`), quien se inscribe con el cupo lleno queda en **lista de espera** y no paga. El admin le da un lugar desde Inscripciones («Darle un lugar»).
+- **Academia (solo el admin):** alumnos y mensualidades por mes, recordatorio por WhatsApp ya redactado (lo envía el admin), altas y bajas con motivo, y exportación a Excel. Las cifras salen en Métricas y en «Qué hacer hoy».
 
 Probar contra Supabase de verdad: `npx supabase start` (Docker) y `npm run prueba:nube`, que comprueba las reglas de privacidad contra la base de datos real: el público no lee datos privados, la lista pública muestra solo nombre, categoría y club, cada comprobante va en su ruta con tipo y tamaño permitidos, nadie se registra solo, el entrenador no ve contactos y el admin puede borrarlo todo.
 
