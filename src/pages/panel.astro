@@ -97,6 +97,11 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
           </div>
         </div>
 
+        <div class="alerta alerta-error panel-aviso" id="panel-aviso" role="alert" hidden>
+          <span id="panel-aviso-texto"></span>
+          <button class="boton boton-secundario boton-chico" type="button" id="panel-aviso-cerrar">Cerrar</button>
+        </div>
+
         <div class="pestanas" role="tablist" aria-label="Secciones del panel">
           <button role="tab" aria-selected="true" aria-controls="p-resumen" id="t-resumen" data-roles="admin">Resumen</button>
           <button role="tab" aria-selected="false" aria-controls="p-metricas" id="t-metricas" data-roles="admin">Métricas</button>
@@ -471,6 +476,7 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
     border: 0;
     border-bottom: 3px solid transparent;
     padding: 12px 14px;
+    min-height: 44px;
     cursor: pointer;
     display: inline-flex;
     gap: 6px;
@@ -500,6 +506,24 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
   }
   .resumen-bloques {
     margin-top: 16px;
+  }
+  /* Aviso de error del panel: fijo abajo para verse desde cualquier pestaña */
+  .panel-aviso {
+    position: fixed;
+    left: 16px;
+    right: 88px; /* deja libre el botón de WhatsApp */
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    z-index: 30;
+    max-width: 560px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 10px 28px rgb(90 42 6 / 0.25);
+  }
+  .panel-aviso[hidden] {
+    display: none;
   }
   /* ---- Métricas */
   .bloque-metricas {
@@ -587,7 +611,6 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
     height: 100%;
     border-radius: 999px;
     background: var(--oro);
-    transition: width var(--t-lento) var(--curva);
   }
   :global(.relleno.lleno) {
     background: var(--error);
@@ -622,7 +645,6 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
     border-radius: 6px 6px 2px 2px;
     background: var(--ambar);
     min-height: 2px;
-    transition: height var(--t-lento) var(--curva);
   }
   :global(.semana.actual .col) {
     background: var(--oro);
@@ -874,7 +896,7 @@ if (esProduccionPanel && !hayBaseDeDatos) return redirigir(`${import.meta.env.BA
     width: 6.5rem;
   }
   :global(.alumno.sin-pago) {
-    border-left: 4px solid var(--oro);
+    background: var(--crema);
   }
   .bajas {
     margin-top: 16px;

@@ -62,6 +62,15 @@ Cobrado y por cobrar (con el costo de cada torneo), inscripciones frente al peri
 
 Las visitas se cuentan de forma anónima (`src/lib/conteo.js`): solo totales por día, página y evento; sin cookies, sin IP y respetando «No rastrear».
 
+### Auditoría de interfaz
+
+`scripts/auditoria-ui.js` revisa todas las páginas en escritorio y celular con [Playwright CLI](https://github.com/microsoft/playwright-cli): accesibilidad (axe), encabezados, desbordes, objetivos táctiles de menos de 44 px, largo de línea, metadatos y si la selección, el cursor y las barras usan la paleta del club. Con `npm run dev` corriendo:
+
+```
+npx playwright-cli open --browser=msedge http://localhost:4321/
+npx playwright-cli run-code --filename=scripts/auditoria-ui.js
+```
+
 ### Documentos de diseño (`docs/`)
 
 - [`FORMULA-GANADORA.md`](docs/FORMULA-GANADORA.md): qué necesitan los clubes de ajedrez (fuentes públicas), la fórmula LLEGAR → CONFIAR → ESCRIBIR → INSCRIBIRSE → VOLVER + OPERAR, y el puntaje de esta web contra ella.

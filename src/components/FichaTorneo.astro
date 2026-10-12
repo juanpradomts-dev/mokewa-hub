@@ -313,8 +313,12 @@ const enLinea = !esProduccion || hayBaseDeDatos;
     color: var(--ok);
     font-weight: 700;
   }
+  :global(svg.ok) {
+    vertical-align: -2px;
+  }
   :global(.exito) {
-    border-left: 5px solid var(--ok);
+    background: var(--ok-fondo);
+    border-color: rgb(30 107 67 / 0.25);
   }
   :global(.tiempo) {
     font-weight: 650;
@@ -340,6 +344,9 @@ const enLinea = !esProduccion || hayBaseDeDatos;
     margin: 0;
     padding-left: 1.4em;
     font-size: 0.93rem;
+  }
+  [data-torneo] .cat {
+    max-width: 70ch; /* línea de lectura cómoda */
   }
   .pago-datos {
     display: flex;

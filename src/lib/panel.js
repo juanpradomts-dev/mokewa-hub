@@ -17,11 +17,20 @@ const $ = (id) => document.getElementById(id);
 const base = document.body.dataset.base ?? "";
 
 // Una acción que va a la base de datos puede fallar (sin internet, sesión vencida): se avisa, no se calla.
+// El aviso sale en la página (no en una ventana del navegador) y se cierra solo a los 10 segundos.
+let avisoTiempo = 0;
+function avisar(texto) {
+  $("panel-aviso-texto").textContent = texto;
+  $("panel-aviso").hidden = false;
+  clearTimeout(avisoTiempo);
+  avisoTiempo = setTimeout(() => ($("panel-aviso").hidden = true), 10_000);
+}
+$("panel-aviso-cerrar").addEventListener("click", () => ($("panel-aviso").hidden = true));
 async function conAviso(accion) {
   try {
     return await accion();
   } catch (err) {
-    alert(err?.message || "No se pudo completar la acción. Revisa tu conexión e intenta de nuevo.");
+    avisar(err?.message || "No se pudo completar la acción. Revisa tu conexión e intenta de nuevo.");
     throw err;
   }
 }

@@ -175,7 +175,7 @@ form.addEventListener("submit", async (e) => {
   conf.hidden = false;
   conf.innerHTML = `<div class="tarjeta exito">
     <p class="antetitulo">${ins.en_espera ? "Lista de espera" : "Inscripción recibida"}</p>
-    <h2>${ins.en_espera ? `${esc(ins.nombres)} quedó en lista de espera` : `¡Listo, ${esc(ins.nombres)}!`}</h2>
+    <h2>${ins.en_espera ? `${esc(ins.nombres)} quedó en lista de espera` : `Listo, ${esc(ins.nombres)}`}</h2>
     <p>${ins.en_espera ? "El cupo de" : "Quedó registrada en"} <strong>${esc(T.nombre)}</strong>${ins.en_espera ? " está completo." : `, categoría <strong>${esc(cat)}</strong>, nivel ${esc(ins.nivel)}.`}</p>
     ${ins.en_espera
       ? `<p>Si se libera un lugar, el club te escribe al ${esc(ins.tutor_telefono)}. ${f ? "Guardamos tu comprobante: el club se comunicará contigo." : "No pagues todavía."}</p>`
@@ -207,9 +207,9 @@ function pintarListas() {
   $("espera-nombres").innerHTML = espera.map((i) => `<li>${esc(i.nombre)} · ${esc(i.categoria)}</li>`).join("");
   $("lista-inscritos").innerHTML = lista.length
     ? `<div class="tabla-envoltura" tabindex="0" role="region" aria-label="Lista de inscritos"><table><thead><tr><th>Jugador</th><th>Cat.</th><th>Club</th></tr></thead><tbody>${lista
-        .map((i) => `<tr><td>${esc(i.nombre)}${i.validado ? ' <span class="ok" title="Pago validado" aria-label="Pago validado">✓</span>' : ""}</td><td>${esc(i.categoria)}</td><td>${esc(i.club)}</td></tr>`)
+        .map((i) => `<tr><td>${esc(i.nombre)}${i.validado ? ' <svg class="ok" viewBox="0 0 16 16" width="14" height="14" role="img" aria-label="Pago validado"><title>Pago validado</title><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ""}</td><td>${esc(i.categoria)}</td><td>${esc(i.club)}</td></tr>`)
         .join("")}</tbody></table></div>`
-    : `<p>Aún no hay inscritos. ¡Sé el primero!</p>`;
+    : `<p>Aún no hay inscritos: sé el primero.</p>`;
   const mias = misInscripciones(T.id);
   $("mis-inscripciones").hidden = !mias.length;
   $("lista-mias").innerHTML = mias

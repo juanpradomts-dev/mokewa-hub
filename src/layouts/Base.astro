@@ -93,10 +93,10 @@ const tituloCompleto = seccion === "inicio" ? `Ajedrez Club Mokewa · ${LEMA}` :
   <body data-base={b} data-modo={MODO} data-contar={seccion === "panel" ? undefined : ""}>
     <a class="saltar" href="#contenido">Saltar al contenido</a>
     {!esProduccion && (
-      <div class="aviso-demo">
+      <aside class="aviso-demo" aria-label="Aviso de demostración">
         Demostración privada preparada para el Ajedrez Club Mokewa · aún no es la web oficial ·{" "}
         <a href={url("/acerca-de-la-demo/")}>qué es esto</a>
-      </div>
+      </aside>
     )}
     <header class="cabecera">
       <div class="contenedor">

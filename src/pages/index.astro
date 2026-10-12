@@ -82,6 +82,7 @@ for (const e of [...historia.torneos].sort((x, y) => y.fecha.localeCompare(x.fec
   <section class="proximo-seccion" id="proximo" hidden aria-labelledby="proximo-titulo">
     <div class="contenedor">
       <a class="proximo tarjeta" id="proximo-enlace" href={`${b}/torneos/`}>
+        <span class="proximo-pieza" aria-hidden="true" set:html={svgPieza("caballo", "claro")} />
         <span class="proximo-texto">
           <span class="antetitulo">Próximo torneo</span>
           <strong id="proximo-titulo"></strong>
@@ -237,17 +238,28 @@ for (const e of [...historia.torneos].sort((x, y) => y.fecha.localeCompare(x.fec
     justify-content: space-between;
     gap: 12px 20px;
     padding: 16px 20px;
-    border-left: 5px solid var(--oro);
     color: var(--tinta);
     text-decoration: none;
   }
   .proximo:hover .boton {
     transform: translateY(-1px);
   }
+  .proximo-pieza {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--oro);
+    color: var(--tinta);
+    font-size: 1.7rem;
+  }
   .proximo-texto {
     display: grid;
     gap: 2px;
     min-width: 0;
+    flex: 1 1 14rem;
   }
   .proximo-texto .antetitulo {
     margin: 0;
