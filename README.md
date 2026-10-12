@@ -62,6 +62,12 @@ Cobrado y por cobrar (con el costo de cada torneo), inscripciones frente al peri
 
 Las visitas se cuentan de forma anónima (`src/lib/conteo.js`): solo totales por día, página y evento; sin cookies, sin IP y respetando «No rastrear».
 
+### Documentos de diseño (`docs/`)
+
+- [`FORMULA-GANADORA.md`](docs/FORMULA-GANADORA.md): qué necesitan los clubes de ajedrez (fuentes públicas), la fórmula LLEGAR → CONFIAR → ESCRIBIR → INSCRIBIRSE → VOLVER + OPERAR, y el puntaje de esta web contra ella.
+- [`GUION-ENTREVISTAS.md`](docs/GUION-ENTREVISTAS.md): guion para validar la fórmula con 5 clubes (contexto, experiencias, profundizar, soluciones actuales y consecuencias).
+- [`presentacion-directiva.html`](docs/presentacion-directiva.html): presentación de 9 diapositivas para la directiva del club (se abre en el navegador).
+
 ### Cupo, lista de espera y academia
 
 - **Cupo:** si un torneo tiene cupo (o el de verano, `verano_cupo`), quien se inscribe con el cupo lleno queda en **lista de espera** y no paga. El admin le da un lugar desde Inscripciones («Darle un lugar»).

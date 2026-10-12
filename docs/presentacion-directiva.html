@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Mokewa · Directiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Archivo+Black&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --oro:#f28a1e; --vino:#a64b08; --vino-osc:#5a2a06; --durazno:#fde7d1; --ambar:#f7a54a;
+  --crema:#fff4e8; --fondo:#fdf8f2; --tinta:#1a1714; --suave:#5f5850; --linea:#eadfd1;
+  --ok:#1e6b43; --ok-fondo:#e3f3e9; --pc-fondo:#fff1c7; --pc-texto:#6f4400;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--vino-osc);color:var(--tinta);font-family:Archivo,system-ui,sans-serif;overflow:hidden}
+.deck{position:relative;width:100vw;height:100vh;overflow:hidden}
+@media(min-width:769px){.deck{max-width:calc(100vh*16/9);max-height:calc(100vw*9/16);margin:auto;position:absolute;inset:0}}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:6% 7%;
+  background:var(--fondo);opacity:0;visibility:hidden;transition:opacity .4s;overflow:hidden}
+.slide.active{opacity:1;visibility:visible}
+.slide.oscura{background:var(--vino-osc);color:var(--crema)}
+.slide.naranja{background:var(--oro);color:var(--tinta)}
+h1,h2{font-family:"Archivo Black",Archivo,sans-serif;line-height:1.05;letter-spacing:-.01em}
+h1{font-size:clamp(34px,5.6vw,84px)}
+h2{font-size:clamp(26px,3.4vw,52px);margin-bottom:.6em;max-width:22ch}
+.ante{font-weight:800;text-transform:uppercase;letter-spacing:.12em;font-size:clamp(11px,1vw,15px);color:var(--vino);margin-bottom:1em}
+.oscura .ante{color:var(--ambar)}
+p,li{font-size:clamp(14px,1.45vw,22px);line-height:1.45}
+.suave{color:var(--suave)} .oscura .suave{color:#e9d6c3}
+.lema{color:var(--oro)}
+.grid{display:grid;gap:clamp(10px,1.6vw,24px)}
+.g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+.tarjeta{background:#fff;border:1px solid var(--linea);border-radius:16px;padding:clamp(12px,1.6vw,24px)}
+.tarjeta h3{font-size:clamp(15px,1.5vw,23px);margin-bottom:.35em}
+.tarjeta p{font-size:clamp(12px,1.15vw,17px);color:var(--suave)}
+.num{font-family:"Archivo Black";font-size:clamp(40px,6vw,96px);color:var(--oro);line-height:1}
+.num-et{font-weight:600;font-size:clamp(12px,1.2vw,18px)}
+.marcador{display:flex;gap:clamp(14px,3vw,48px);margin-top:1.4em}
+.check{list-style:none;display:grid;gap:.5em}
+.check li{padding-left:1.6em;position:relative}
+.check li::before{content:"";position:absolute;left:0;top:.35em;width:.85em;height:.85em;border-radius:50%;background:var(--oro)}
+.chip{display:inline-block;font-size:clamp(10px,.9vw,13px);font-weight:800;padding:.25em .7em;border-radius:99px;margin-bottom:.6em}
+.chip.ok{background:var(--ok-fondo);color:var(--ok)} .chip.falta{background:var(--pc-fondo);color:var(--pc-texto)}
+.dos{display:grid;grid-template-columns:1fr 1.15fr;gap:5%;align-items:center}
+.grafico{height:clamp(200px,42vh,420px)}
+.pieza{position:absolute;right:6%;bottom:8%;font-size:clamp(120px,18vw,300px);color:rgb(242 138 30/.14);line-height:1;font-family:serif;pointer-events:none}
+.url{font-family:ui-monospace,Consolas,monospace;font-size:clamp(12px,1.2vw,18px);background:rgb(255 255 255/.12);padding:.4em .8em;border-radius:8px;display:inline-block;align-self:flex-start;margin-top:1.2em}
+.decision{display:flex;gap:1em;align-items:flex-start;padding:clamp(10px,1.3vw,20px) 0;border-bottom:1px solid rgb(26 23 20/.15)}
+.decision b{font-family:"Archivo Black";font-size:clamp(20px,2.4vw,36px);min-width:1.4em}
+.barra{position:fixed;top:0;left:0;height:4px;background:var(--oro);transition:width .3s;z-index:10}
+.nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;z-index:10;
+  background:rgb(26 23 20/.75);padding:6px 10px;border-radius:99px}
+.nav button{background:rgb(255 255 255/.12);border:0;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px}
+.nav span{color:#fff;font-size:13px;min-width:44px;text-align:center}
+@media(max-width:768px){.g3,.g4,.dos,.g2{grid-template-columns:1fr}.slide{padding:28px 18px 70px;justify-content:flex-start;overflow:auto}.pieza{display:none}}
+@media print{body{overflow:visible}.slide{position:relative;opacity:1;visibility:visible;page-break-after:always;height:100vh}.nav,.barra{display:none}}
+</style>
+</head>
+<body>
+<div class="barra" id="barra"></div>
+<div class="deck">
+
+<!-- 1. Portada -->
+<section class="slide oscura active">
+  <p class="ante">Ajedrez Club Mokewa · Moquegua</p>
+  <h1>La web del club,<br><span class="lema">lista para jugar</span></h1>
+  <p class="suave" style="margin-top:1.2em;max-width:44ch">Qué tiene, qué datos usa y qué necesitamos de la directiva para publicarla oficialmente.</p>
+  <span class="url">juanpradomts-dev.github.io/mokewa-hub</span>
+  <div class="pieza">♞</div>
+</section>
+
+<!-- 2. Problema -->
+<section class="slide">
+  <p class="ante">El punto de partida</p>
+  <h2>Hoy la información del club está <span class="lema">repartida</span></h2>
+  <div class="grid g3">
+    <div class="tarjeta"><h3>Torneos</h3><p>Resultados dispersos en Chess-Results, uno por torneo, difíciles de encontrar.</p></div>
+    <div class="tarjeta"><h3>Clases</h3><p>Un padre que busca clases no tiene un lugar único con niveles, edades y forma de contacto.</p></div>
+    <div class="tarjeta"><h3>Historia</h3><p>Los campeones y torneos del club no estaban reunidos en un solo sitio.</p></div>
+  </div>
+  <p class="suave" style="margin-top:1.4em">La web los junta en un lugar que se abre bien en el celular.</p>
+</section>
+
+<!-- 3. Qué tiene -->
+<section class="slide">
+  <p class="ante">Lo que ya está hecho</p>
+  <h2>Cuatro páginas, una pregunta cada una</h2>
+  <div class="grid g4">
+    <div class="tarjeta"><h3>Inicio</h3><p>Quiénes somos, los tres niveles y el camino del peón a la corona.</p></div>
+    <div class="tarjeta"><h3>Academia</h3><p>Niveles Básico, Intermedio y Avanzado, más 12 preguntas frecuentes.</p></div>
+    <div class="tarjeta"><h3>El Club</h3><p>Línea de tiempo interactiva con torneos y campeones desde 2022.</p></div>
+    <div class="tarjeta"><h3>Contacto</h3><p>Correo, mapa de Google con «Cómo llegar» y botón de WhatsApp.</p></div>
+  </div>
+</section>
+
+<!-- 4. Datos reales -->
+<section class="slide">
+  <div class="dos">
+    <div>
+      <p class="ante">Solo datos verificados</p>
+      <h2>La historia, con fuente</h2>
+      <p class="suave">Cada torneo sale de Chess-Results. Nada inventado.</p>
+      <div class="marcador">
+        <div><div class="num">33</div><div class="num-et">torneos presenciales</div></div>
+        <div><div class="num">15</div><div class="num-et">campeones</div></div>
+        <div><div class="num">2022</div><div class="num-et">primer torneo</div></div>
+      </div>
+    </div>
+    <div class="grafico"><canvas id="torneos"></canvas></div>
+  </div>
+</section>
+
+<!-- 5. Pensada para familias -->
+<section class="slide">
+  <p class="ante">Pensada para quien llega por primera vez</p>
+  <h2>Un padre entiende la web en <span class="lema">segundos</span></h2>
+  <div class="grid g2">
+    <ul class="check">
+      <li>Se lee cómodo en el celular, no solo en la computadora.</li>
+      <li>Cada nivel dice para quién es y qué hacer: «Quiero empezar».</li>
+      <li>Botón de contacto siempre a mano.</li>
+    </ul>
+    <ul class="check">
+      <li>Revisada con pruebas de accesibilidad (contraste, teclado, lectores de pantalla).</li>
+      <li>Rápida: sin programas pesados, carga en cualquier conexión.</li>
+      <li>12 preguntas frecuentes sobre clases, torneos y familias.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 6. Privacidad -->
+<section class="slide oscura">
+  <p class="ante">Cuidado de los alumnos</p>
+  <h2>Privacidad primero, sobre todo con <span class="lema">menores</span></h2>
+  <ul class="check" style="max-width:60ch">
+    <li>Campeones mostrados con nombre e inicial del apellido.</li>
+    <li>Fotos de menores solo con autorización escrita de sus padres.</li>
+    <li>La web oficial no guarda datos de los visitantes.</li>
+    <li>Página de privacidad que explica todo, incluido el mapa.</li>
+    <li>Revisión de seguridad del código con herramienta automática (en curso).</li>
+  </ul>
+</section>
+
+<!-- 7. Lo que falta -->
+<section class="slide">
+  <p class="ante">Lo que solo el club puede darnos</p>
+  <h2>Faltan datos que no vamos a <span class="lema">inventar</span></h2>
+  <div class="grid g4">
+    <div class="tarjeta"><span class="chip falta">Pendiente</span><h3>Contacto</h3><p>Correo del club y número de WhatsApp.</p></div>
+    <div class="tarjeta"><span class="chip falta">Pendiente</span><h3>Redes</h3><p>Enlaces de Facebook, Instagram, TikTok, YouTube, Lichess.</p></div>
+    <div class="tarjeta"><span class="chip falta">Pendiente</span><h3>Academia</h3><p>Horarios, edades, precio, clase de prueba y entrenadores.</p></div>
+    <div class="tarjeta"><span class="chip falta">Pendiente</span><h3>Identidad</h3><p>Misión, visión y fotos autorizadas.</p></div>
+  </div>
+  <p class="suave" style="margin-top:1.2em">Mientras no estén, la web oficial simplemente no los muestra.</p>
+</section>
+
+<!-- 8. Decisiones -->
+<section class="slide naranja">
+  <p class="ante" style="color:var(--vino-osc)">Lo que pedimos hoy</p>
+  <h2>Tres decisiones de la directiva</h2>
+  <div>
+    <div class="decision"><b>1</b><p><strong>Aprobar la web oficial</strong> tal como está, con la dirección actual.</p></div>
+    <div class="decision"><b>2</b><p><strong>Enviar los datos pendientes</strong> (contacto, redes, academia, misión y visión).</p></div>
+    <div class="decision"><b>3</b><p><strong>Autorizar que aparezca en Google</strong>, para que las familias de Moquegua la encuentren.</p></div>
+  </div>
+</section>
+
+<!-- 9. Cierre -->
+<section class="slide oscura">
+  <p class="ante">Siguiente jugada</p>
+  <h1>La primera jugada<br><span class="lema">es del club</span></h1>
+  <p class="suave" style="margin-top:1.2em">Con los datos del club, la web queda completa y lista para Google.</p>
+  <span class="url">juanpradomts-dev.github.io/mokewa-hub</span>
+  <div class="pieza">♛</div>
+</section>
+
+</div>
+<div class="nav"><button onclick="ir(n-1)" aria-label="Anterior">←</button><span id="cont"></span><button onclick="ir(n+1)" aria-label="Siguiente">→</button></div>
+<script>
+const s=document.querySelectorAll('.slide'),T=s.length;let n=1;
+function ir(k){n=Math.max(1,Math.min(T,k));s.forEach((e,i)=>e.classList.toggle('active',i===n-1));
+  document.getElementById('cont').textContent=n+' / '+T;document.getElementById('barra').style.width=(n/T*100)+'%'}
+document.addEventListener('keydown',e=>{if(['ArrowRight',' ','PageDown'].includes(e.key)){e.preventDefault();ir(n+1)}
+  if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();ir(n-1)}if(e.key==='Home')ir(1);if(e.key==='End')ir(T)});
+document.addEventListener('click',e=>{if(!e.target.closest('.nav'))ir(n+1)});
+ir(1);
+if(window.Chart)new Chart(document.getElementById('torneos'),{type:'bar',
+  data:{labels:['2022','2023','2024','2025','2026*'],datasets:[{data:[7,3,14,7,2],backgroundColor:['#f7a54a','#f7a54a','#f28a1e','#f7a54a','#fde7d1'],borderRadius:8}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+    title:{display:true,text:'Torneos presenciales por año  (*2026: hasta julio)',color:'#5f5850',font:{family:'Archivo',size:13}}},
+    scales:{x:{grid:{display:false},ticks:{color:'#1a1714',font:{family:'Archivo',weight:'600'}}},
+            y:{beginAtZero:true,grid:{color:'#eadfd1'},ticks:{color:'#5f5850',precision:0}}}}});
+</script>
+</body>
+</html>
