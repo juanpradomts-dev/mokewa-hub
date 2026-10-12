@@ -93,7 +93,7 @@ h1 {
   font-weight: 820;
 }
 h2 {
-  font-size: clamp(1.75rem, 4.6vw, 2.55rem);
+  font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 780;
 }
 h3 {
