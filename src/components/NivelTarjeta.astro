@@ -25,12 +25,13 @@ const mensaje = `Hola, quisiera saber el horario y el precio del nivel ${n.nombr
 ---
 
 <article class={`tarjeta nivel nivel-${n.id}`} id={n.id} data-aparece style={`--i:${orden}`}>
+  <!-- La pieza del nivel sobre su casilla: el tablero se oscurece de básico a avanzado -->
+  <div class="nivel-casilla" aria-hidden="true">
+    <span class="nivel-pieza" set:html={svgPieza(n.pieza, "claro")} />
+  </div>
   <div class="nivel-cabeza">
-    <span class="nivel-pieza" aria-hidden="true" set:html={svgPieza(n.pieza, "claro")} />
-    <div>
-      <Titulo class="nivel-nombre">{n.nombre}</Titulo>
-      <Dato clase="nivel-edad" etiqueta="Edad sugerida" campo={n.edad} />
-    </div>
+    <Titulo class="nivel-nombre">{n.nombre}</Titulo>
+    <Dato clase="nivel-edad" etiqueta="Edad sugerida" campo={n.edad} />
   </div>
   <p class="nivel-para">{n.para}</p>
   {aprende.length > 0 && (
@@ -58,32 +59,55 @@ const mensaje = `Hola, quisiera saber el horario y el precio del nivel ${n.nombr
 
 <style>
   .nivel {
-    border-top: 6px solid var(--acento-nivel, var(--oro));
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 24px;
+    padding: 0 24px 24px;
+    overflow: hidden;
     scroll-margin-top: 90px;
   }
-  .nivel-cabeza {
-    display: flex;
-    gap: 14px;
-    align-items: center;
-  }
-  .nivel-pieza {
+  /* Casilla de tablero (4 cuadros por fila) con la pieza al centro */
+  .nivel-casilla {
     display: grid;
     place-items: center;
-    width: 52px;
-    height: 52px;
-    flex: none;
-    border-radius: 14px;
-    background: var(--fondo-nivel, var(--casilla));
+    height: 132px;
+    margin: 0 -24px 6px;
+    background: repeating-conic-gradient(var(--casilla-a) 0 25%, var(--casilla-b) 0 50%) 50% 50% / 66px 66px;
+  }
+  .nivel-pieza {
+    display: block;
+    font-size: 5.2rem;
+    line-height: 0;
     color: var(--tinta);
-    font-size: 1.9rem;
-    line-height: 1;
+    filter: drop-shadow(0 8px 10px rgb(60 25 4 / 0.28));
+    transition: transform var(--t-medio) var(--curva-resorte);
+  }
+  .nivel:hover .nivel-pieza {
+    transform: translateY(-4px);
+  }
+  /* Al aparecer la tarjeta, la pieza cae sobre su casilla (un solo movimiento, para todos) */
+  :global(.con-aparicion) .nivel[data-aparece] .nivel-pieza {
+    opacity: 0;
+    transform: translateY(-26px) scale(1.06);
+    transition:
+      opacity 0.3s var(--curva),
+      transform 0.65s var(--curva-resorte);
+    transition-delay: calc(var(--i, 0) * 70ms + 220ms);
+  }
+  :global(.con-aparicion) .nivel.visto .nivel-pieza {
+    opacity: 1;
+    transform: none;
+  }
+  :global(.con-aparicion) .nivel.visto:hover .nivel-pieza {
+    transform: translateY(-4px);
+    transition-delay: 0s;
+  }
+  .nivel-cabeza {
+    display: grid;
+    gap: 2px;
   }
   .nivel-nombre {
-    font-size: 1.35rem;
+    font-size: clamp(1.45rem, 2.4vw, 1.75rem);
     margin: 0;
   }
   .nivel-para {
@@ -128,16 +152,24 @@ const mensaje = `Hola, quisiera saber el horario y el precio del nivel ${n.nombr
   .nivel-pie :global(.nivel-boton) {
     width: 100%;
   }
+  /* De básico a avanzado el tablero se oscurece y la pieza sube de rango: peón blanco, caballo blanco, dama dorada */
   .nivel-basico {
     --acento-nivel: #f7a54a;
-    --fondo-nivel: #fff1e0;
+    --casilla-a: #fff1e0;
+    --casilla-b: #fde2c6;
   }
   .nivel-intermedio {
     --acento-nivel: #f28a1e;
-    --fondo-nivel: #fde2c6;
+    --casilla-a: #f7a54a;
+    --casilla-b: #f28a1e;
   }
   .nivel-avanzado {
     --acento-nivel: #a64b08;
-    --fondo-nivel: #f9d3ae;
+    --casilla-a: #5a2a06;
+    --casilla-b: #6e3510;
+  }
+  .nivel-avanzado .nivel-pieza {
+    --pr: #f7a54a;
+    filter: drop-shadow(0 8px 12px rgb(0 0 0 / 0.45));
   }
 </style>

@@ -49,12 +49,19 @@ const bloques = (["mision", "vision"] as const)
       align-items: center;
     }
   }
-  .quienes-texto p {
-    color: var(--suave);
-    font-size: 1.05rem;
+  /* Declaración del club: el título a escala de titular y el texto en tinta, no en gris */
+  .quienes-texto > p:not(.antetitulo) {
+    color: var(--tinta);
+    font-size: clamp(1.12rem, 1.7vw, 1.32rem);
+    line-height: 1.5;
+    max-width: 46ch;
   }
   .quienes h2 {
-    max-width: 20ch;
+    max-width: 13ch;
+    font-size: clamp(2.3rem, 5.4vw, 3.9rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
   }
   /* Sin misión ni visión confirmadas (web oficial): título a la izquierda y texto a la derecha,
      sin media pantalla vacía. */
@@ -96,7 +103,8 @@ const bloques = (["mision", "vision"] as const)
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    font-weight: 600;
+    font-weight: 650;
+    font-size: 1.05rem;
   }
   .mv {
     display: grid;

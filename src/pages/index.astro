@@ -95,6 +95,8 @@ for (const e of [...historia.torneos].sort((x, y) => y.fecha.localeCompare(x.fec
 
   <!-- 2. QUIÉNES SOMOS -->
   <section class="seccion" id="quienes-somos">
+    <!-- Torre en silueta (el mismo recurso de las piezas del héroe): el club como algo sólido -->
+    <span class="quienes-torre" aria-hidden="true" set:html={svgPieza("torre", "oscuro")} />
     <div class="contenedor"><QuienesSomos /></div>
   </section>
 
@@ -227,6 +229,35 @@ for (const e of [...historia.torneos].sort((x, y) => y.fecha.localeCompare(x.fec
 </script>
 
 <style>
+  /* ---------- Quiénes somos: más aire y una torre grande al costado ---------- */
+  #quienes-somos {
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(56px, 9vw, 112px);
+  }
+  #quienes-somos .contenedor {
+    position: relative;
+  }
+  .quienes-torre {
+    --pd: transparent; /* silueta, sin detalles */
+    position: absolute;
+    right: max(-40px, calc((100vw - var(--ancho)) / 2 - 140px));
+    bottom: -28px;
+    font-size: clamp(13rem, 24vw, 21rem);
+    line-height: 0;
+    color: rgb(166 75 8 / 0.08);
+    transform: rotate(-6deg);
+    pointer-events: none;
+  }
+  @media (max-width: 899px) {
+    .quienes-torre {
+      font-size: 11rem;
+      right: -36px;
+      bottom: -18px;
+      color: rgb(166 75 8 / 0.06);
+    }
+  }
+
   /* ---------- Próximo torneo ---------- */
   .proximo-seccion {
     padding: 20px 0 0;
