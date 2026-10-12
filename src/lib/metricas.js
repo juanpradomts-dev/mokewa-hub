@@ -3,6 +3,7 @@
 // Funciones puras (reciben los datos y devuelven números): las prueba tests/metricas.test.mjs y sirven
 // igual para la demo (datos del navegador) y para la web oficial (Supabase).
 
+import { csv } from "./csv.js";
 const DIA = 864e5;
 export const PERIODOS = [
   [7, "Últimos 7 días"],
@@ -265,7 +266,7 @@ export function csvMetricas(m, etiquetaPeriodo, ac = null) {
         ]
       : []),
   ];
-  return "﻿" + filas.map((f) => f.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  return csv(filas);
 }
 
 // ---------------------------------------------------------------- academia: alumnos y mensualidades

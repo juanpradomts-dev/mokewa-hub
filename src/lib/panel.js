@@ -636,7 +636,7 @@ function vistaPrevia() {
   $("r-vista").innerHTML = filasResultados.length
     ? `<div class="tabla-envoltura" tabindex="0" role="region" aria-label="Vista previa de resultados"><table><thead><tr><th class="num">Puesto</th><th>Jugador</th><th>Cat.</th><th class="num">Puntos</th></tr></thead><tbody>${filasResultados
         .slice(0, 50)
-        .map((f) => `<tr><td class="num">${f.puesto}</td><td>${esc(f.nombre)}</td><td>${esc(f.categoria || "")}</td><td class="num">${f.puntos ?? "—"}</td></tr>`)
+        .map((f) => `<tr><td class="num">${esc(f.puesto)}</td><td>${esc(f.nombre)}</td><td>${esc(f.categoria || "")}</td><td class="num">${esc(f.puntos ?? "—")}</td></tr>`)
         .join("")}</tbody></table></div><p class="suave">${filasResultados.length} jugadores · origen: ${esc(origenResultados)}</p>`
     : `<p class="suave">Aquí aparece la tabla de posiciones antes de publicarla.</p>`;
 }

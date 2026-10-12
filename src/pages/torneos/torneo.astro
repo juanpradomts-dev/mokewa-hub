@@ -10,6 +10,6 @@ const b = import.meta.env.BASE_URL.replace(/\/$/, "");
 if (esProduccion && !hayBaseDeDatos) return redirigir(`${b}/torneos/`);
 ---
 
-<Base titulo="Torneo" seccion="torneos" descripcion="Torneo del Ajedrez Club Mokewa en Moquegua: fecha, categorías e inscripción.">
+<Base titulo="Torneo" seccion="torneos" privada descripcion="Torneo del Ajedrez Club Mokewa en Moquegua: fecha, categorías e inscripción.">
   <FichaTorneo />
 </Base>

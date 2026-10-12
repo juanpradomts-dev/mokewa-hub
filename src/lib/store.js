@@ -17,6 +17,7 @@ import { esProduccion } from "./contenido.js";
 import personalDemo from "../data/personal-demo.json";
 import { claveJugador, cupoDe } from "./metricas.js";
 import { visitasDemo, borrarVisitasDemo } from "./conteo.js";
+import { csv } from "./csv.js";
 
 const CLAVE = "mokewa-demo-v1";
 const EVENTO = "mokewa:cambio";
@@ -273,7 +274,7 @@ export function csvInscritos(torneoId) {
     filas.push([i.apellidos, i.nombres, i.fecha_nacimiento, i.categoria, i.nivel ?? "", i.club ?? "", i.fide_id ?? "", i.lichess ?? "", i.estado_pago, i.en_espera ? "Sí" : ""]);
   }
   // BOM para que Excel abra bien las tildes.
-  return "﻿" + filas.map((f) => f.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  return csv(filas);
 }
 
 // ---------------------------------------------------------------- vouchers (IndexedDB)
@@ -572,7 +573,7 @@ export function csvAlumnos() {
   for (const a of alumnosAcademia())
     filas.push([a.apellidos, a.nombres, a.nivel ?? "", a.tutor_nombre ?? "", a.tutor_telefono ?? "", a.mensualidad ?? "", a.inicio ?? "", a.baja ?? "", a.motivo_baja ?? "",
       pagos.filter((p) => p.alumno_id === a.id).map((p) => String(p.mes).slice(0, 7)).sort().join(" ")]);
-  return "\ufeff" + filas.map((f) => f.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  return csv(filas);
 }
 
 // Demo: alumnos de prueba (sin celular ni precio: esos datos los pone el club).

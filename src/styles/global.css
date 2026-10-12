@@ -49,6 +49,7 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-padding-top: 5rem;
+  scroll-padding-bottom: 96px; /* lo enfocado con el teclado no queda debajo del botón de WhatsApp */
   scroll-behavior: smooth; /* responde a un clic: va para todos (también con «reducir animaciones») */
 }
 body {
@@ -782,6 +783,12 @@ textarea[aria-invalid="true"] {
   padding: 22px 0 18px;
   font-size: 0.9rem;
 }
+/* En celular el botón flotante de WhatsApp queda sobre el pie: el final del pie le deja su espacio */
+@media (max-width: 719px) {
+  .pie {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+}
 .pie a {
   color: #fff;
 }
@@ -1122,4 +1129,10 @@ input[type="file"]::file-selector-button {
 input[type="file"]::file-selector-button:hover {
   border-color: var(--vino);
   color: var(--vino);
+}
+
+/* Animaciones que se repiten, en pausa mientras su zona no se ve (src/lib/pausar.js) */
+[data-fuera],
+[data-fuera] * {
+  animation-play-state: paused !important;
 }

@@ -93,9 +93,13 @@ const json = JSON.stringify(datos).replace(/</g, "\\u003c");
   type Ev = { anio: string; mes: string; torneo: string; rating: boolean; fuente: string | null; fide: boolean; campeones: Campeon[] };
 
   import { svgPieza } from "../../lib/piezas.js";
+  import { pausarFueraDeVista } from "../../lib/pausar.js";
   const CORONA = svgPieza("dama", "oscuro");
   const raiz = document.querySelector<HTMLElement>("[data-historia]");
-  if (raiz) iniciar(raiz);
+  if (raiz) {
+    iniciar(raiz);
+    pausarFueraDeVista(raiz); // la luz del eje y el caballo que salta se pausan fuera de la vista
+  }
 
   function iniciar(raiz: HTMLElement) {
     const datos: Ev[] = JSON.parse(raiz.querySelector("[data-datos-historia]")!.textContent || "[]");

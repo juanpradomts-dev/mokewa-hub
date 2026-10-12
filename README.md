@@ -73,6 +73,8 @@ npx playwright-cli run-code --filename=scripts/auditoria-ui.js
 
 ### Documentos de diseño (`docs/`)
 
+- [`DESIGN.md`](DESIGN.md): el sistema visual del club (colores, tipografía, formas y reglas), validado con `@google/design.md`. Léelo antes de cambiar el diseño.
+
 - [`FORMULA-GANADORA.md`](docs/FORMULA-GANADORA.md): qué necesitan los clubes de ajedrez (fuentes públicas), la fórmula LLEGAR → CONFIAR → ESCRIBIR → INSCRIBIRSE → VOLVER + OPERAR, y el puntaje de esta web contra ella.
 - [`GUION-ENTREVISTAS.md`](docs/GUION-ENTREVISTAS.md): guion para validar la fórmula con 5 clubes (contexto, experiencias, profundizar, soluciones actuales y consecuencias).
 - [`presentacion-directiva.html`](docs/presentacion-directiva.html): presentación de 9 diapositivas para la directiva del club (se abre en el navegador).

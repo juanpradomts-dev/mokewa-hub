@@ -20,3 +20,14 @@ test("eventoDeEnlace: reconoce los canales de contacto y nada más", () => {
   assert.equal(eventoDeEnlace("https://lichess.org/team/x"), null);
   assert.equal(eventoDeEnlace("/academia/"), null);
 });
+
+import { celda, csv } from "../src/lib/csv.js";
+
+test("csv: lo que escribe un visitante no se ejecuta como fórmula al abrirlo en Excel", () => {
+  assert.equal(celda('=HYPERLINK("http://x","clic")'), `"'=HYPERLINK(""http://x"",""clic"")"`);
+  assert.equal(celda("+51 999"), `"'+51 999"`);
+  assert.equal(celda("@SUM(A1)"), `"'@SUM(A1)"`);
+  assert.equal(celda("-12.5"), `"-12.5"`, "un número negativo queda igual");
+  assert.equal(celda("Quispe Mamani"), `"Quispe Mamani"`);
+  assert.ok(csv([["a", "b"]]).startsWith("﻿"), "BOM para las tildes");
+});

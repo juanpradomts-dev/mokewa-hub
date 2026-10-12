@@ -12,6 +12,7 @@
 //   .heroe              recibe --mx, --my (cursor) y --sy (scroll) para las piezas del fondo
 // Sin JavaScript, el caballo simplemente se queda en el héroe.
 
+import { pausarFueraDeVista } from "./pausar.js";
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const SUAVE = 0.12; // fracción del camino que se recorre por cuadro (más bajo = más suave)
@@ -25,6 +26,8 @@ export function iniciarViaje() {
   if (!desde || !hasta || !viajero || !moneda) return;
 
   document.body.append(viajero);
+  pausarFueraDeVista(viajero);
+  pausarFueraDeVista(heroe);
   viajero.classList.add("en-viaje");
 
   // El caballo NUNCA pasa por encima de la información:

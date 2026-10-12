@@ -126,7 +126,7 @@ const realizados = [...presenciales.torneos].sort((a, c) => c.fecha.localeCompar
         const r = res[k];
         const filas = r.filas
           .slice(0, 10)
-          .map((f: any) => `<tr><td class="num">${f.puesto}</td><td>${esc(f.nombre)}</td><td>${esc(f.categoria || "")}</td><td class="num">${f.puntos ?? "—"}</td></tr>`)
+          .map((f: any) => `<tr><td class="num">${esc(f.puesto)}</td><td>${esc(f.nombre)}</td><td>${esc(f.categoria || "")}</td><td class="num">${esc(f.puntos ?? "—")}</td></tr>`)
           .join("");
         return `<article class="tarjeta"><div class="etiquetas"><span class="etiqueta etiqueta-ok">Publicado por el club</span><span class="etiqueta">${esc(r.origen)}</span></div>
           <h3>${esc(r.nombre)}</h3>
