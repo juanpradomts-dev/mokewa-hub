@@ -12,7 +12,7 @@
   "blitz": {
    "games": 19,
    "rating": 1593,
-   "rd": 145,
+   "rd": 146,
    "prog": -139,
    "prov": true
   },
@@ -47,7 +47,7 @@
   "puzzle": {
    "games": 1071,
    "rating": 1888,
-   "rd": 98,
+   "rd": 99,
    "prog": 0
   },
   "racer": {
